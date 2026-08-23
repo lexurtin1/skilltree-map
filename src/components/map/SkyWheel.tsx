@@ -520,56 +520,7 @@ function MiniTree({
         );
       })}
 
-      {/* Persistent tip labels (outermost job per arm) — always outside */}
-      {shape.arms.map((arm, ai) => {
-        const tip = arm.jobs[arm.jobs.length - 1];
-        if (!tip) return null;
-        const isArm = activeArm === ai;
-        const dimArm = armFocus && !isArm;
-        // When a specific inner job is hovered, tip label yields to that job's label
-        const hideForInner =
-          isArm && activeJob != null && activeJob !== arm.jobs.length - 1;
-        if (hideForInner) return null;
-        return (
-          <div
-            key={`tip-label-${ai}`}
-            className="pointer-events-none absolute whitespace-nowrap"
-            style={{
-              left: tip.x,
-              top: tip.y,
-              transform: `rotate(${-deg}deg) translate(18px, -50%)`,
-              transformOrigin: "0 50%",
-              opacity: dimArm ? 0.12 : isArm ? 1 : deptLit ? 0.78 : 0.35,
-              zIndex: isArm ? 6 : 2,
-              transition: "opacity 160ms ease",
-            }}
-          >
-            <div
-              className="rounded-md px-2 py-1 text-left"
-              style={{
-                background: isArm ? "rgba(12,14,18,0.88)" : "rgba(12,14,18,0.55)",
-                border: `1px solid color-mix(in srgb, ${color} ${isArm ? 55 : 28}%, transparent)`,
-                boxShadow: isArm ? "0 4px 18px rgba(0,0,0,0.55)" : "none",
-              }}
-            >
-              <div
-                className="text-[9px] font-bold uppercase tracking-[0.16em]"
-                style={{ color }}
-              >
-                {arm.fnName}
-              </div>
-              <div
-                className="text-[12px] font-medium leading-tight"
-                style={{ color: "var(--ivory)" }}
-              >
-                {tip.name}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Job dots + hover labels for non-tip nodes */}
+      {/* Job dots — name tags only while that specific node is hovered */}
       {shape.arms.map((arm, ai) =>
         arm.jobs.map((job, ji) => {
           const isArm = activeArm === ai;
@@ -577,8 +528,7 @@ function MiniTree({
           const dimArm = armFocus && !isArm;
           const assisted = job.level === "assisted";
           const manual = job.level === "manual";
-          const isTip = ji === arm.jobs.length - 1;
-          const showHoverLabel = isJob && !isTip;
+          const showHoverLabel = isJob;
 
           return (
             <div
@@ -644,22 +594,14 @@ function MiniTree({
                   }}
                 >
                   <div
-                    className="rounded-md px-2 py-1 text-left"
+                    className="rounded-md px-2.5 py-1.5 text-[12px] font-medium leading-tight text-[var(--ivory)]"
                     style={{
-                      background: "rgba(12,14,18,0.88)",
+                      background: "rgba(12,14,18,0.9)",
                       border: `1px solid color-mix(in srgb, ${color} 55%, transparent)`,
                       boxShadow: "0 4px 18px rgba(0,0,0,0.55)",
                     }}
                   >
-                    <div
-                      className="text-[9px] font-bold uppercase tracking-[0.16em]"
-                      style={{ color }}
-                    >
-                      {arm.fnName}
-                    </div>
-                    <div className="text-[12px] font-medium leading-tight text-[var(--ivory)]">
-                      {job.name}
-                    </div>
+                    {job.name}
                   </div>
                 </div>
               )}
