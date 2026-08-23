@@ -1,0 +1,247 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #0e1118;
+  --bg-2: #20242d;
+  --bg-3: #161a22;
+  --ivory: #e9e4d6;
+  --ivory-2: #b9b4a6;
+  --ink-2: #8a8da0;
+  --ink-3: #565a6e;
+  --copper: #c58b5f;
+  --line: rgba(233, 228, 214, 0.14);
+  --lnrgb: 233, 228, 214;
+  --glass: rgba(14, 17, 24, 0.78);
+  --font-sans: var(--font-jakarta);
+  --font-serif: var(--font-marcellus);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-ivory: var(--ivory);
+  --color-ivory-2: var(--ivory-2);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-copper: var(--copper);
+  --font-sans: var(--font-jakarta);
+  --font-serif: var(--font-marcellus);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: radial-gradient(
+    circle,
+    rgba(232, 235, 242, 0.05) 1px,
+    transparent 1px
+  );
+  background-size: 14px 14px;
+  color: var(--ivory);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--copper);
+  color: #131315;
+}
+
+/* Starfield */
+.bgstar {
+  position: absolute;
+  border-radius: 50%;
+  background: #cdc9e0;
+  animation: twinkle 6s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgstar {
+    animation: none !important;
+  }
+}
+
+/* Map line draw */
+@keyframes drawline {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes nodepop {
+  from {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadein {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes treein {
+  from {
+    opacity: 0;
+    transform: translateY(34px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.path-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: drawline 0.55s ease forwards;
+  animation-delay: var(--d, 0s);
+}
+
+.node-pop {
+  opacity: 0;
+  animation: nodepop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4) forwards;
+  animation-delay: var(--d, 0s);
+}
+
+.popdot {
+  opacity: 0;
+  animation: fadein 0.3s ease forwards;
+  animation-delay: var(--d, 0s);
+}
+
+/* Living hub particle field — orbiting cloud */
+.hub-brain {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.hub-haze {
+  animation: hubHaze 6s ease-in-out infinite alternate;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.hub-orbit {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  transform: rotate(var(--phase, 0deg));
+  animation: hubOrbit linear infinite;
+  will-change: transform;
+}
+
+.hub-orbit-rev {
+  animation-name: hubOrbitRev;
+}
+
+.hub-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hubWobble ease-in-out infinite alternate;
+}
+
+.hub-core {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hubPulse 2.4s ease-in-out infinite;
+}
+
+.hub-core-b {
+  animation-delay: -1.1s;
+  animation-duration: 3.1s;
+}
+
+.hub-core-c {
+  animation-delay: -0.6s;
+  animation-duration: 2.8s;
+}
+
+@keyframes hubOrbit {
+  from {
+    transform: rotate(var(--phase, 0deg));
+  }
+  to {
+    transform: rotate(calc(var(--phase, 0deg) + 360deg));
+  }
+}
+
+@keyframes hubOrbitRev {
+  from {
+    transform: rotate(var(--phase, 0deg));
+  }
+  to {
+    transform: rotate(calc(var(--phase, 0deg) - 360deg));
+  }
+}
+
+@keyframes hubWobble {
+  0% {
+    transform: translate(0, 0) scale(0.85);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate(var(--wobble-x, 3px), var(--wobble-y, -2px)) scale(1.25);
+    opacity: 1;
+  }
+}
+
+@keyframes hubHaze {
+  0% {
+    opacity: 0.35;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes hubPulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-dot,
+  .hub-orbit,
+  .hub-orbit-rev,
+  .hub-haze,
+  .hub-core,
+  .hub-core-b,
+  .hub-core-c {
+    animation: none !important;
+  }
+}
