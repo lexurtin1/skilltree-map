@@ -150,7 +150,7 @@ export function NodeConstellation({
           style={{ left: sat.x * 0.52, top: sat.y * 0.52, zIndex: 6 }}
         >
           <span
-            className="rounded px-1.5 py-0.5 text-[10px] tracking-[0.08em] text-[var(--ink-2)]"
+            className="rounded px-1.5 py-0.5 text-[15px] tracking-[0.08em] text-[var(--ink-2)]"
             style={{ background: "rgba(12,14,18,0.86)" }}
           >
             {sat.relationship}
@@ -166,6 +166,7 @@ export function NodeConstellation({
         size={Math.round(nodeSize(centre) * 1.6)}
         selected={selectedId === centre.id}
         label="always"
+        labelScale={1.45}
         delay={0.05}
         onSelect={() => onSelectNode(centre.id)}
       />
@@ -180,6 +181,7 @@ export function NodeConstellation({
           selected={selectedId === sat.node.id}
           delay={sat.delay}
           label="always"
+          labelScale={1.45}
           drillable={hasConstellation(sat.node.id)}
           onSelect={() => onSelectNode(sat.node.id)}
           onDrillDown={() => onDrillDown(sat.node.id)}
@@ -246,7 +248,7 @@ function ExternalNode({
         left: x,
         top: y,
         ["--d" as string]: `${delay}s`,
-        maxWidth: 250,
+        maxWidth: 330,
         background: "rgba(12,14,18,0.82)",
         borderColor: selected
           ? domain.color
@@ -261,17 +263,17 @@ function ExternalNode({
           style={{ background: STATUS[node.status].color }}
         />
         <span
-          className="text-[9px] font-bold uppercase tracking-[0.16em]"
+          className="text-[13px] font-bold uppercase tracking-[0.16em]"
           style={{ color: domain.color }}
         >
           {sameDomain ? relationship : domain.label}
         </span>
       </span>
-      <span className="mt-1 block text-[12px] font-medium leading-tight text-[var(--ivory)]">
+      <span className="mt-1 block text-[17px] font-medium leading-tight text-[var(--ivory)]">
         {node.label}
       </span>
       {node.subtitle && (
-        <span className="mt-0.5 block text-[10px] leading-snug text-[var(--ink-2)]">
+        <span className="mt-0.5 block text-[14px] leading-snug text-[var(--ink-2)]">
           {node.subtitle}
         </span>
       )}

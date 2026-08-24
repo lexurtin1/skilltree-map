@@ -101,9 +101,17 @@ type MapNodeProps = {
   /** Rotation to cancel so labels stay upright inside the spinning wheel. */
   counterRotate?: number;
   label?: "always" | "hover" | "none";
+  /**
+   * Multiplies label type size in world units. Views that sit at a low camera
+   * scale (the domain fan, the drill-down constellation) pass a value above 1
+   * so text is still legible once the world is scaled down to fit.
+   */
+  labelScale?: number;
   delay?: number;
   onSelect?: () => void;
   onDrillDown?: () => void;
+  /** Fires on pointer enter/leave — drives which relationship lines are drawn. */
+  onHoverChange?: (hovered: boolean) => void;
   drillable?: boolean;
 };
 
@@ -116,9 +124,11 @@ export function MapNode({
   dimmed = false,
   counterRotate = 0,
   label = "always",
+  labelScale = 1,
   delay,
   onSelect,
   onDrillDown,
+  onHoverChange,
   drillable = false,
 }: MapNodeProps) {
   const domain = DOMAIN_BY_ID[node.domain];
@@ -130,6 +140,8 @@ export function MapNode({
   return (
     <div
       className="group absolute"
+      onPointerEnter={() => onHoverChange?.(true)}
+      onPointerLeave={() => onHoverChange?.(false)}
       style={{
         left: x,
         top: y,
@@ -211,8 +223,9 @@ export function MapNode({
           }}
         >
           <div
-            className="text-[12.5px] font-medium leading-tight"
+            className="font-medium leading-tight"
             style={{
+              fontSize: 13.5 * labelScale,
               color: selected ? "var(--ivory)" : "var(--ivory-2)",
               textShadow: "0 1px 10px rgba(0,0,0,0.8)",
             }}
@@ -221,8 +234,12 @@ export function MapNode({
           </div>
           {node.subtitle && (
             <div
-              className="mt-0.5 max-w-[220px] whitespace-normal text-[10.5px] leading-snug"
-              style={{ color: "var(--ink-2)", textShadow: "0 1px 8px rgba(0,0,0,0.8)" }}
+              className="mt-0.5 max-w-[230px] whitespace-normal leading-snug"
+              style={{
+                fontSize: 11.5 * labelScale,
+                color: "var(--ink-2)",
+                textShadow: "0 1px 8px rgba(0,0,0,0.8)",
+              }}
             >
               {node.subtitle}
             </div>

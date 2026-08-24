@@ -42,7 +42,7 @@ type SkyWheelProps = {
   onSelectPulse: () => void;
 };
 
-type HoverTarget = { domain: number; arm: number | null };
+type HoverTarget = { domain: number; arm: number | null; node?: string | null };
 
 function polar(r: number, deg: number) {
   const a = (deg * Math.PI) / 180;
@@ -195,7 +195,23 @@ export function SkyWheel({
     return map;
   }, [wheelAngle]);
 
-  const crossEdges = useMemo(() => surfacedCrossDomainEdges(), []);
+  const allCrossEdges = useMemo(() => surfacedCrossDomainEdges(), []);
+
+  /**
+   * Relationship lines stay hidden in the quiet default state — drawing all of
+   * them at once crowds the constellation. They appear only for the node under
+   * the pointer, or for the node whose detail panel is open.
+   */
+  const focusId = hover?.node ?? selectedId ?? null;
+  const crossEdges = useMemo(
+    () =>
+      focusId
+        ? allCrossEdges.filter(
+            (edge) => edge.source === focusId || edge.target === focusId,
+          )
+        : [],
+    [allCrossEdges, focusId],
+  );
 
   return (
     <div className="relative" style={{ width: 0, height: 0 }}>
@@ -241,18 +257,13 @@ export function SkyWheel({
         })}
       </svg>
 
-      {/* Cross-domain relationships — the connections worth seeing unprompted */}
+      {/* Cross-domain relationships — drawn only for the hovered or selected node */}
       <svg
         width={2000}
         height={2000}
         viewBox="-1000 -1000 2000 2000"
         className="pointer-events-none absolute overflow-visible"
-        style={{
-          left: -1000,
-          top: -1000,
-          opacity: anyHover ? 0.25 : 1,
-          transition: "opacity 280ms ease",
-        }}
+        style={{ left: -1000, top: -1000 }}
       >
         {crossEdges.map((edge) => {
           const a = positions.get(edge.source);
@@ -279,8 +290,8 @@ export function SkyWheel({
               d={`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`}
               fill="none"
               stroke={edgeColor(edge)}
-              strokeOpacity={edgeOpacity(edge) * 0.55}
-              strokeWidth={edgeWidth(edge, 0.8)}
+              strokeOpacity={edgeOpacity(edge)}
+              strokeWidth={edgeWidth(edge, 0.9)}
               strokeLinecap="round"
               strokeDasharray={edge.type === "blocks" ? "6 7" : undefined}
             />
@@ -402,6 +413,9 @@ export function SkyWheel({
                   lit={!dimmed}
                   selectedId={selectedId}
                   onArmEnter={(arm) => enter({ domain: i, arm })}
+                  onNodeHover={(nodeId) =>
+                    enter({ domain: i, arm: hover?.arm ?? null, node: nodeId })
+                  }
                   onRootEnter={() => enter({ domain: i, arm: null })}
                   onOpenDomain={() => onOpenDomain(domain.id)}
                   onSelectNode={onSelectNode}
@@ -466,6 +480,7 @@ function MiniTree({
   lit,
   selectedId,
   onArmEnter,
+  onNodeHover,
   onRootEnter,
   onOpenDomain,
   onSelectNode,
@@ -477,6 +492,7 @@ function MiniTree({
   lit: boolean;
   selectedId: string | null;
   onArmEnter: (arm: number) => void;
+  onNodeHover: (nodeId: string | null) => void;
   onRootEnter: () => void;
   onOpenDomain: () => void;
   onSelectNode: (nodeId: string) => void;
@@ -584,6 +600,9 @@ function MiniTree({
               counterRotate={deg}
               label="hover"
               onSelect={() => onSelectNode(item.node.id)}
+              onHoverChange={(hovered) =>
+                onNodeHover(hovered ? item.node.id : null)
+              }
             />
           );
         }),

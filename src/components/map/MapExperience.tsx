@@ -184,11 +184,6 @@ export function MapExperience() {
 
   useEffect(() => () => stopAnim(), [stopAnim]);
 
-  const snapToNearest = useCallback(() => {
-    const i = focusedFromWheel(wheelRef.current);
-    animateTo(angleForDomain(i));
-  }, [animateTo]);
-
   const push = useCallback((next: View) => {
     setStack((s) => (sameView(s[s.length - 1], next) ? s : [...s, next]));
     setCamera(cameraFor(next));
@@ -309,8 +304,6 @@ export function MapExperience() {
       setCamera((c) => {
         const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, c.scale * factor));
         if (next === c.scale) return c;
-        // The sky spins around the hub at world 0,0 — keep it pinned in place.
-        if (view.kind === "overview") return { ...c, scale: next };
         const mx = window.innerWidth / 2;
         const my = window.innerHeight / 2;
         const wx = (mx - c.x) / c.scale;
@@ -318,7 +311,7 @@ export function MapExperience() {
         return { scale: next, x: mx - wx * next, y: my - wy * next };
       });
     },
-    [view.kind],
+    [],
   );
 
   const resetView = useCallback(() => setCamera(cameraFor(view)), [view]);
@@ -384,16 +377,6 @@ export function MapExperience() {
       <CameraWorld
         camera={camera}
         onCameraChange={setCamera}
-        rotateMode={view.kind === "overview"}
-        onRotate={(d) => {
-          stopAnim();
-          setWheelAngle((a) => {
-            const next = a + d;
-            wheelRef.current = next;
-            return next;
-          });
-        }}
-        onDragEnd={view.kind === "overview" ? snapToNearest : undefined}
         onClickWorld={onClickWorld}
       >
         {view.kind === "overview" && (

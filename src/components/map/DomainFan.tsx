@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   getDomain,
   groupsForDomain,
@@ -129,14 +129,21 @@ export function DomainFan({
     return { paths, junctions, placed: [...placed.values()], groupLabels, links };
   }, [domainId]);
 
-  const activeLinkIds = useMemo(() => {
-    if (!selectedId) return new Set<string>();
-    return new Set(
-      layout.links
-        .filter((l) => l.source === selectedId || l.target === selectedId)
-        .map((l) => l.id),
-    );
-  }, [layout.links, selectedId]);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
+  /**
+   * Relationship lines are hidden in the default state — showing every link at
+   * once turns the fan into a hairball. Only the lines touching the node under
+   * the pointer, or the node whose panel is open, are drawn.
+   */
+  const focusId = hoveredId ?? selectedId;
+  const visibleLinks = useMemo(
+    () =>
+      focusId
+        ? layout.links.filter((l) => l.source === focusId || l.target === focusId)
+        : [],
+    [focusId, layout.links],
+  );
 
   return (
     <div className="relative" style={{ width: 0, height: 0 }}>
@@ -169,23 +176,19 @@ export function DomainFan({
           />
         ))}
 
-        {/* Cross-branch relationships inside this domain */}
-        {layout.links.map((l) => {
-          const active = activeLinkIds.has(l.id);
-          return (
-            <path
-              key={l.id}
-              d={l.d}
-              fill="none"
-              stroke={l.color}
-              strokeOpacity={active ? 0.75 : selectedId ? 0.12 : 0.28}
-              strokeWidth={active ? l.width * 1.6 : l.width}
-              strokeLinecap="round"
-              strokeDasharray="7 9"
-              style={{ transition: "stroke-opacity 200ms ease, stroke-width 200ms ease" }}
-            />
-          );
-        })}
+        {/* Cross-branch relationships — only for the hovered or selected node */}
+        {visibleLinks.map((l) => (
+          <path
+            key={l.id}
+            d={l.d}
+            fill="none"
+            stroke={l.color}
+            strokeOpacity={0.8}
+            strokeWidth={l.width * 1.6}
+            strokeLinecap="round"
+            strokeDasharray="7 9"
+          />
+        ))}
 
         {layout.junctions.map((j, i) => (
           <circle
@@ -239,15 +242,15 @@ export function DomainFan({
           style={{ left: group.x, top: group.y }}
         >
           <div
-            className="whitespace-nowrap text-[11px] font-bold uppercase tracking-[0.18em]"
-            style={{ color: domain.color, transform: "translateY(-26px)" }}
+            className="whitespace-nowrap text-[19px] font-bold uppercase tracking-[0.18em]"
+            style={{ color: domain.color, transform: "translateY(-40px)" }}
           >
             {group.label}
           </div>
           {group.subtitle && (
             <div
-              className="whitespace-nowrap text-[10px] tracking-[0.02em] text-[var(--ink-3)]"
-              style={{ transform: "translateY(-24px)" }}
+              className="whitespace-nowrap text-[16px] tracking-[0.02em] text-[var(--ink-3)]"
+              style={{ transform: "translateY(-36px)" }}
             >
               {group.subtitle}
             </div>
@@ -266,9 +269,11 @@ export function DomainFan({
           dimmed={false}
           delay={item.delay}
           label="always"
+          labelScale={1.7}
           drillable={hasConstellation(item.node.id)}
           onSelect={() => onSelectNode(item.node.id)}
           onDrillDown={() => onDrillDown(item.node.id)}
+          onHoverChange={(hovered) => setHoveredId(hovered ? item.node.id : null)}
         />
       ))}
     </div>

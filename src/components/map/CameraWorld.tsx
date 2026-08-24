@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 export const ZOOM_MIN = 0.18;
 export const ZOOM_MAX = 2.4;
@@ -21,24 +16,26 @@ type CameraWorldProps = {
   onCameraChange: (next: CameraState) => void;
   minScale?: number;
   maxScale?: number;
-  /** Sky mode: drag spins the wheel around the hub. */
-  rotateMode?: boolean;
-  onRotate?: (deltaDeg: number) => void;
-  /** Fired when a rotate/pan drag ends (for snap-to-dept). */
-  onDragEnd?: () => void;
   onClickWorld?: () => void;
   children: ReactNode;
   className?: string;
 };
 
+/**
+ * Pan and zoom surface. Dragging moves the world freely in any direction in
+ * every view; the wheel and pinch zoom around the pointer.
+ *
+ * `will-change: transform` is applied only while the camera is actually
+ * moving. Left on permanently it promotes the world to a composited layer
+ * that is rasterised once and then GPU-scaled, which makes text and SVG go
+ * soft as soon as you zoom in. Dropping it at rest lets the browser
+ * re-rasterise at the current scale, so a zoomed-in branch stays sharp.
+ */
 export function CameraWorld({
   camera,
   onCameraChange,
   minScale = ZOOM_MIN,
   maxScale = ZOOM_MAX,
-  rotateMode = false,
-  onRotate,
-  onDragEnd,
   onClickWorld,
   children,
   className = "",
@@ -50,16 +47,34 @@ export function CameraWorld({
     moved: boolean;
     lastX: number;
     lastY: number;
-    /** Angle from hub (top = 0, clockwise), radians. */
-    lastAngle: number | null;
-  }>({ active: false, moved: false, lastX: 0, lastY: 0, lastAngle: null });
+  }>({ active: false, moved: false, lastX: 0, lastY: 0 });
   /** Live pointers, tracked so two fingers can pinch. */
   const pointersRef = useRef(new Map<number, { x: number; y: number }>());
   const pinchRef = useRef<{ dist: number; scale: number } | null>(null);
 
+  /** True only while panning or zooming — see the note on the component. */
+  const [moving, setMoving] = useState(false);
+  const settleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const markMoving = useCallback(() => {
+    setMoving(true);
+    if (settleRef.current) clearTimeout(settleRef.current);
+    settleRef.current = setTimeout(() => {
+      setMoving(false);
+      settleRef.current = null;
+    }, 180);
+  }, []);
+
   useEffect(() => {
     camRef.current = camera;
   }, [camera]);
+
+  useEffect(
+    () => () => {
+      if (settleRef.current) clearTimeout(settleRef.current);
+    },
+    [],
+  );
 
   const clampScale = useCallback(
     (s: number) => Math.min(maxScale, Math.max(minScale, s)),
@@ -68,35 +83,19 @@ export function CameraWorld({
 
   /**
    * Scale to `nextScale` while holding the world point under (ax, ay) still.
-   * Anchor coords are relative to the viewport rect. In rotate mode the hub
-   * lives at world 0,0 — pin it there so spinning stays true to the cursor.
+   * Anchor coords are relative to the viewport rect.
    */
   const zoomTo = useCallback(
     (nextScale: number, ax: number, ay: number) => {
       const c = camRef.current;
       const next = clampScale(nextScale);
       if (next === c.scale) return;
-      if (rotateMode) {
-        onCameraChange({ ...c, scale: next });
-        return;
-      }
       const wx = (ax - c.x) / c.scale;
       const wy = (ay - c.y) / c.scale;
       onCameraChange({ scale: next, x: ax - wx * next, y: ay - wy * next });
     },
-    [clampScale, onCameraChange, rotateMode],
+    [clampScale, onCameraChange],
   );
-
-  /** Screen angle from wheel hub — matches sky polar (0 at top, clockwise). */
-  const angleFromHub = useCallback((clientX: number, clientY: number) => {
-    const el = rootRef.current;
-    if (!el) return 0;
-    const rect = el.getBoundingClientRect();
-    const c = camRef.current;
-    const dx = clientX - (rect.left + c.x);
-    const dy = clientY - (rect.top + c.y);
-    return Math.atan2(dx, -dy);
-  }, []);
 
   const pinchDistance = useCallback(() => {
     const pts = [...pointersRef.current.values()];
@@ -119,7 +118,7 @@ export function CameraWorld({
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
 
       if (pointersRef.current.size === 2) {
-        // Second finger down — hand over to pinch, drop the pan/rotate drag.
+        // Second finger down — hand over to pinch, drop the pan drag.
         dragRef.current.active = false;
         dragRef.current.moved = true;
         pinchRef.current = {
@@ -135,10 +134,9 @@ export function CameraWorld({
         moved: false,
         lastX: e.clientX,
         lastY: e.clientY,
-        lastAngle: rotateMode ? angleFromHub(e.clientX, e.clientY) : null,
       };
     },
-    [angleFromHub, pinchDistance, rotateMode],
+    [pinchDistance],
   );
 
   const onPointerMove = useCallback(
@@ -153,6 +151,7 @@ export function CameraWorld({
         if (pinch.dist > 0 && dist > 0) {
           const rect = rootRef.current?.getBoundingClientRect();
           const mid = pinchMidpoint();
+          markMoving();
           zoomTo(
             pinch.scale * (dist / pinch.dist),
             mid.x - (rect?.left ?? 0),
@@ -170,30 +169,11 @@ export function CameraWorld({
       d.lastX = e.clientX;
       d.lastY = e.clientY;
 
-      if (rotateMode && onRotate) {
-        const ang = angleFromHub(e.clientX, e.clientY);
-        if (d.lastAngle != null) {
-          let delta = ang - d.lastAngle;
-          while (delta > Math.PI) delta -= Math.PI * 2;
-          while (delta < -Math.PI) delta += Math.PI * 2;
-          onRotate((delta * 180) / Math.PI);
-        }
-        d.lastAngle = ang;
-        return;
-      }
-
+      markMoving();
       const c = camRef.current;
       onCameraChange({ ...c, x: c.x + dx, y: c.y + dy });
     },
-    [
-      angleFromHub,
-      onCameraChange,
-      onRotate,
-      pinchDistance,
-      pinchMidpoint,
-      rotateMode,
-      zoomTo,
-    ],
+    [markMoving, onCameraChange, pinchDistance, pinchMidpoint, zoomTo],
   );
 
   const endDrag = useCallback(
@@ -210,11 +190,9 @@ export function CameraWorld({
       if (!d.active) return;
       const moved = d.moved;
       d.active = false;
-      d.lastAngle = null;
-      if (moved) onDragEnd?.();
-      else onClickWorld?.();
+      if (!moved) onClickWorld?.();
     },
-    [onClickWorld, onDragEnd],
+    [onClickWorld],
   );
 
   useEffect(() => {
@@ -234,6 +212,7 @@ export function CameraWorld({
         Math.max(0.5, Math.exp(-e.deltaY * unit * intensity)),
       );
 
+      markMoving();
       zoomTo(
         camRef.current.scale * factor,
         e.clientX - rect.left,
@@ -243,7 +222,7 @@ export function CameraWorld({
 
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [zoomTo]);
+  }, [markMoving, zoomTo]);
 
   return (
     <div
@@ -255,10 +234,11 @@ export function CameraWorld({
       onPointerCancel={endDrag}
     >
       <div
-        className="absolute left-0 top-0 will-change-transform"
+        className="absolute left-0 top-0"
         style={{
           transform: `translate(${camera.x}px, ${camera.y}px) scale(${camera.scale})`,
           transformOrigin: "0 0",
+          willChange: moving ? "transform" : "auto",
         }}
       >
         {children}
