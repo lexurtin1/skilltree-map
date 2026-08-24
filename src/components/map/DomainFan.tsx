@@ -15,21 +15,25 @@ import { nodeSize } from "@/lib/company-map/visuals";
 import { MapNode } from "./MapNode";
 
 const FAN_SPAN = (186 * Math.PI) / 180;
-const R0 = 250;
-const R_BASE = 400;
-const R_STEP = 172;
+const R0 = 260;
+const R_BASE = 430;
+const R_STEP = 150;
 
 function P(r: number, a: number): [number, number] {
   return [r * Math.sin(a), -r * Math.cos(a)];
 }
 
-/** Outer radius of a domain fan — lets the camera fit the whole branch. */
+/**
+ * Radius of the outermost node ring. The camera adds its own padding, so this
+ * stays the raw geometry rather than a padded guess — an over-padded extent is
+ * what pushed the fan to a scale where nothing was readable.
+ */
 export function domainFanExtent(id: DomainId): number {
   const deepest = groupsForDomain(id).reduce(
     (max, group) => Math.max(max, nodesForGroup(group.id).length),
     0,
   );
-  return R_BASE + Math.max(0, deepest - 1) * R_STEP + 160;
+  return R_BASE + Math.max(0, deepest - 1) * R_STEP;
 }
 
 type DomainFanProps = {
@@ -242,14 +246,14 @@ export function DomainFan({
           style={{ left: group.x, top: group.y }}
         >
           <div
-            className="whitespace-nowrap text-[19px] font-bold uppercase tracking-[0.18em]"
+            className="whitespace-nowrap text-[15px] font-bold uppercase tracking-[0.18em]"
             style={{ color: domain.color, transform: "translateY(-40px)" }}
           >
             {group.label}
           </div>
           {group.subtitle && (
             <div
-              className="whitespace-nowrap text-[16px] tracking-[0.02em] text-[var(--ink-3)]"
+              className="whitespace-nowrap text-[12px] tracking-[0.02em] text-[var(--ink-3)]"
               style={{ transform: "translateY(-36px)" }}
             >
               {group.subtitle}
@@ -268,8 +272,10 @@ export function DomainFan({
           selected={selectedId === item.node.id}
           dimmed={false}
           delay={item.delay}
-          label="always"
-          labelScale={1.7}
+          // Only the material nodes carry a standing label; the rest name
+          // themselves on hover. Visual hierarchy, not a wall of text.
+          label={item.node.importance >= 3 ? "always" : "hover"}
+          labelScale={1.35}
           drillable={hasConstellation(item.node.id)}
           onSelect={() => onSelectNode(item.node.id)}
           onDrillDown={() => onDrillDown(item.node.id)}

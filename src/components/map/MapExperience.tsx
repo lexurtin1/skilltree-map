@@ -69,22 +69,38 @@ function skyCamera(): CameraState {
   };
 }
 
+/**
+ * The fan is a half-disc: 2R wide, R tall, rooted near the bottom of the
+ * viewport. Framing it against its real geometry rather than a padded square
+ * buys roughly a quarter more scale, which is the difference between labels
+ * that read and labels that do not.
+ */
 function fanCamera(domainId: DomainId): CameraState {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  const extent = domainFanExtent(domainId);
-  const scale = Math.min(w / (2.15 * extent), h / (1.35 * extent), 0.85);
-  return { x: w / 2, y: h * 0.84, scale: Math.max(ZOOM_MIN, scale) };
+  const r = domainFanExtent(domainId);
+  const halfWidth = r + 130; // label overhang at the flanks
+  const height = r + 90; // node radius plus the root's offset below centre
+  // Leave the top chrome and the bottom caption band clear.
+  const usableH = Math.max(320, h - 210);
+  const scale = Math.min(w / (2 * halfWidth), usableH / height, 0.95);
+  return {
+    x: w / 2,
+    y: Math.max(h * 0.7, h - 150),
+    scale: Math.max(ZOOM_MIN, scale),
+  };
 }
 
 function constellationCamera(): CameraState {
   const w = window.innerWidth;
   const h = window.innerHeight;
+  const usableH = Math.max(320, h - 190);
   const scale = Math.min(
-    w / (2.3 * CONSTELLATION_EXTENT),
-    h / (2.3 * CONSTELLATION_EXTENT),
+    w / (2.1 * CONSTELLATION_EXTENT),
+    usableH / (2.05 * CONSTELLATION_EXTENT),
+    0.95,
   );
-  return { x: w / 2, y: h / 2 + 10, scale: Math.max(ZOOM_MIN, Math.min(0.9, scale)) };
+  return { x: w / 2, y: h / 2 - 10, scale: Math.max(ZOOM_MIN, scale) };
 }
 
 function cameraFor(view: View): CameraState {

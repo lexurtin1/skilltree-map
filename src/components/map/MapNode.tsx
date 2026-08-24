@@ -107,6 +107,12 @@ type MapNodeProps = {
    * so text is still legible once the world is scaled down to fit.
    */
   labelScale?: number;
+  /**
+   * Subtitles are hover-only by default — printing a second line under every
+   * node is what turns a branch into a wall of text. Views with few nodes and
+   * room to breathe can opt back in.
+   */
+  showSubtitle?: boolean;
   delay?: number;
   onSelect?: () => void;
   onDrillDown?: () => void;
@@ -125,6 +131,7 @@ export function MapNode({
   counterRotate = 0,
   label = "always",
   labelScale = 1,
+  showSubtitle = false,
   delay,
   onSelect,
   onDrillDown,
@@ -206,7 +213,7 @@ export function MapNode({
 
       {label !== "none" && (
         <div
-          className={`pointer-events-none absolute whitespace-nowrap text-center ${
+          className={`pointer-events-none absolute text-center ${
             label === "hover" && !selected
               ? "opacity-0 group-hover:opacity-100"
               : "opacity-100"
@@ -222,10 +229,13 @@ export function MapNode({
             zIndex: selected ? 13 : 5,
           }}
         >
+          {/* Wrapped rather than nowrap: an unbounded label line is what
+              collides with the neighbouring branch. */}
           <div
-            className="font-medium leading-tight"
+            className="mx-auto font-medium leading-tight"
             style={{
               fontSize: 13.5 * labelScale,
+              maxWidth: Math.max(170, 150 * labelScale),
               color: selected ? "var(--ivory)" : "var(--ivory-2)",
               textShadow: "0 1px 10px rgba(0,0,0,0.8)",
             }}
@@ -234,11 +244,17 @@ export function MapNode({
           </div>
           {node.subtitle && (
             <div
-              className="mt-0.5 max-w-[230px] whitespace-normal leading-snug"
+              className={`mx-auto mt-0.5 leading-snug ${
+                showSubtitle || selected
+                  ? "opacity-100"
+                  : "opacity-0 group-hover:opacity-100"
+              }`}
               style={{
                 fontSize: 11.5 * labelScale,
+                maxWidth: Math.max(170, 150 * labelScale),
                 color: "var(--ink-2)",
                 textShadow: "0 1px 8px rgba(0,0,0,0.8)",
+                transition: "opacity 180ms ease",
               }}
             >
               {node.subtitle}

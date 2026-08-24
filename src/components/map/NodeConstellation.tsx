@@ -15,8 +15,8 @@ import { edgeOpacity, edgeWidth, nodeSize } from "@/lib/company-map/visuals";
 import { MapNode } from "./MapNode";
 
 const R_SAT = 430;
-const R_LINK = 790;
-export const CONSTELLATION_EXTENT = R_LINK + 190;
+const R_LINK = 720;
+export const CONSTELLATION_EXTENT = R_LINK + 120;
 
 type NodeConstellationProps = {
   nodeId: string;
@@ -166,7 +166,7 @@ export function NodeConstellation({
         size={Math.round(nodeSize(centre) * 1.6)}
         selected={selectedId === centre.id}
         label="always"
-        labelScale={1.45}
+        labelScale={1.35}
         delay={0.05}
         onSelect={() => onSelectNode(centre.id)}
       />
@@ -181,7 +181,8 @@ export function NodeConstellation({
           selected={selectedId === sat.node.id}
           delay={sat.delay}
           label="always"
-          labelScale={1.45}
+          labelScale={1.35}
+          showSubtitle
           drillable={hasConstellation(sat.node.id)}
           onSelect={() => onSelectNode(sat.node.id)}
           onDrillDown={() => onDrillDown(sat.node.id)}
