@@ -3,7 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TREE, type Job } from "@/lib/tree";
-import { CameraWorld, type CameraState } from "./CameraWorld";
+import {
+  CameraWorld,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  type CameraState,
+} from "./CameraWorld";
 import { DeptFan } from "./DeptFan";
 import { MapChrome } from "./MapChrome";
 import { SkillCard } from "./SkillCard";
@@ -185,13 +190,13 @@ export function MapExperience() {
 
   const bumpZoom = useCallback(
     (factor: number) => {
-      if (mode === "sky") return; // sky zoom locked
       setCamera((c) => {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        const mx = w / 2;
-        const my = h / 2;
-        const next = Math.min(2.4, Math.max(0.18, c.scale * factor));
+        const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, c.scale * factor));
+        if (next === c.scale) return c;
+        // Sky spins around the hub at world 0,0 — keep it pinned in place.
+        if (mode === "sky") return { ...c, scale: next };
+        const mx = window.innerWidth / 2;
+        const my = window.innerHeight / 2;
         const wx = (mx - c.x) / c.scale;
         const wy = (my - c.y) / c.scale;
         return { scale: next, x: mx - wx * next, y: my - wy * next };
@@ -199,6 +204,31 @@ export function MapExperience() {
     },
     [mode],
   );
+
+  const resetView = useCallback(() => {
+    if (mode === "sky") fitSky();
+    else fitFan();
+  }, [fitFan, fitSky, mode]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest('input, textarea, [contenteditable="true"]')) return;
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        bumpZoom(1.12);
+      } else if (e.key === "-" || e.key === "_") {
+        e.preventDefault();
+        bumpZoom(0.9);
+      } else if (e.key === "0") {
+        e.preventDefault();
+        resetView();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [bumpZoom, resetView]);
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[var(--bg)]">
@@ -254,6 +284,7 @@ export function MapExperience() {
         zoomPct={zoomPct}
         onZoomIn={() => bumpZoom(1.12)}
         onZoomOut={() => bumpZoom(0.9)}
+        onZoomReset={resetView}
         onBack={mode === "fan" ? rise : undefined}
         onPrevDept={() => stepDept(-1)}
         onNextDept={() => stepDept(1)}

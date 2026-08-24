@@ -7,6 +7,7 @@ type MapChromeProps = {
   zoomPct: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
+  onZoomReset?: () => void;
   onBack?: () => void;
   onPrevDept?: () => void;
   onNextDept?: () => void;
@@ -21,6 +22,7 @@ export function MapChrome({
   zoomPct,
   onZoomIn,
   onZoomOut,
+  onZoomReset,
   onBack,
   onPrevDept,
   onNextDept,
@@ -136,9 +138,15 @@ export function MapChrome({
           >
             −
           </button>
-          <span className="w-10 text-center text-[11px] tabular-nums text-[var(--ink-2)]">
+          <button
+            type="button"
+            onClick={onZoomReset}
+            className="w-11 rounded-full text-center text-[11px] tabular-nums text-[var(--ink-2)] transition hover:text-[var(--ivory)]"
+            title="Reset zoom (0)"
+            aria-label="Reset zoom"
+          >
             {zoomPct}%
-          </span>
+          </button>
           <button
             type="button"
             onClick={onZoomIn}
@@ -148,12 +156,6 @@ export function MapChrome({
             +
           </button>
         </div>
-        <button
-          type="button"
-          className="rounded-full border border-[var(--line)] bg-[var(--glass)] px-3 py-2 text-[11px] font-semibold text-[var(--ivory-2)] backdrop-blur-md transition hover:border-[var(--copper)] hover:text-[var(--ivory)]"
-        >
-          Feedback
-        </button>
       </div>
     </>
   );
