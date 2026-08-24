@@ -16,9 +16,9 @@ const marcellus = Marcellus({
 });
 
 export const metadata: Metadata = {
-  title: "SkillTree · MAP",
+  title: "Company Map",
   description:
-    "Interactive constellation map of AI jobs across business departments.",
+    "Executive constellation map of customers, growth, market, delivery, product, organisation and capital.",
 };
 
 export default function RootLayout({

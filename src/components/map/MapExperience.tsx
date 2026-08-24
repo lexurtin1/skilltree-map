@@ -1,26 +1,29 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { TREE, type Job } from "@/lib/tree";
 import {
-  CameraWorld,
-  ZOOM_MAX,
-  ZOOM_MIN,
-  type CameraState,
-} from "./CameraWorld";
-import { DeptFan } from "./DeptFan";
-import { MapChrome } from "./MapChrome";
-import { SkillCard } from "./SkillCard";
+  DOMAINS,
+  DOMAIN_BY_ID,
+  EXECUTIVE_PULSE,
+  getGroup,
+  getNode,
+  hasConstellation,
+  trailFor,
+  type Crumb,
+  type DomainId,
+} from "@/lib/company-map";
+import { CameraWorld, ZOOM_MAX, ZOOM_MIN, type CameraState } from "./CameraWorld";
+import { DomainFan, domainFanExtent } from "./DomainFan";
+import { MapChrome, type MapMode } from "./MapChrome";
+import { CONSTELLATION_EXTENT, NodeConstellation } from "./NodeConstellation";
+import { NodeDetailPanel } from "./NodeDetailPanel";
 import { SkyWheel, W_STEP } from "./SkyWheel";
 import { Starfield } from "./Starfield";
 
-type Mode = "sky" | "fan";
-
-type Selection = {
-  job: Job;
-  fnName: string;
-} | null;
+type View =
+  | { kind: "overview" }
+  | { kind: "domain"; domainId: DomainId }
+  | { kind: "node"; nodeId: string };
 
 function normalizeAngle(a: number) {
   return ((a % 360) + 360) % 360;
@@ -35,23 +38,93 @@ function angleDelta(from: number, to: number) {
 }
 
 function focusedFromWheel(wheel: number) {
-  const n = TREE.length;
+  const n = DOMAINS.length;
   const idx = Math.round((180 - wheel) / W_STEP);
   return ((idx % n) + n) % n;
 }
 
-/** Angle that seats department `i` at the bottom (6 o'clock). */
-function angleForDept(i: number) {
+/** Angle that seats domain `i` at the bottom (6 o'clock). */
+function angleForDomain(i: number) {
   return 180 - i * W_STEP;
 }
 
+function domainIndexOf(id: DomainId) {
+  const i = DOMAINS.findIndex((d) => d.id === id);
+  return i < 0 ? 0 : i;
+}
+
+/* ── Camera framing, one pure function per view ──────────────────────────── */
+
+function skyCamera(): CameraState {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  // Wheel diameter includes the outer labels at R_LABEL ≈ 700 → ~1500 span.
+  const mx = w < 700 ? 30 : 120;
+  const my = w < 700 ? 130 : 150;
+  const scale = Math.min((w - mx) / 1780, (h - my) / 1780);
+  return {
+    x: w / 2,
+    y: h / 2 - h * 0.04,
+    scale: Math.max(0.18, Math.min(0.95, scale)),
+  };
+}
+
+function fanCamera(domainId: DomainId): CameraState {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const extent = domainFanExtent(domainId);
+  const scale = Math.min(w / (2.15 * extent), h / (1.35 * extent), 0.85);
+  return { x: w / 2, y: h * 0.84, scale: Math.max(ZOOM_MIN, scale) };
+}
+
+function constellationCamera(): CameraState {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const scale = Math.min(
+    w / (2.3 * CONSTELLATION_EXTENT),
+    h / (2.3 * CONSTELLATION_EXTENT),
+  );
+  return { x: w / 2, y: h / 2 + 10, scale: Math.max(ZOOM_MIN, Math.min(0.9, scale)) };
+}
+
+function cameraFor(view: View): CameraState {
+  if (view.kind === "overview") return skyCamera();
+  if (view.kind === "domain") return fanCamera(view.domainId);
+  return constellationCamera();
+}
+
+/**
+ * The view a node lives in: a satellite belongs to its parent's constellation,
+ * anything else belongs to its domain fan.
+ */
+function viewForNode(nodeId: string): View | null {
+  if (nodeId === EXECUTIVE_PULSE.id) return { kind: "overview" };
+  const node = getNode(nodeId);
+  if (!node) return null;
+  if (node.type === "domain") return { kind: "domain", domainId: node.domain };
+  const parentId = node.parentId;
+  if (parentId && !getGroup(parentId) && parentId !== EXECUTIVE_PULSE.id) {
+    return { kind: "node", nodeId: parentId };
+  }
+  return { kind: "domain", domainId: node.domain };
+}
+
+function sameView(a: View, b: View) {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "domain" && b.kind === "domain") return a.domainId === b.domainId;
+  if (a.kind === "node" && b.kind === "node") return a.nodeId === b.nodeId;
+  return true;
+}
+
 export function MapExperience() {
-  const router = useRouter();
-  const [mode, setMode] = useState<Mode>("sky");
+  const [stack, setStack] = useState<View[]>([{ kind: "overview" }]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [wheelAngle, setWheelAngle] = useState(180);
-  const [deptIndex, setDeptIndex] = useState(0);
-  const [selection, setSelection] = useState<Selection>(null);
-  const [camera, setCamera] = useState<CameraState>({ x: 0, y: 0, scale: 1 });
+  const [domainIndex, setDomainIndex] = useState(0);
+  const [camera, setCamera] = useState<CameraState>(skyCamera);
+
+  const view = stack[stack.length - 1];
+  const mode: MapMode = view.kind;
 
   const wheelRef = useRef(wheelAngle);
   const targetRef = useRef<number | null>(null);
@@ -61,43 +134,14 @@ export function MapExperience() {
     wheelRef.current = wheelAngle;
   }, [wheelAngle]);
 
-  const focusedIndex = mode === "sky" ? focusedFromWheel(wheelAngle) : deptIndex;
-  const dept = TREE[focusedIndex];
-
-  const fitSky = useCallback(() => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    // Wheel diameter includes outer labels at R_LABEL≈700 → ~1500 span + margin
-    const mx = w < 700 ? 30 : 120;
-    const my = w < 700 ? 130 : 150;
-    const scale = Math.min((w - mx) / 1780, (h - my) / 1780);
-    setCamera({
-      x: w / 2,
-      y: h / 2 - h * 0.04,
-      scale: Math.max(0.18, Math.min(0.95, scale)),
-    });
-  }, []);
-
-  const fitFan = useCallback(() => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const scale = Math.min(w / 1600, h / 1400, 0.85) * (w < 800 ? 0.7 : 1);
-    setCamera({
-      x: w / 2 + (w > 900 ? 80 : 0),
-      y: h * 0.72,
-      scale,
-    });
-  }, []);
+  const focusedIndex = view.kind === "overview" ? focusedFromWheel(wheelAngle) : domainIndex;
+  const focusedDomain = DOMAINS[focusedIndex];
 
   useEffect(() => {
-    fitSky();
-    const onResize = () => {
-      if (mode === "sky") fitSky();
-      else fitFan();
-    };
+    const onResize = () => setCamera(cameraFor(view));
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
-  }, [fitFan, fitSky, mode]);
+  }, [view]);
 
   const stopAnim = useCallback(() => {
     if (rafRef.current != null) {
@@ -110,7 +154,7 @@ export function MapExperience() {
   const animateTo = useCallback(
     (target: number, onDone?: () => void) => {
       stopAnim();
-      // Keep continuity with current angle (don't jump ±360)
+      // Keep continuity with the current angle (don't jump ±360).
       const current = wheelRef.current;
       const dest = current + angleDelta(current, target);
       targetRef.current = dest;
@@ -142,50 +186,122 @@ export function MapExperience() {
 
   const snapToNearest = useCallback(() => {
     const i = focusedFromWheel(wheelRef.current);
-    animateTo(angleForDept(i));
+    animateTo(angleForDomain(i));
   }, [animateTo]);
 
-  const dive = useCallback(
-    (i: number) => {
-      setDeptIndex(i);
-      setSelection(null);
-      animateTo(angleForDept(i), () => {
-        setMode("fan");
-        fitFan();
-      });
+  const push = useCallback((next: View) => {
+    setStack((s) => (sameView(s[s.length - 1], next) ? s : [...s, next]));
+    setCamera(cameraFor(next));
+  }, []);
+
+  /** Reset the trail to a domain — used by the breadcrumb. */
+  const goToDomain = useCallback((domainId: DomainId) => {
+    setDomainIndex(domainIndexOf(domainId));
+    setSelectedId(null);
+    setStack([{ kind: "overview" }, { kind: "domain", domainId }]);
+    setCamera(fanCamera(domainId));
+  }, []);
+
+  const goToOverview = useCallback((select: string | null = null) => {
+    setStack([{ kind: "overview" }]);
+    setSelectedId(select);
+    setCamera(skyCamera());
+  }, []);
+
+  const openDomain = useCallback(
+    (domainId: DomainId) => {
+      setDomainIndex(domainIndexOf(domainId));
+      setSelectedId(null);
+      animateTo(angleForDomain(domainIndexOf(domainId)), () =>
+        push({ kind: "domain", domainId }),
+      );
     },
-    [animateTo, fitFan],
+    [animateTo, push],
   );
 
-  const rise = useCallback(() => {
-    setSelection(null);
-    setMode("sky");
-    fitSky();
-    // Re-seat the current dept at the bottom
-    requestAnimationFrame(() => {
-      setWheelAngle(angleForDept(deptIndex));
-      wheelRef.current = angleForDept(deptIndex);
-    });
-  }, [deptIndex, fitSky]);
+  const openConstellation = useCallback(
+    (nodeId: string) => {
+      if (!hasConstellation(nodeId)) return;
+      push({ kind: "node", nodeId });
+      setSelectedId(nodeId);
+    },
+    [push],
+  );
 
-  const stepDept = useCallback(
-    (dir: number) => {
-      const n = TREE.length;
-      if (mode === "sky") {
-        const next = (focusedIndex + dir + n) % n;
-        animateTo(angleForDept(next));
-      } else {
-        const next = (deptIndex + dir + n) % n;
-        setDeptIndex(next);
-        setSelection(null);
-        fitFan();
+  /** Follow a relationship — into another domain if that is where it leads. */
+  const follow = useCallback(
+    (nodeId: string) => {
+      const target = viewForNode(nodeId);
+      if (!target) return;
+      if (target.kind === "overview") {
+        goToOverview(nodeId === EXECUTIVE_PULSE.id ? EXECUTIVE_PULSE.id : null);
+        return;
       }
+      if (target.kind === "domain") setDomainIndex(domainIndexOf(target.domainId));
+      if (!sameView(view, target)) push(target);
+      setSelectedId(nodeId);
     },
-    [animateTo, deptIndex, fitFan, focusedIndex, mode],
+    [goToOverview, push, view],
   );
 
-  const edgeLeft = TREE[(focusedIndex - 1 + TREE.length) % TREE.length]?.name;
-  const edgeRight = TREE[(focusedIndex + 1) % TREE.length]?.name;
+  const back = useCallback(() => {
+    setSelectedId(null);
+    setStack((s) => {
+      if (s.length <= 1) return s;
+      const next = s.slice(0, -1);
+      const top = next[next.length - 1];
+      setCamera(cameraFor(top));
+      if (top.kind === "domain") setDomainIndex(domainIndexOf(top.domainId));
+      return next;
+    });
+  }, []);
+
+  const onClickWorld = useCallback(() => {
+    if (selectedId) {
+      setSelectedId(null);
+      return;
+    }
+    back();
+  }, [back, selectedId]);
+
+  const stepDomain = useCallback(
+    (dir: number) => {
+      const n = DOMAINS.length;
+      if (view.kind === "overview") {
+        const next = (focusedIndex + dir + n) % n;
+        animateTo(angleForDomain(next));
+        return;
+      }
+      const next = (domainIndex + dir + n) % n;
+      const domainId = DOMAINS[next].id;
+      setDomainIndex(next);
+      setSelectedId(null);
+      setStack((s) => [...s.slice(0, -1), { kind: "domain", domainId }]);
+      setCamera(fanCamera(domainId));
+    },
+    [animateTo, domainIndex, focusedIndex, view.kind],
+  );
+
+  const onCrumb = useCallback(
+    (crumb: Crumb) => {
+      if (crumb.kind === "pulse") {
+        goToOverview();
+        return;
+      }
+      if (crumb.kind === "domain") {
+        goToDomain(crumb.id as DomainId);
+        return;
+      }
+      if (crumb.kind === "group") {
+        const group = getGroup(crumb.id);
+        if (group) goToDomain(group.domain);
+        return;
+      }
+      follow(crumb.id);
+    },
+    [follow, goToDomain, goToOverview],
+  );
+
   const zoomPct = useMemo(() => Math.round(camera.scale * 100), [camera.scale]);
 
   const bumpZoom = useCallback(
@@ -193,8 +309,8 @@ export function MapExperience() {
       setCamera((c) => {
         const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, c.scale * factor));
         if (next === c.scale) return c;
-        // Sky spins around the hub at world 0,0 — keep it pinned in place.
-        if (mode === "sky") return { ...c, scale: next };
+        // The sky spins around the hub at world 0,0 — keep it pinned in place.
+        if (view.kind === "overview") return { ...c, scale: next };
         const mx = window.innerWidth / 2;
         const my = window.innerHeight / 2;
         const wx = (mx - c.x) / c.scale;
@@ -202,13 +318,10 @@ export function MapExperience() {
         return { scale: next, x: mx - wx * next, y: my - wy * next };
       });
     },
-    [mode],
+    [view.kind],
   );
 
-  const resetView = useCallback(() => {
-    if (mode === "sky") fitSky();
-    else fitFan();
-  }, [fitFan, fitSky, mode]);
+  const resetView = useCallback(() => setCamera(cameraFor(view)), [view]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -224,11 +337,45 @@ export function MapExperience() {
       } else if (e.key === "0") {
         e.preventDefault();
         resetView();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        onClickWorld();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [bumpZoom, resetView]);
+  }, [bumpZoom, onClickWorld, resetView]);
+
+  const selectedNode = selectedId ? getNode(selectedId) : null;
+
+  const trail: Crumb[] = useMemo(() => {
+    if (view.kind === "overview") return [];
+    if (view.kind === "domain") return trailFor(view.domainId);
+    return trailFor(view.nodeId);
+  }, [view]);
+
+  const caption = useMemo(() => {
+    if (view.kind === "overview") {
+      return {
+        title: focusedDomain.label,
+        subtitle: focusedDomain.subtitle,
+        color: undefined as string | undefined,
+      };
+    }
+    if (view.kind === "domain") {
+      const domain = DOMAIN_BY_ID[view.domainId];
+      return { title: domain.label, subtitle: domain.subtitle, color: domain.color };
+    }
+    const node = getNode(view.nodeId);
+    return {
+      title: node?.label ?? "",
+      subtitle: node?.subtitle,
+      color: node ? DOMAIN_BY_ID[node.domain].color : undefined,
+    };
+  }, [focusedDomain, view]);
+
+  const edgeLeft = DOMAINS[(domainIndex - 1 + DOMAINS.length) % DOMAINS.length]?.label;
+  const edgeRight = DOMAINS[(domainIndex + 1) % DOMAINS.length]?.label;
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[var(--bg)]">
@@ -237,7 +384,7 @@ export function MapExperience() {
       <CameraWorld
         camera={camera}
         onCameraChange={setCamera}
-        rotateMode={mode === "sky"}
+        rotateMode={view.kind === "overview"}
         onRotate={(d) => {
           stopAnim();
           setWheelAngle((a) => {
@@ -246,50 +393,66 @@ export function MapExperience() {
             return next;
           });
         }}
-        onDragEnd={mode === "sky" ? snapToNearest : undefined}
-        onClickWorld={() => {
-          if (mode === "fan") setSelection(null);
-        }}
+        onDragEnd={view.kind === "overview" ? snapToNearest : undefined}
+        onClickWorld={onClickWorld}
       >
-        {mode === "sky" ? (
+        {view.kind === "overview" && (
           <SkyWheel
             wheelAngle={wheelAngle}
             focusedIndex={focusedIndex}
-            onDive={dive}
-            onHubClick={() => router.push("/chat")}
+            selectedId={selectedId}
+            onOpenDomain={openDomain}
+            onSelectNode={setSelectedId}
+            onSelectPulse={() => setSelectedId(EXECUTIVE_PULSE.id)}
           />
-        ) : (
-          <DeptFan
-            dept={TREE[deptIndex]}
-            selectedJob={selection?.job.name ?? null}
-            onSelectRoot={() => setSelection(null)}
-            onSelectJob={(job, fnName) => setSelection({ job, fnName })}
+        )}
+
+        {view.kind === "domain" && (
+          <DomainFan
+            domainId={view.domainId}
+            selectedId={selectedId}
+            onSelectNode={setSelectedId}
+            onDrillDown={openConstellation}
+            onSelectDomain={() => setSelectedId(view.domainId)}
+          />
+        )}
+
+        {view.kind === "node" && (
+          <NodeConstellation
+            nodeId={view.nodeId}
+            selectedId={selectedId}
+            onSelectNode={setSelectedId}
+            onDrillDown={openConstellation}
+            onFollow={follow}
           />
         )}
       </CameraWorld>
 
-      {selection && mode === "fan" && (
-        <SkillCard
-          dept={TREE[deptIndex]}
-          fnName={selection.fnName}
-          job={selection.job}
-          onClose={() => setSelection(null)}
+      {selectedNode && (
+        <NodeDetailPanel
+          nodeId={selectedNode.id}
+          onClose={() => setSelectedId(null)}
+          onFollow={follow}
+          onDrillDown={openConstellation}
         />
       )}
 
       <MapChrome
         mode={mode}
-        deptName={dept.name}
-        deptSub={dept.sub}
+        trail={trail}
+        captionTitle={caption.title}
+        captionSubtitle={caption.subtitle}
+        captionColor={caption.color}
         zoomPct={zoomPct}
         onZoomIn={() => bumpZoom(1.12)}
         onZoomOut={() => bumpZoom(0.9)}
         onZoomReset={resetView}
-        onBack={mode === "fan" ? rise : undefined}
-        onPrevDept={() => stepDept(-1)}
-        onNextDept={() => stepDept(1)}
-        edgeLeft={mode === "fan" ? edgeLeft : undefined}
-        edgeRight={mode === "fan" ? edgeRight : undefined}
+        onBack={stack.length > 1 ? back : undefined}
+        onCrumb={onCrumb}
+        onPrevDomain={() => stepDomain(-1)}
+        onNextDomain={() => stepDomain(1)}
+        edgeLeft={view.kind === "domain" ? edgeLeft : undefined}
+        edgeRight={view.kind === "domain" ? edgeRight : undefined}
       />
     </div>
   );

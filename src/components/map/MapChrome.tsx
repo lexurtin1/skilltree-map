@@ -1,69 +1,120 @@
 "use client";
 
+import type { Crumb, DomainId } from "@/lib/company-map";
+import { DOMAIN_BY_ID } from "@/lib/company-map";
+
+export type MapMode = "overview" | "domain" | "node";
+
 type MapChromeProps = {
-  mode: "sky" | "fan";
-  deptName?: string;
-  deptSub?: string;
+  mode: MapMode;
+  /** Ancestor trail for the current view, root first. */
+  trail: Crumb[];
+  captionTitle: string;
+  captionSubtitle?: string;
+  captionColor?: string;
   zoomPct: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onZoomReset?: () => void;
   onBack?: () => void;
-  onPrevDept?: () => void;
-  onNextDept?: () => void;
+  onCrumb?: (crumb: Crumb) => void;
+  onPrevDomain?: () => void;
+  onNextDomain?: () => void;
   edgeLeft?: string;
   edgeRight?: string;
 };
 
 export function MapChrome({
   mode,
-  deptName,
-  deptSub,
+  trail,
+  captionTitle,
+  captionSubtitle,
+  captionColor,
   zoomPct,
   onZoomIn,
   onZoomOut,
   onZoomReset,
   onBack,
-  onPrevDept,
-  onNextDept,
+  onCrumb,
+  onPrevDomain,
+  onNextDomain,
   edgeLeft,
   edgeRight,
 }: MapChromeProps) {
   return (
     <>
-      {mode === "fan" && onBack && (
-        <button
-          type="button"
-          data-ui
-          onClick={onBack}
-          className="absolute left-4 top-[4.5rem] z-30 flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--glass)] px-3 py-2 text-[11px] font-bold tracking-[0.14em] text-[var(--ivory-2)] backdrop-blur-md transition hover:border-[var(--copper)] hover:text-[var(--ivory)]"
-        >
-          ← ALL DEPARTMENTS
-        </button>
+      {mode !== "overview" && (
+        <div className="absolute left-4 top-[4.5rem] z-30 flex max-w-[min(560px,calc(100vw-2rem))] flex-wrap items-center gap-2">
+          {onBack && (
+            <button
+              type="button"
+              data-ui
+              onClick={onBack}
+              className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--glass)] px-3 py-2 text-[11px] font-bold tracking-[0.14em] text-[var(--ivory-2)] backdrop-blur-md transition hover:border-[var(--copper)] hover:text-[var(--ivory)]"
+            >
+              ← BACK
+            </button>
+          )}
+          <nav
+            data-ui
+            className="flex flex-wrap items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--glass)] px-3 py-2 backdrop-blur-md"
+            aria-label="Map trail"
+          >
+            {trail.map((crumb, i) => {
+              const last = i === trail.length - 1;
+              const color =
+                crumb.kind === "domain"
+                  ? DOMAIN_BY_ID[crumb.id as DomainId]?.color
+                  : undefined;
+              return (
+                <span key={crumb.id} className="flex items-center gap-1">
+                  {i > 0 && <span className="text-[10px] text-[var(--ink-3)]">›</span>}
+                  <button
+                    type="button"
+                    disabled={last}
+                    onClick={() => onCrumb?.(crumb)}
+                    className={`max-w-[180px] truncate text-[11px] tracking-[0.06em] transition ${
+                      last
+                        ? "cursor-default text-[var(--ivory)]"
+                        : "text-[var(--ink-2)] hover:text-[var(--ivory)]"
+                    }`}
+                    style={color && !last ? { color } : undefined}
+                  >
+                    {crumb.label}
+                  </button>
+                </span>
+              );
+            })}
+          </nav>
+        </div>
       )}
 
-      {mode === "fan" && edgeLeft && onPrevDept && (
+      {mode !== "overview" && edgeLeft && onPrevDomain && (
         <button
           type="button"
           data-ui
-          onClick={onPrevDept}
+          onClick={onPrevDomain}
           className="absolute left-3 top-1/2 z-30 -translate-y-1/2 text-left text-[var(--ivory-2)] transition hover:text-[var(--ivory)]"
         >
           <div className="mb-1 text-[18px] opacity-70">‹</div>
           <div
             className="max-w-[72px] text-[11px] tracking-[0.16em]"
-            style={{ fontFamily: "var(--font-serif), serif", writingMode: "vertical-rl", transform: "rotate(180deg)" }}
+            style={{
+              fontFamily: "var(--font-serif), serif",
+              writingMode: "vertical-rl",
+              transform: "rotate(180deg)",
+            }}
           >
             {edgeLeft.toUpperCase()}
           </div>
         </button>
       )}
 
-      {mode === "fan" && edgeRight && onNextDept && (
+      {mode !== "overview" && edgeRight && onNextDomain && (
         <button
           type="button"
           data-ui
-          onClick={onNextDept}
+          onClick={onNextDomain}
           className="absolute right-3 top-1/2 z-30 -translate-y-1/2 text-right text-[var(--ivory-2)] transition hover:text-[var(--ivory)]"
         >
           <div className="mb-1 text-[18px] opacity-70">›</div>
@@ -76,59 +127,42 @@ export function MapChrome({
         </button>
       )}
 
-      {/* Caption sits in the clear band under the orbit — not on top of nodes */}
-      {mode === "sky" && (
-        <div className="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 text-center sm:bottom-6">
-          <p
-            className="text-[28px] tracking-[0.2em] text-[var(--ivory)] sm:text-[34px]"
-            style={{ fontFamily: "var(--font-serif), serif" }}
-          >
-            {deptName?.toUpperCase() ?? "SALES"}
-          </p>
-          <p className="mt-1 text-[11px] text-[var(--ink-2)]">
-            {deptSub ?? "targeting · outreach · sequencing"}
-          </p>
+      {/* Caption sits in the clear band under the graph — never on top of nodes */}
+      <div className="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 px-4 text-center sm:bottom-6">
+        <p
+          className="text-[26px] tracking-[0.18em] sm:text-[32px]"
+          style={{ fontFamily: "var(--font-serif), serif", color: captionColor ?? "var(--ivory)" }}
+        >
+          {captionTitle.toUpperCase()}
+        </p>
+        {captionSubtitle && (
+          <p className="mt-1 text-[11px] text-[var(--ink-2)]">{captionSubtitle}</p>
+        )}
+        {mode === "overview" && (
           <div className="pointer-events-auto mt-2 flex items-center justify-center gap-8 text-[var(--ivory-2)]">
             <button
               type="button"
               data-ui
-              onClick={onPrevDept}
+              onClick={onPrevDomain}
               className="text-xl leading-none transition hover:text-[var(--ivory)]"
-              aria-label="Previous department"
+              aria-label="Previous domain"
             >
               ‹
             </button>
             <button
               type="button"
               data-ui
-              onClick={onNextDept}
+              onClick={onNextDomain}
               className="text-xl leading-none transition hover:text-[var(--ivory)]"
-              aria-label="Next department"
+              aria-label="Next domain"
             >
               ›
             </button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {mode === "fan" && deptName && (
-        <div className="pointer-events-none absolute bottom-6 left-1/2 z-30 -translate-x-1/2 text-center">
-          <p
-            className="text-[28px] tracking-[0.16em] text-[var(--ivory)] sm:text-[34px]"
-            style={{ fontFamily: "var(--font-serif), serif" }}
-          >
-            {deptName.toUpperCase()}
-          </p>
-          {deptSub && (
-            <p className="mt-1 text-[11px] text-[var(--ink-2)]">{deptSub}</p>
-          )}
-        </div>
-      )}
-
-      <div
-        data-ui
-        className="absolute bottom-4 right-4 z-30 flex items-center gap-2"
-      >
+      <div data-ui className="absolute bottom-4 right-4 z-30 flex items-center gap-2">
         <div className="flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--glass)] px-2 py-1.5 backdrop-blur-md">
           <button
             type="button"

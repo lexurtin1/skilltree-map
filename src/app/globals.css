@@ -245,3 +245,80 @@ body {
     animation: none !important;
   }
 }
+
+/* ── Company Map node semantics ─────────────────────────────────────────────
+   Motion is reserved for genuinely urgent or emerging signals. Everything
+   else on the map stays still. `--halo` is set per node from its status. */
+
+.cm-signal::after,
+.cm-glow::after,
+.cm-urgent::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.cm-signal::after {
+  border: 1px solid color-mix(in srgb, var(--halo, #6c7080) 55%, transparent);
+  animation: cmSignal 3.6s ease-out infinite;
+}
+
+.cm-glow::after {
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--halo, #4fd1a5) 40%, transparent);
+  animation: cmGlow 4.4s ease-in-out infinite alternate;
+}
+
+.cm-urgent::after {
+  border: 1.5px solid color-mix(in srgb, var(--halo, #e04b4b) 75%, transparent);
+  animation: cmUrgent 2.4s ease-out infinite;
+}
+
+@keyframes cmSignal {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.86);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
+}
+
+@keyframes cmGlow {
+  0% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes cmUrgent {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.9);
+  }
+  75% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cm-signal::after,
+  .cm-glow::after,
+  .cm-urgent::after {
+    animation: none !important;
+    opacity: 0.55;
+  }
+}

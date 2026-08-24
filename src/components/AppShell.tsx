@@ -54,7 +54,7 @@ function TopBar() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={pathname === "/" ? "Search jobs" : "Search panels"}
+            placeholder={pathname === "/" ? "Search the map" : "Search panels"}
             className="w-full rounded-full border border-[var(--line)] bg-[var(--glass)] py-2 pl-9 pr-3 text-[13px] text-[var(--ivory)] outline-none backdrop-blur-md placeholder:text-[var(--ink-3)] focus:border-[var(--copper)]"
           />
         </label>

@@ -1,44 +1,55 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { TREE, type AutonomyLevel, type Department } from "@/lib/tree";
+import { useMemo, useRef, useState } from "react";
+import {
+  DOMAINS,
+  EXECUTIVE_PULSE,
+  groupsForDomain,
+  nodesForGroup,
+  STATUS,
+  surfacedCrossDomainEdges,
+  type CompanyMapNode,
+  type DomainId,
+  type DomainMeta,
+} from "@/lib/company-map";
+import { edgeColor, edgeOpacity, edgeWidth, nodeSize } from "@/lib/company-map/visuals";
+import { MapNode } from "./MapNode";
 
-const N = TREE.length;
-/** Equal wedge for every department. */
+const N = DOMAINS.length;
+/** Equal wedge for every domain. */
 export const W_STEP = 360 / N;
 
 /**
- * Exact SkillTree sky mini-tree constants (from map.html).
- * Roots sit on R_ROOT; branches fan outward in polar coords with zigzag.
+ * Sky geometry, carried over from the original constellation layout so the
+ * silhouette and motion of the map are unchanged.
  */
 const R_ROOT = 310;
-/** Outside foliage tips (root + R_MAX ≈ 624) so names stay clear of nodes. */
+/** Outside the foliage tips so domain names stay clear of nodes. */
 const R_LABEL = 700;
 const SPAN = (140 * Math.PI) / 180;
 const R0 = 80;
 const RB = 146;
-const R_STEP = 56;
-const R_MAX = RB + 3 * R_STEP; // 314 — uniform outer silhouette
+const R_MAX = 314;
+/** Hot children shown per branch group at the top level — keeps the sky quiet. */
+const PER_ARM = 3;
 
 type SkyWheelProps = {
   wheelAngle: number;
   focusedIndex: number;
-  onDive: (deptIndex: number) => void;
-  onHubClick: () => void;
+  selectedId: string | null;
+  onOpenDomain: (domainId: DomainId) => void;
+  onSelectNode: (nodeId: string) => void;
+  onSelectPulse: () => void;
 };
 
-type HoverTarget = {
-  dept: number;
-  arm: number | null;
-  job: number | null;
-};
+type HoverTarget = { domain: number; arm: number | null };
 
 function polar(r: number, deg: number) {
   const a = (deg * Math.PI) / 180;
   return { x: r * Math.sin(a), y: -r * Math.cos(a) };
 }
 
-/** Local polar: a=0 points up (−Y); after rotate(deptDeg) that is radially outward. */
+/** Local polar: a=0 points up (−Y); after rotate(domainDeg) that is outward. */
 function P(r: number, a: number): [number, number] {
   return [r * Math.sin(a), -r * Math.cos(a)];
 }
@@ -53,100 +64,97 @@ function mulberry32(seed: number) {
   };
 }
 
-type BranchSeg = {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  op: number;
-};
+type Seg = { x1: number; y1: number; x2: number; y2: number; op: number };
 
-type JobNode = {
-  x: number;
-  y: number;
-  name: string;
-  level: AutonomyLevel;
-};
+type ArmNode = { node: CompanyMapNode; x: number; y: number };
 
 type Arm = {
-  fnIndex: number;
-  fnName: string;
+  groupId: string;
+  groupLabel: string;
   aC: number;
-  stump: BranchSeg;
-  fn: { x: number; y: number };
-  jobSegs: BranchSeg[];
-  jobs: JobNode[];
-};
-
-type MiniShape = {
-  arms: Arm[];
+  stump: Seg;
+  hub: { x: number; y: number };
+  segs: Seg[];
+  nodes: ArmNode[];
 };
 
 /**
- * Port of SkillTree map.html sky mini builder, kept as per-arm structures
- * so hover can light one branch and label its nodes.
+ * One domain's mini constellation. Arms are the branch groups; each arm
+ * surfaces its most material children, hot ones first.
  */
-function buildMiniTree(dept: Department): MiniShape {
+function buildMiniTree(domain: DomainMeta): Arm[] {
+  const groups = groupsForDomain(domain.id);
   const arms: Arm[] = [];
-  const nf = dept.functions.length;
+  const span = SPAN / Math.max(1, groups.length);
   let cursor = -SPAN / 2;
 
-  const litOf = (level: AutonomyLevel) =>
-    level === "autonomous" ? 0.42 : level === "assisted" ? 0.26 : 0.12;
-
-  dept.functions.forEach((fn, fi) => {
-    const jobs = fn.jobs.length;
-    const span = SPAN / nf;
+  for (const group of groups) {
     const aC = cursor + span / 2;
     const [ex, ey] = P(R0, aC);
     const [sx, sy] = P(36, aC);
 
-    const jobSegs: BranchSeg[] = [];
-    const jobNodes: JobNode[] = [];
+    const picked = [...nodesForGroup(group.id)]
+      .sort(
+        (a, b) =>
+          Number(Boolean(b.hot)) - Number(Boolean(a.hot)) ||
+          b.importance - a.importance,
+      )
+      .slice(0, PER_ARM);
+
+    const segs: Seg[] = [];
+    const nodes: ArmNode[] = [];
     let px = ex;
     let py = ey;
-    fn.jobs.forEach((job, ji) => {
-      const zig =
-        (ji % 2 ? 1 : -1) *
-        Math.min(span * 0.22, 0.075) *
-        (ji ? 1 : 0.45);
-      const r = RB + (jobs > 1 ? (ji * (R_MAX - RB)) / (jobs - 1) : 0);
-      const [jx, jy] = P(r, aC + zig);
-      jobSegs.push({
+
+    picked.forEach((node, i) => {
+      const zig = (i % 2 ? 1 : -1) * Math.min(span * 0.22, 0.075) * (i ? 1 : 0.45);
+      const r = RB + (picked.length > 1 ? (i * (R_MAX - RB)) / (picked.length - 1) : 0);
+      const [nx, ny] = P(r, aC + zig);
+      segs.push({
         x1: px,
         y1: py,
-        x2: jx,
-        y2: jy,
-        op: litOf(job.level),
+        x2: nx,
+        y2: ny,
+        op: node.hot ? 0.5 : 0.16 + node.importance * 0.04,
       });
-      jobNodes.push({ x: jx, y: jy, name: job.name, level: job.level });
-      px = jx;
-      py = jy;
+      nodes.push({ node, x: nx, y: ny });
+      px = nx;
+      py = ny;
     });
 
     arms.push({
-      fnIndex: fi,
-      fnName: fn.name,
+      groupId: group.id,
+      groupLabel: group.label,
       aC,
       stump: { x1: sx, y1: sy, x2: ex, y2: ey, op: 0.2 },
-      fn: { x: ex, y: ey },
-      jobSegs,
-      jobs: jobNodes,
+      hub: { x: ex, y: ey },
+      segs,
+      nodes,
     });
 
     cursor += span;
-  });
+  }
 
-  return { arms };
+  return arms;
 }
 
-const TREE_SHAPES = TREE.map((d) => buildMiniTree(d));
+const SHAPES: Arm[][] = DOMAINS.map(buildMiniTree);
+
+/** Rotate a local mini-tree point into wheel-world coordinates. */
+function toWorld(deg: number, rootX: number, rootY: number, x: number, y: number) {
+  const a = (deg * Math.PI) / 180;
+  const c = Math.cos(a);
+  const s = Math.sin(a);
+  return { x: rootX + x * c - y * s, y: rootY + x * s + y * c };
+}
 
 export function SkyWheel({
   wheelAngle,
   focusedIndex,
-  onDive,
-  onHubClick,
+  selectedId,
+  onOpenDomain,
+  onSelectNode,
+  onSelectPulse,
 }: SkyWheelProps) {
   const [hover, setHover] = useState<HoverTarget | null>(null);
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -172,8 +180,26 @@ export function SkyWheel({
     }, 80);
   };
 
+  /** World position of every surfaced node, recomputed as the wheel turns. */
+  const positions = useMemo(() => {
+    const map = new Map<string, { x: number; y: number }>();
+    DOMAINS.forEach((domain, i) => {
+      const deg = wheelAngle + i * W_STEP;
+      const root = polar(R_ROOT, deg);
+      for (const arm of SHAPES[i]) {
+        for (const item of arm.nodes) {
+          map.set(item.node.id, toWorld(deg, root.x, root.y, item.x, item.y));
+        }
+      }
+    });
+    return map;
+  }, [wheelAngle]);
+
+  const crossEdges = useMemo(() => surfacedCrossDomainEdges(), []);
+
   return (
     <div className="relative" style={{ width: 0, height: 0 }}>
+      {/* Orbit guides */}
       <svg
         width={1400}
         height={1400}
@@ -195,7 +221,7 @@ export function SkyWheel({
           strokeWidth={1}
           strokeDasharray="1 12"
         />
-        {TREE.map((_, i) => {
+        {DOMAINS.map((_, i) => {
           const a = (i * W_STEP * Math.PI) / 180;
           const x0 = 115 * Math.sin(a);
           const y0 = -115 * Math.cos(a);
@@ -215,12 +241,60 @@ export function SkyWheel({
         })}
       </svg>
 
+      {/* Cross-domain relationships — the connections worth seeing unprompted */}
+      <svg
+        width={2000}
+        height={2000}
+        viewBox="-1000 -1000 2000 2000"
+        className="pointer-events-none absolute overflow-visible"
+        style={{
+          left: -1000,
+          top: -1000,
+          opacity: anyHover ? 0.25 : 1,
+          transition: "opacity 280ms ease",
+        }}
+      >
+        {crossEdges.map((edge) => {
+          const a = positions.get(edge.source);
+          const b = positions.get(edge.target);
+          if (!a || !b) return null;
+          const mx = (a.x + b.x) / 2;
+          const my = (a.y + b.y) / 2;
+          const len = Math.hypot(mx, my);
+          let cx: number;
+          let cy: number;
+          if (len < 80) {
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const l = Math.hypot(dx, dy) || 1;
+            cx = (-dy / l) * 300;
+            cy = (dx / l) * 300;
+          } else {
+            cx = mx * 1.4;
+            cy = my * 1.4;
+          }
+          return (
+            <path
+              key={edge.id}
+              d={`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`}
+              fill="none"
+              stroke={edgeColor(edge)}
+              strokeOpacity={edgeOpacity(edge) * 0.55}
+              strokeWidth={edgeWidth(edge, 0.8)}
+              strokeLinecap="round"
+              strokeDasharray={edge.type === "blocks" ? "6 7" : undefined}
+            />
+          );
+        })}
+      </svg>
+
+      {/* Executive Pulse — the centre of the map */}
       <button
         type="button"
         data-node
         onClick={(e) => {
           e.stopPropagation();
-          onHubClick();
+          onSelectPulse();
         }}
         className="hub-brain absolute flex h-[360px] w-[360px] -translate-x-1/2 -translate-y-1/2 items-center justify-center transition hover:scale-[1.04]"
         style={{
@@ -229,15 +303,10 @@ export function SkyWheel({
           opacity: anyHover ? 0.32 : 1,
           transition: "opacity 280ms ease",
         }}
-        title="Open AI chat"
-        aria-label="Open AI chat"
+        title="Executive Pulse — priorities, decisions, change"
+        aria-label="Executive Pulse"
       >
-        <svg
-          viewBox="-180 -180 360 360"
-          width={360}
-          height={360}
-          className="overflow-visible"
-        >
+        <svg viewBox="-180 -180 360 360" width={360} height={360} className="overflow-visible">
           <defs>
             <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="rgba(233,228,214,0.22)" />
@@ -245,14 +314,7 @@ export function SkyWheel({
               <stop offset="100%" stopColor="rgba(197,139,95,0)" />
             </radialGradient>
           </defs>
-          <circle
-            className="hub-haze"
-            cx={0}
-            cy={0}
-            r={150}
-            fill="url(#hubGlow)"
-            opacity={0.55}
-          />
+          <circle className="hub-haze" cx={0} cy={0} r={150} fill="url(#hubGlow)" opacity={0.55} />
           {HUB_DOTS.map((d, k) => (
             <g
               key={k}
@@ -286,28 +348,34 @@ export function SkyWheel({
             cx={-8}
             cy={7}
             r={2}
-            fill={TREE[0].color}
+            fill={STATUS[EXECUTIVE_PULSE.status].color}
           />
         </svg>
-        <span className="pointer-events-none absolute top-[188px] text-[11px] font-bold tracking-[0.32em] text-[var(--ivory-2)]">
-          CHAT
+        <span className="pointer-events-none absolute top-[182px] text-center">
+          <span
+            className={`block text-[12px] font-bold tracking-[0.3em] ${
+              selectedId === EXECUTIVE_PULSE.id ? "text-[var(--ivory)]" : "text-[var(--ivory-2)]"
+            }`}
+          >
+            EXECUTIVE PULSE
+          </span>
+          <span className="mt-1 block text-[10.5px] tracking-[0.04em] text-[var(--ink-2)]">
+            {EXECUTIVE_PULSE.subtitle}
+          </span>
         </span>
       </button>
 
-      {TREE.map((dept, i) => {
+      {DOMAINS.map((domain, i) => {
         const deg = wheelAngle + i * W_STEP;
         const root = polar(R_ROOT, deg);
         const label = polar(R_LABEL, deg);
         const focused = i === focusedIndex;
-        const deptHover = hover?.dept === i;
-        const dimmed = hover != null && hover.dept !== i;
-        const opacity = dimmed ? 0.14 : 1;
-        const shape = TREE_SHAPES[i];
-        const activeArm = deptHover ? hover!.arm : null;
-        const activeJob = deptHover ? hover!.job : null;
+        const domainHover = hover?.domain === i;
+        const dimmed = hover != null && hover.domain !== i;
+        const arms = SHAPES[i];
 
         return (
-          <div key={dept.name} className="contents">
+          <div key={domain.id} className="contents">
             <div
               data-node
               className="absolute"
@@ -316,58 +384,49 @@ export function SkyWheel({
                 top: root.y,
                 width: 0,
                 height: 0,
-                opacity,
+                opacity: dimmed ? 0.14 : 1,
                 filter: dimmed ? "grayscale(1) brightness(0.5)" : "none",
-                transform: `scale(${deptHover ? 1.04 : 1})`,
-                transition:
-                  "opacity 220ms ease, filter 220ms ease, transform 220ms ease",
-                zIndex: deptHover ? 8 : dimmed ? 1 : 4,
+                transform: `scale(${domainHover ? 1.04 : 1})`,
+                transition: "opacity 220ms ease, filter 220ms ease, transform 220ms ease",
+                zIndex: domainHover ? 8 : dimmed ? 1 : 4,
               }}
-              onPointerEnter={() => enter({ dept: i, arm: null, job: null })}
+              onPointerEnter={() => enter({ domain: i, arm: null })}
               onPointerLeave={leave}
             >
-              <div
-                className="absolute left-0 top-0"
-                style={{ transform: `rotate(${deg}deg)` }}
-              >
+              <div className="absolute left-0 top-0" style={{ transform: `rotate(${deg}deg)` }}>
                 <MiniTree
-                  color={dept.color}
+                  domain={domain}
                   deg={deg}
-                  shape={shape}
-                  activeArm={activeArm}
-                  activeJob={activeJob}
-                  deptLit={!dimmed}
-                  onArmEnter={(arm, job) => enter({ dept: i, arm, job })}
-                  onRootEnter={() => enter({ dept: i, arm: null, job: null })}
-                  onDive={() => onDive(i)}
+                  arms={arms}
+                  activeArm={domainHover ? hover!.arm : null}
+                  lit={!dimmed}
+                  selectedId={selectedId}
+                  onArmEnter={(arm) => enter({ domain: i, arm })}
+                  onRootEnter={() => enter({ domain: i, arm: null })}
+                  onOpenDomain={() => onOpenDomain(domain.id)}
+                  onSelectNode={onSelectNode}
                 />
               </div>
             </div>
 
-            {/* Department name — outside the foliage, always readable */}
+            {/* Domain name — outside the foliage, always readable */}
             <button
               type="button"
               data-node
-              onPointerEnter={() => enter({ dept: i, arm: null, job: null })}
+              onPointerEnter={() => enter({ domain: i, arm: null })}
               onPointerLeave={leave}
               onClick={(e) => {
                 e.stopPropagation();
-                onDive(i);
+                onOpenDomain(domain.id);
               }}
               className="absolute -translate-x-1/2 -translate-y-1/2 text-center"
               style={{
                 left: label.x,
                 top: label.y,
-                opacity: anyHover
-                  ? deptHover
-                    ? 1
-                    : 0.16
-                  : focused
-                    ? 0.35
-                    : 1,
+                opacity: anyHover ? (domainHover ? 1 : 0.16) : focused ? 0.35 : 1,
                 pointerEvents: "auto",
                 transition: "opacity 220ms ease",
-                zIndex: deptHover ? 9 : 3,
+                zIndex: domainHover ? 9 : 3,
                 filter: dimmed ? "grayscale(1) brightness(0.45)" : "none",
               }}
             >
@@ -375,21 +434,21 @@ export function SkyWheel({
                 className="whitespace-nowrap text-[17px] font-medium tracking-[0.22em] text-[var(--ivory)]"
                 style={{
                   fontFamily: "var(--font-serif), serif",
-                  color: deptHover ? dept.color : undefined,
+                  color: domainHover ? domain.color : undefined,
                   textShadow: "0 1px 12px rgba(0,0,0,0.65)",
                   transition: "color 180ms ease",
                 }}
               >
-                {dept.name.toUpperCase()}
+                {domain.label.toUpperCase()}
               </div>
               <div
                 className="mt-1 whitespace-nowrap text-[11px] tracking-[0.04em]"
                 style={{
-                  color: deptHover ? "var(--ivory-2)" : "var(--ink-2)",
+                  color: domainHover ? "var(--ivory-2)" : "var(--ink-2)",
                   textShadow: "0 1px 8px rgba(0,0,0,0.55)",
                 }}
               >
-                {dept.sub}
+                {domain.subtitle}
               </div>
             </button>
           </div>
@@ -400,25 +459,27 @@ export function SkyWheel({
 }
 
 function MiniTree({
-  color,
+  domain,
   deg,
-  shape,
+  arms,
   activeArm,
-  activeJob,
-  deptLit,
+  lit,
+  selectedId,
   onArmEnter,
   onRootEnter,
-  onDive,
+  onOpenDomain,
+  onSelectNode,
 }: {
-  color: string;
+  domain: DomainMeta;
   deg: number;
-  shape: MiniShape;
+  arms: Arm[];
   activeArm: number | null;
-  activeJob: number | null;
-  deptLit: boolean;
-  onArmEnter: (arm: number, job: number | null) => void;
+  lit: boolean;
+  selectedId: string | null;
+  onArmEnter: (arm: number) => void;
   onRootEnter: () => void;
-  onDive: () => void;
+  onOpenDomain: () => void;
+  onSelectNode: (nodeId: string) => void;
 }) {
   const lineBase = "rgb(var(--lnrgb))";
   const armFocus = activeArm != null;
@@ -432,75 +493,60 @@ function MiniTree({
         className="pointer-events-none overflow-visible"
         style={{ position: "absolute", left: -380, top: -420 }}
       >
-        {shape.arms.map((arm, ai) => {
+        {arms.map((arm, ai) => {
           const isArm = activeArm === ai;
           const dimArm = armFocus && !isArm;
-          const stumpOp = dimArm
-            ? 0.06
-            : isArm
-              ? 0.55
-              : deptLit
-                ? arm.stump.op
-                : arm.stump.op * 0.45;
+          const stumpOp = dimArm ? 0.06 : isArm ? 0.55 : lit ? arm.stump.op : arm.stump.op * 0.45;
 
           return (
-            <g key={ai}>
+            <g key={arm.groupId}>
               <path
                 d={`M ${arm.stump.x1.toFixed(1)} ${arm.stump.y1.toFixed(1)} L ${arm.stump.x2.toFixed(1)} ${arm.stump.y2.toFixed(1)}`}
-                stroke={isArm ? color : lineBase}
+                stroke={isArm ? domain.color : lineBase}
                 strokeOpacity={stumpOp}
                 strokeWidth={isArm ? 2.6 : 2}
                 fill="none"
                 strokeLinecap="round"
               />
-              {arm.jobSegs.map((b, bi) => {
-                const isJob = isArm && activeJob === bi;
-                const op = dimArm
-                  ? 0.05
-                  : isArm
-                    ? isJob
-                      ? 0.95
-                      : 0.7
-                    : deptLit
-                      ? b.op
-                      : b.op * 0.4;
+              {arm.segs.map((b, bi) => {
+                const op = dimArm ? 0.05 : isArm ? 0.7 : lit ? b.op : b.op * 0.4;
                 return (
                   <path
                     key={bi}
                     d={`M ${b.x1.toFixed(1)} ${b.y1.toFixed(1)} L ${b.x2.toFixed(1)} ${b.y2.toFixed(1)}`}
-                    stroke={isArm ? color : lineBase}
+                    stroke={isArm ? domain.color : lineBase}
                     strokeOpacity={op}
-                    strokeWidth={isJob ? 2.8 : isArm ? 2.3 : 2}
+                    strokeWidth={isArm ? 2.3 : 2}
                     fill="none"
                     strokeLinecap="round"
                   />
                 );
               })}
               <circle
-                cx={arm.fn.x}
-                cy={arm.fn.y}
+                cx={arm.hub.x}
+                cy={arm.hub.y}
                 r={isArm ? 5.5 : 4}
-                fill={color}
-                opacity={dimArm ? 0.2 : isArm ? 1 : deptLit ? 1 : 0.4}
+                fill={domain.color}
+                opacity={dimArm ? 0.2 : isArm ? 1 : lit ? 1 : 0.4}
               />
             </g>
           );
         })}
       </svg>
 
-      {/* Broad arm hit targets */}
-      {shape.arms.map((arm, ai) => {
-        const tip = arm.jobs[arm.jobs.length - 1] ?? arm.fn;
-        const len = Math.hypot(tip.x - arm.fn.x, tip.y - arm.fn.y);
+      {/* Broad arm hit targets — hovering lights one branch group */}
+      {arms.map((arm, ai) => {
+        const tip = arm.nodes[arm.nodes.length - 1] ?? arm.hub;
+        const len = Math.hypot(tip.x - arm.hub.x, tip.y - arm.hub.y);
         return (
           <button
-            key={`hit-${ai}`}
+            key={`hit-${arm.groupId}`}
             type="button"
             data-node
             className="absolute"
             style={{
-              left: (arm.fn.x + tip.x) / 2,
-              top: (arm.fn.y + tip.y) / 2,
+              left: (arm.hub.x + tip.x) / 2,
+              top: (arm.hub.y + tip.y) / 2,
               width: 52,
               height: Math.max(88, len + 36),
               marginLeft: -26,
@@ -510,133 +556,69 @@ function MiniTree({
               background: "transparent",
               cursor: "pointer",
             }}
-            aria-label={arm.fnName}
-            onPointerEnter={() => onArmEnter(ai, null)}
+            aria-label={arm.groupLabel}
+            onPointerEnter={() => onArmEnter(ai)}
             onClick={(e) => {
               e.stopPropagation();
-              onDive();
+              onOpenDomain();
             }}
           />
         );
       })}
 
-      {/* Job dots — name tags only while that specific node is hovered */}
-      {shape.arms.map((arm, ai) =>
-        arm.jobs.map((job, ji) => {
+      {/* Surfaced child nodes */}
+      {arms.map((arm, ai) =>
+        arm.nodes.map((item) => {
           const isArm = activeArm === ai;
-          const isJob = isArm && activeJob === ji;
           const dimArm = armFocus && !isArm;
-          const assisted = job.level === "assisted";
-          const manual = job.level === "manual";
-          const showHoverLabel = isJob;
-
+          const size = Math.round(nodeSize(item.node, item.node.hot ? 0.42 : 0.3));
           return (
-            <div
-              key={`job-${ai}-${ji}`}
-              className="absolute"
-              style={{ left: job.x, top: job.y }}
-            >
-              <button
-                type="button"
-                data-node
-                className="absolute rounded-full"
-                style={{
-                  left: 0,
-                  top: 0,
-                  width: isJob ? 20 : 15,
-                  height: isJob ? 20 : 15,
-                  marginLeft: isJob ? -10 : -7.5,
-                  marginTop: isJob ? -10 : -7.5,
-                  background: manual
-                    ? "rgba(233,228,214,0.04)"
-                    : assisted
-                      ? "rgba(233,228,214,0.1)"
-                      : "var(--ivory)",
-                  border: manual
-                    ? "1px solid rgba(233,228,214,0.16)"
-                    : assisted
-                      ? `1.5px solid ${isArm ? color : "rgba(233,228,214,0.65)"}`
-                      : isJob
-                        ? `2px solid ${color}`
-                        : "none",
-                  boxShadow: isJob
-                    ? `0 0 14px color-mix(in srgb, ${color} 70%, transparent)`
-                    : isArm && !assisted && !manual
-                      ? `0 0 10px color-mix(in srgb, ${color} 45%, transparent)`
-                      : !assisted && !manual && deptLit
-                        ? "0 0 7px rgba(233,228,214,0.35)"
-                        : "none",
-                  opacity: dimArm ? 0.15 : 1,
-                  transform: `scale(${isJob ? 1.15 : 1})`,
-                  transition:
-                    "width 160ms ease, height 160ms ease, box-shadow 160ms ease, opacity 160ms ease, transform 160ms ease",
-                  cursor: "pointer",
-                  zIndex: isJob ? 3 : 1,
-                }}
-                title={job.name}
-                aria-label={job.name}
-                onPointerEnter={() => onArmEnter(ai, ji)}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDive();
-                }}
-              />
-
-              {showHoverLabel && (
-                <div
-                  className="pointer-events-none absolute whitespace-nowrap"
-                  style={{
-                    left: 0,
-                    top: 0,
-                    transform: `rotate(${-deg}deg) translate(16px, -50%)`,
-                    transformOrigin: "0 50%",
-                    zIndex: 5,
-                  }}
-                >
-                  <div
-                    className="rounded-md px-2.5 py-1.5 text-[12px] font-medium leading-tight text-[var(--ivory)]"
-                    style={{
-                      background: "rgba(12,14,18,0.9)",
-                      border: `1px solid color-mix(in srgb, ${color} 55%, transparent)`,
-                      boxShadow: "0 4px 18px rgba(0,0,0,0.55)",
-                    }}
-                  >
-                    {job.name}
-                  </div>
-                </div>
-              )}
-            </div>
+            <MapNode
+              key={item.node.id}
+              node={item.node}
+              x={item.x}
+              y={item.y}
+              size={Math.max(11, size)}
+              selected={selectedId === item.node.id}
+              dimmed={dimArm}
+              counterRotate={deg}
+              label="hover"
+              onSelect={() => onSelectNode(item.node.id)}
+            />
           );
         }),
       )}
 
-      {/* Function mid-node hits */}
-      {shape.arms.map((arm, ai) => (
-        <button
-          key={`fn-${ai}`}
-          type="button"
-          data-node
-          className="absolute rounded-full"
-          style={{
-            left: arm.fn.x,
-            top: arm.fn.y,
-            width: 22,
-            height: 22,
-            marginLeft: -11,
-            marginTop: -11,
-            background: "transparent",
-            cursor: "pointer",
-          }}
-          aria-label={arm.fnName}
-          onPointerEnter={() => onArmEnter(ai, null)}
-          onClick={(e) => {
-            e.stopPropagation();
-            onDive();
-          }}
-        />
-      ))}
+      {/* Branch group label appears only while its arm is lit */}
+      {arms.map((arm, ai) => {
+        if (activeArm !== ai) return null;
+        const [lx, ly] = P(R0 - 34, arm.aC);
+        return (
+          <div
+            key={`lbl-${arm.groupId}`}
+            className="pointer-events-none absolute whitespace-nowrap"
+            style={{
+              left: lx,
+              top: ly,
+              transform: `translate(-50%, -50%) rotate(${-deg}deg)`,
+              zIndex: 6,
+            }}
+          >
+            <span
+              className="rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em]"
+              style={{
+                background: "rgba(12,14,18,0.9)",
+                color: domain.color,
+                border: `1px solid color-mix(in srgb, ${domain.color} 45%, transparent)`,
+              }}
+            >
+              {arm.groupLabel}
+            </span>
+          </div>
+        );
+      })}
 
-      {/* Root badge */}
+      {/* Domain root badge */}
       <button
         type="button"
         data-node
@@ -649,25 +631,20 @@ function MiniTree({
           marginLeft: -32,
           marginTop: -32,
           background: "rgba(233,228,214,0.05)",
-          border: `1.5px solid color-mix(in srgb, ${color} 65%, transparent)`,
-          boxShadow: `0 0 0 6px color-mix(in srgb, ${color} 7%, transparent)`,
+          border: `1.5px solid color-mix(in srgb, ${domain.color} 65%, transparent)`,
+          boxShadow: `0 0 0 6px color-mix(in srgb, ${domain.color} 7%, transparent)`,
           cursor: "pointer",
         }}
-        aria-label="Open department"
+        aria-label={`Open ${domain.label}`}
         onPointerEnter={onRootEnter}
         onClick={(e) => {
           e.stopPropagation();
-          onDive();
+          onOpenDomain();
         }}
       >
         <svg width={27} height={27} viewBox="0 0 24 24" fill="none">
-          <path
-            d="M12 5v14M5 12h14"
-            stroke={color}
-            strokeWidth={1.6}
-            strokeLinecap="round"
-          />
-          <circle cx={12} cy={12} r={8.5} stroke={color} strokeWidth={1.2} />
+          <path d="M12 5v14M5 12h14" stroke={domain.color} strokeWidth={1.6} strokeLinecap="round" />
+          <circle cx={12} cy={12} r={8.5} stroke={domain.color} strokeWidth={1.2} />
         </svg>
       </button>
     </div>
@@ -706,7 +683,7 @@ const HUB_DOTS = (() => {
         orbit,
         phase: t * 360 + (rnd() - 0.5) * 28,
         r: 0.7 + rnd() * (orbit < 35 ? 2.4 : 1.8),
-        fill: k % 4 === 0 ? "#E9E4D6" : TREE[k % N].color,
+        fill: k % 4 === 0 ? "#E9E4D6" : DOMAINS[k % N].color,
         op: 0.28 + rnd() * 0.55,
         spin: shell.spin0 + rnd() * (shell.spin1 - shell.spin0),
         delay: -rnd() * 40,
