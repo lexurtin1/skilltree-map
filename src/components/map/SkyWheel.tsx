@@ -5,6 +5,7 @@ import {
   DOMAINS,
   EXECUTIVE_PULSE,
   groupsForDomain,
+  hasConstellation,
   nodesForGroup,
   STATUS,
   surfacedCrossDomainEdges,
@@ -25,7 +26,7 @@ export const W_STEP = 360 / N;
  */
 const R_ROOT = 310;
 /** Outside the foliage tips so domain names stay clear of nodes. */
-const R_LABEL = 700;
+const R_LABEL = 640;
 const SPAN = (140 * Math.PI) / 180;
 const R0 = 80;
 const RB = 146;
@@ -39,6 +40,7 @@ type SkyWheelProps = {
   selectedId: string | null;
   onOpenDomain: (domainId: DomainId) => void;
   onSelectNode: (nodeId: string) => void;
+  onDrillDown: (nodeId: string) => void;
   onSelectPulse: () => void;
 };
 
@@ -154,6 +156,7 @@ export function SkyWheel({
   selectedId,
   onOpenDomain,
   onSelectNode,
+  onDrillDown,
   onSelectPulse,
 }: SkyWheelProps) {
   const [hover, setHover] = useState<HoverTarget | null>(null);
@@ -299,7 +302,7 @@ export function SkyWheel({
         })}
       </svg>
 
-      {/* Executive Pulse — the centre of the map */}
+      {/* Library — the centre of the ontology */}
       <button
         type="button"
         data-node
@@ -314,8 +317,8 @@ export function SkyWheel({
           opacity: anyHover ? 0.32 : 1,
           transition: "opacity 280ms ease",
         }}
-        title="Executive Pulse — priorities, decisions, change"
-        aria-label="Executive Pulse"
+        title={EXECUTIVE_PULSE.label}
+        aria-label={EXECUTIVE_PULSE.label}
       >
         <svg viewBox="-180 -180 360 360" width={360} height={360} className="overflow-visible">
           <defs>
@@ -364,13 +367,13 @@ export function SkyWheel({
         </svg>
         <span className="pointer-events-none absolute top-[182px] text-center">
           <span
-            className={`block text-[12px] font-bold tracking-[0.3em] ${
-              selectedId === EXECUTIVE_PULSE.id ? "text-[var(--ivory)]" : "text-[var(--ivory-2)]"
+            className={`block text-[15px] font-semibold tracking-[0.12em] ${
+              selectedId === EXECUTIVE_PULSE.id ? "text-[var(--copper)]" : "text-[var(--ivory)]"
             }`}
           >
-            EXECUTIVE PULSE
+            {EXECUTIVE_PULSE.label.toUpperCase()}
           </span>
-          <span className="mt-1 block text-[10.5px] tracking-[0.04em] text-[var(--ink-2)]">
+          <span className="mt-1 block text-[12px] tracking-[0.02em] text-[var(--ink-2)]">
             {EXECUTIVE_PULSE.subtitle}
           </span>
         </span>
@@ -395,11 +398,11 @@ export function SkyWheel({
                 top: root.y,
                 width: 0,
                 height: 0,
-                opacity: dimmed ? 0.14 : 1,
+                opacity: dimmed ? 0.14 : focused ? 1 : 0.72,
                 filter: dimmed ? "grayscale(1) brightness(0.5)" : "none",
-                transform: `scale(${domainHover ? 1.04 : 1})`,
+                transform: `scale(${domainHover || focused ? 1.06 : 1})`,
                 transition: "opacity 220ms ease, filter 220ms ease, transform 220ms ease",
-                zIndex: domainHover ? 8 : dimmed ? 1 : 4,
+                zIndex: domainHover || focused ? 8 : dimmed ? 1 : 4,
               }}
               onPointerEnter={() => enter({ domain: i, arm: null })}
               onPointerLeave={leave}
@@ -411,6 +414,7 @@ export function SkyWheel({
                   arms={arms}
                   activeArm={domainHover ? hover!.arm : null}
                   lit={!dimmed}
+                  focused={focused}
                   selectedId={selectedId}
                   onArmEnter={(arm) => enter({ domain: i, arm })}
                   onNodeHover={(nodeId) =>
@@ -419,6 +423,7 @@ export function SkyWheel({
                   onRootEnter={() => enter({ domain: i, arm: null })}
                   onOpenDomain={() => onOpenDomain(domain.id)}
                   onSelectNode={onSelectNode}
+                  onDrillDown={onDrillDown}
                 />
               </div>
             </div>
@@ -437,26 +442,34 @@ export function SkyWheel({
               style={{
                 left: label.x,
                 top: label.y,
-                opacity: anyHover ? (domainHover ? 1 : 0.16) : focused ? 0.35 : 1,
+                opacity: anyHover
+                  ? domainHover
+                    ? 1
+                    : 0.2
+                  : focused
+                    ? 1
+                    : 0.55,
                 pointerEvents: "auto",
                 transition: "opacity 220ms ease",
-                zIndex: domainHover ? 9 : 3,
+                zIndex: domainHover || focused ? 9 : 3,
                 filter: dimmed ? "grayscale(0.85) opacity(0.5)" : "none",
               }}
             >
               <div
-                className="whitespace-nowrap text-[15px] font-semibold tracking-[0.04em] text-[var(--ivory)]"
+                className="whitespace-nowrap font-semibold tracking-[0.02em] text-[var(--ivory)]"
                 style={{
-                  color: domainHover ? domain.color : undefined,
-                  transition: "color 180ms ease",
+                  fontSize: focused || domainHover ? 22 : 18,
+                  color: focused || domainHover ? domain.color : undefined,
+                  transition: "color 180ms ease, font-size 180ms ease",
                 }}
               >
                 {domain.label}
               </div>
               <div
-                className="mt-1 whitespace-nowrap text-[11px] tracking-[0.02em]"
+                className="mt-1 whitespace-nowrap tracking-[0.02em]"
                 style={{
-                  color: domainHover ? "var(--ivory-2)" : "var(--ink-2)",
+                  fontSize: 13,
+                  color: domainHover || focused ? "var(--ivory-2)" : "var(--ink-2)",
                 }}
               >
                 {domain.subtitle}
@@ -475,24 +488,28 @@ function MiniTree({
   arms,
   activeArm,
   lit,
+  focused,
   selectedId,
   onArmEnter,
   onNodeHover,
   onRootEnter,
   onOpenDomain,
   onSelectNode,
+  onDrillDown,
 }: {
   domain: DomainMeta;
   deg: number;
   arms: Arm[];
   activeArm: number | null;
   lit: boolean;
+  focused: boolean;
   selectedId: string | null;
   onArmEnter: (arm: number) => void;
   onNodeHover: (nodeId: string | null) => void;
   onRootEnter: () => void;
   onOpenDomain: () => void;
   onSelectNode: (nodeId: string) => void;
+  onDrillDown: (nodeId: string) => void;
 }) {
   const lineBase = "rgb(var(--lnrgb))";
   const armFocus = activeArm != null;
@@ -596,7 +613,9 @@ function MiniTree({
               dimmed={dimArm}
               counterRotate={deg}
               label="hover"
+              drillable={hasConstellation(item.node.id)}
               onSelect={() => onSelectNode(item.node.id)}
+              onDrillDown={() => onDrillDown(item.node.id)}
               onHoverChange={(hovered) =>
                 onNodeHover(hovered ? item.node.id : null)
               }
@@ -642,14 +661,17 @@ function MiniTree({
         style={{
           left: 0,
           top: 0,
-          width: 64,
-          height: 64,
-          marginLeft: -32,
-          marginTop: -32,
+          width: focused ? 72 : 64,
+          height: focused ? 72 : 64,
+          marginLeft: focused ? -36 : -32,
+          marginTop: focused ? -36 : -32,
           background: "var(--bg-3)",
-          border: `1.5px solid color-mix(in srgb, ${domain.color} 65%, transparent)`,
-          boxShadow: `0 0 0 6px color-mix(in srgb, ${domain.color} 7%, transparent)`,
+          border: `${focused ? 2.5 : 1.5}px solid color-mix(in srgb, ${domain.color} ${focused ? 85 : 65}%, transparent)`,
+          boxShadow: focused
+            ? `0 0 0 8px color-mix(in srgb, ${domain.color} 18%, transparent), 0 0 24px color-mix(in srgb, ${domain.color} 28%, transparent)`
+            : `0 0 0 6px color-mix(in srgb, ${domain.color} 7%, transparent)`,
           cursor: "pointer",
+          transition: "width 180ms ease, height 180ms ease, box-shadow 180ms ease",
         }}
         aria-label={`Open ${domain.label}`}
         onPointerEnter={onRootEnter}

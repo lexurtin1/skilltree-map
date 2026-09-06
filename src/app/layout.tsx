@@ -10,9 +10,9 @@ const plex = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Broadridge · AI Capability Map",
+  title: "Broadridge · Ontology",
   description:
-    "Explore company capabilities across customers, growth, market, delivery, product, organisation and capital.",
+    "Visual library of what the AI collects across customers, growth, market, delivery, product, organisation and capital.",
 };
 
 export default function RootLayout({

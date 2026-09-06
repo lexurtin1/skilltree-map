@@ -57,14 +57,14 @@ function domainIndexOf(id: DomainId) {
 function skyCamera(): CameraState {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  // Wheel diameter includes the outer labels at R_LABEL ≈ 700 → ~1500 span.
-  const mx = w < 700 ? 30 : 120;
-  const my = w < 700 ? 130 : 150;
-  const scale = Math.min((w - mx) / 1780, (h - my) / 1780);
+  // Wheel diameter includes outer labels at R_LABEL ≈ 640 → ~1280 span + padding.
+  const mx = w < 700 ? 24 : 80;
+  const my = w < 700 ? 110 : 120;
+  const scale = Math.min((w - mx) / 1480, (h - my) / 1480);
   return {
     x: w / 2,
-    y: h / 2 - h * 0.04,
-    scale: Math.max(0.18, Math.min(0.95, scale)),
+    y: h / 2 - h * 0.02,
+    scale: Math.max(0.42, Math.min(0.85, scale)),
   };
 }
 
@@ -232,15 +232,40 @@ export function MapExperience() {
   const openConstellation = useCallback(
     (nodeId: string) => {
       if (!hasConstellation(nodeId)) return;
-      push({ kind: "node", nodeId });
+      const node = getNode(nodeId);
+      if (!node) return;
+      const domainId = node.domain;
+      setDomainIndex(domainIndexOf(domainId));
       setSelectedId(nodeId);
+      setStack((s) => {
+        // Always walk overview → domain → … → constellation so Back is coherent.
+        let next: View[] = [{ kind: "overview" }];
+        const domainView: View = { kind: "domain", domainId };
+        const nodeView: View = { kind: "node", nodeId };
+
+        // Preserve any intermediate constellation frames already on the path
+        // for this domain (depth-2+), then append the new centre.
+        const prior = s.filter(
+          (v) =>
+            v.kind === "node" &&
+            v.nodeId !== nodeId &&
+            getNode(v.nodeId)?.domain === domainId,
+        );
+        next = [...next, domainView, ...prior, nodeView];
+        return next;
+      });
+      setCamera(constellationCamera());
     },
-    [push],
+    [],
   );
 
-  /** Follow a relationship — into another domain if that is where it leads. */
+  /** Follow a relationship — into its constellation when it has one. */
   const follow = useCallback(
     (nodeId: string) => {
+      if (hasConstellation(nodeId)) {
+        openConstellation(nodeId);
+        return;
+      }
       const target = viewForNode(nodeId);
       if (!target) return;
       if (target.kind === "overview") {
@@ -251,7 +276,7 @@ export function MapExperience() {
       if (!sameView(view, target)) push(target);
       setSelectedId(nodeId);
     },
-    [goToOverview, push, view],
+    [goToOverview, openConstellation, push, view],
   );
 
   const back = useCallback(() => {
@@ -367,7 +392,7 @@ export function MapExperience() {
       return {
         title: focusedDomain.label,
         subtitle: focusedDomain.subtitle,
-        color: undefined as string | undefined,
+        color: focusedDomain.color,
       };
     }
     if (view.kind === "domain") {
@@ -399,6 +424,7 @@ export function MapExperience() {
             selectedId={selectedId}
             onOpenDomain={openDomain}
             onSelectNode={setSelectedId}
+            onDrillDown={openConstellation}
             onSelectPulse={() => setSelectedId(EXECUTIVE_PULSE.id)}
           />
         )}

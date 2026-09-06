@@ -129,13 +129,13 @@ export function MapChrome({
 
       <div className="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 px-4 text-center sm:bottom-6">
         <p
-          className="text-[24px] font-semibold tracking-tight sm:text-[28px]"
+          className="text-[34px] font-semibold tracking-tight sm:text-[40px]"
           style={{ color: captionColor ?? "var(--ivory)" }}
         >
           {captionTitle}
         </p>
         {captionSubtitle && (
-          <p className="mt-1 text-[12px] text-[var(--ink-2)]">{captionSubtitle}</p>
+          <p className="mt-1.5 text-[14px] text-[var(--ink-2)]">{captionSubtitle}</p>
         )}
         {mode === "overview" && (
           <div className="pointer-events-auto mt-2 flex items-center justify-center gap-8 text-[var(--ivory-2)]">

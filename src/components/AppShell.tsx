@@ -53,7 +53,7 @@ function TopBar() {
               Broadridge
             </p>
             <p className="truncate text-[11px] text-[var(--ink-2)]">
-              Capability Map
+              Ontology
             </p>
           </div>
         </Link>

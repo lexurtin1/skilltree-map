@@ -176,6 +176,10 @@ export function MapNode({
         aria-label={node.label}
         onClick={(e) => {
           e.stopPropagation();
+          if (drillable && onDrillDown) {
+            onDrillDown();
+            return;
+          }
           onSelect?.();
         }}
         onDoubleClick={(e) => {
@@ -195,7 +199,7 @@ export function MapNode({
           border: `${ringWidth(node.status)}px solid ${ring}`,
           boxShadow: selected
             ? `0 0 0 5px color-mix(in srgb, ${halo} 26%, transparent), 0 0 26px color-mix(in srgb, ${halo} 55%, transparent)`
-            : `0 2px 12px rgba(0,0,0,0.45)`,
+            : `0 2px 12px rgba(11,31,51,0.12)`,
           transform: `scale(${selected ? 1.12 : 1})`,
           transition: "transform 180ms ease, box-shadow 180ms ease",
           cursor: "pointer",
@@ -204,9 +208,12 @@ export function MapNode({
         <NodeGlyph type={node.type} color={glyphColor} size={size} />
         {drillable && (
           <span
-            className="pointer-events-none absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full"
+            className="pointer-events-none absolute -bottom-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full text-[9px] font-bold leading-none text-white"
             style={{ background: domain.color, boxShadow: "0 0 0 2px #ffffff" }}
-          />
+            aria-hidden
+          >
+            ›
+          </span>
         )}
       </button>
       </div>
@@ -234,7 +241,7 @@ export function MapNode({
           <div
             className="mx-auto font-medium leading-tight"
             style={{
-              fontSize: 13.5 * labelScale,
+              fontSize: 15 * labelScale,
               maxWidth: Math.max(170, 150 * labelScale),
               color: selected ? "var(--ivory)" : "var(--ivory-2)",
             }}

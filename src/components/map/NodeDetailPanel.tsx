@@ -189,7 +189,7 @@ export function NodeDetailPanel({
             }}
           >
             <span className="text-[12.5px] font-semibold text-[var(--ivory)]">
-              {node.constellationTitle ?? "Open constellation"}
+              {node.constellationTitle ?? node.label}
             </span>
             <span style={{ color: domain.color }}>→</span>
           </button>

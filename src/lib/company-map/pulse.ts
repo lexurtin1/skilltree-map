@@ -11,8 +11,8 @@ import type { CompanyMapNode } from "./types";
  */
 export const EXECUTIVE_PULSE: CompanyMapNode = {
   id: "pulse",
-  label: "Executive Pulse",
-  subtitle: "priorities, decisions, change",
+  label: "Library",
+  subtitle: "collected knowledge",
   domain: "capital",
   type: "decision",
   status: "watch",
