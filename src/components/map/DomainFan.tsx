@@ -82,6 +82,8 @@ export function DomainFan({
       const aC = cursor + span / 2;
       const [ex, ey] = P(R0, aC);
       const [rx, ry] = P(66, aC);
+      // Sit labels on the stump, clear of the first ring of nodes.
+      const [lx, ly] = P(R0 - 95, aC);
 
       paths.push({
         d: `M ${rx.toFixed(1)} ${ry.toFixed(1)} L ${ex.toFixed(1)} ${ey.toFixed(1)}`,
@@ -89,7 +91,7 @@ export function DomainFan({
         delay: 0.15,
       });
       junctions.push({ x: ex, y: ey, delay: 0.3 });
-      groupLabels.push({ id: group.id, label: group.label, subtitle: group.subtitle, x: ex, y: ey });
+      groupLabels.push({ id: group.id, label: group.label, subtitle: group.subtitle, x: lx, y: ly });
 
       let px = ex;
       let py = ey;
@@ -238,7 +240,7 @@ export function DomainFan({
         </svg>
       </button>
 
-      {/* Branch group labels */}
+      {/* Branch group labels — navy titles, clear of foliage */}
       {layout.groupLabels.map((group) => (
         <div
           key={group.id}
@@ -246,16 +248,13 @@ export function DomainFan({
           style={{ left: group.x, top: group.y }}
         >
           <div
-            className="whitespace-nowrap text-[15px] font-bold uppercase tracking-[0.18em]"
-            style={{ color: domain.color, transform: "translateY(-40px)" }}
+            className="whitespace-nowrap rounded-md bg-[var(--bg-3)]/90 px-2 py-1 text-[14px] font-semibold tracking-[0.04em]"
+            style={{ color: "var(--copper)" }}
           >
             {group.label}
           </div>
           {group.subtitle && (
-            <div
-              className="whitespace-nowrap text-[12px] tracking-[0.02em] text-[var(--ink-3)]"
-              style={{ transform: "translateY(-36px)" }}
-            >
+            <div className="mt-0.5 whitespace-nowrap text-[12px] tracking-[0.02em] text-[var(--ink-2)]">
               {group.subtitle}
             </div>
           )}

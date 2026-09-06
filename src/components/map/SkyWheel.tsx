@@ -26,7 +26,7 @@ export const W_STEP = 360 / N;
  */
 const R_ROOT = 310;
 /** Outside the foliage tips so domain names stay clear of nodes. */
-const R_LABEL = 640;
+const R_LABEL = 780;
 const SPAN = (140 * Math.PI) / 180;
 const R0 = 80;
 const RB = 146;
@@ -456,11 +456,11 @@ export function SkyWheel({
               }}
             >
               <div
-                className="whitespace-nowrap font-semibold tracking-[0.02em] text-[var(--ivory)]"
+                className="whitespace-nowrap font-semibold tracking-[0.02em]"
                 style={{
                   fontSize: focused || domainHover ? 22 : 18,
-                  color: focused || domainHover ? domain.color : undefined,
-                  transition: "color 180ms ease, font-size 180ms ease",
+                  color: "var(--copper)",
+                  transition: "font-size 180ms ease",
                 }}
               >
                 {domain.label}
@@ -640,11 +640,10 @@ function MiniTree({
             }}
           >
             <span
-              className="rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em]"
+              className="rounded-md bg-[var(--bg-3)] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em]"
               style={{
-                background: "var(--bg-3)",
-                color: domain.color,
-                border: `1px solid color-mix(in srgb, ${domain.color} 45%, transparent)`,
+                color: "var(--copper)",
+                border: "1px solid var(--line)",
               }}
             >
               {arm.groupLabel}

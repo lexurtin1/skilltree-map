@@ -46,8 +46,8 @@ function TopBar() {
           </svg>
         </button>
 
-        <Link href="/" className="flex min-w-0 items-center gap-2.5">
-          <BrandLogo variant="mark" height={32} priority />
+        <Link href="/" className="flex min-w-0 items-center gap-3">
+          <BrandLogo variant="mark" height={36} priority />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-[14px] font-semibold tracking-tight text-[var(--copper)]">
               Broadridge

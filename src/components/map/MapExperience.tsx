@@ -57,14 +57,14 @@ function domainIndexOf(id: DomainId) {
 function skyCamera(): CameraState {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  // Wheel diameter includes outer labels at R_LABEL ≈ 640 → ~1280 span + padding.
-  const mx = w < 700 ? 24 : 80;
-  const my = w < 700 ? 110 : 120;
-  const scale = Math.min((w - mx) / 1480, (h - my) / 1480);
+  // Wheel diameter includes outer labels at R_LABEL ≈ 780 → ~1560 span + padding.
+  const mx = w < 700 ? 24 : 64;
+  const my = w < 700 ? 110 : 100;
+  const scale = Math.min((w - mx) / 1620, (h - my) / 1620);
   return {
     x: w / 2,
     y: h / 2 - h * 0.02,
-    scale: Math.max(0.42, Math.min(0.85, scale)),
+    scale: Math.max(0.4, Math.min(0.82, scale)),
   };
 }
 
@@ -392,18 +392,18 @@ export function MapExperience() {
       return {
         title: focusedDomain.label,
         subtitle: focusedDomain.subtitle,
-        color: focusedDomain.color,
+        color: "var(--copper)",
       };
     }
     if (view.kind === "domain") {
       const domain = DOMAIN_BY_ID[view.domainId];
-      return { title: domain.label, subtitle: domain.subtitle, color: domain.color };
+      return { title: domain.label, subtitle: domain.subtitle, color: "var(--copper)" };
     }
     const node = getNode(view.nodeId);
     return {
       title: node?.label ?? "",
       subtitle: node?.subtitle,
-      color: node ? DOMAIN_BY_ID[node.domain].color : undefined,
+      color: "var(--copper)",
     };
   }, [focusedDomain, view]);
 

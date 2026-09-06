@@ -207,7 +207,7 @@ export function NodeConstellation({
         className="pointer-events-none absolute -translate-x-1/2 whitespace-nowrap text-center"
         style={{ left: 0, top: -R_LINK - 150 }}
       >
-        <p className="text-[10px] font-bold tracking-[0.22em]" style={{ color: centreDomain.color }}>
+        <p className="text-[10px] font-bold tracking-[0.22em]" style={{ color: "var(--copper)" }}>
           {(centre.constellationTitle ?? "CONSTELLATION").toUpperCase()}
         </p>
       </div>
@@ -264,7 +264,7 @@ function ExternalNode({
         />
         <span
           className="text-[13px] font-bold uppercase tracking-[0.16em]"
-          style={{ color: domain.color }}
+          style={{ color: "var(--copper)" }}
         >
           {sameDomain ? relationship : domain.label}
         </span>
