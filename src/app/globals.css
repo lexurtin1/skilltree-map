@@ -386,146 +386,61 @@ body {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Control Centres stage.
-
-   A light theme cannot lean on glow for depth, and a white card on a white
-   ground has no edge at all. So the stage is lit instead: a bright pool where
-   the front card sits, falling away to a soft navy at the edges of the frame.
-   The cards read as objects under a light rather than shapes on paper.
-
-   All three layers are painted behind the cards, never over them.
-   ───────────────────────────────────────────────────────────────────────── */
-
-.gi-stage {
-  background-color: var(--surface-0);
-  background-image:
-    /* the pool the front card sits in */
-    radial-gradient(
-      ellipse 58% 46% at 50% 50%,
-      rgba(255, 255, 255, 0.95),
-      rgba(255, 255, 255, 0) 64%
-    ),
-    /* the fall-off toward the frame */
-    radial-gradient(
-      ellipse 116% 104% at 50% 46%,
-      rgba(0, 31, 90, 0) 34%,
-      rgba(0, 31, 90, 0.055) 66%,
-      rgba(0, 31, 90, 0.13) 100%
-    ),
-    /* the fine grid, kept faint enough to read as texture */
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size:
-    auto,
-    auto,
-    58px 58px,
-    58px 58px;
-}
 
 /* ═════════════════════════════════════════════════════════════════════════════
-   THE DARK ROOM
+   THE GALLERY
 
-   Control Centres is the only dark surface in the product. Everything else —
-   every module page a seller actually works in — stays light. The boundary is
-   `data-surface="dark"`, and because every colour in the product already comes
-   from a semantic token, the dark room is an override rather than a second set
-   of components.
+   The whole product is light, including the room the Control Centres hang in.
+   Depth in a light room cannot come from glow — a bright edge on a bright ground
+   is invisible — so it comes from the two things that actually make an object
+   look like an object on paper: a real cast shadow, and a ground that is not
+   uniform.
+
+   The ground is a Broadridge navy gradient. It is deepest at the frame edges and
+   lifts to near-white where the front panel sits, so the panel is standing in
+   its own pool of light. The wave field renders on top of that ground in the
+   same navy, so the gradient is literally moving.
    ═════════════════════════════════════════════════════════════════════════ */
 
-[data-surface="dark"] {
-  --surface-0: #040b1a; /* the room itself */
-  --surface-1: rgba(255, 255, 255, 0.05); /* glass */
-  --surface-2: rgba(255, 255, 255, 0.03); /* recessed glass */
-  --surface-3: rgba(255, 255, 255, 0.08);
-
-  --text-1: #eaf0fa;
-  --text-2: #b9c6de;
-  --text-3: #8a9bbb;
-  --text-4: #64748f;
-
-  --line: rgba(255, 255, 255, 0.1);
-  --line-soft: rgba(255, 255, 255, 0.055);
-  --line-strong: rgba(255, 255, 255, 0.2);
-
-  --brand-tint: rgba(91, 155, 255, 0.14);
-  --brand-soft: rgba(146, 186, 255, 0.5);
-  --brand-wash: rgba(255, 255, 255, 0.04);
-  --chip-bg: rgba(255, 255, 255, 0.11);
-  --chip-fg: #eaf0fa;
-
-  /* State colours lift so they stay legible against navy. */
-  --state-quiet: #8a9bbb;
-  --state-new: #6aa6ff;
-  --state-attention: #e8ab4a;
-  --state-risk: #ff7a70;
-  --state-progress: #4fd8b8;
-
-  --state-quiet-bg: rgba(138, 155, 187, 0.14);
-  --state-new-bg: rgba(106, 166, 255, 0.15);
-  --state-attention-bg: rgba(232, 171, 74, 0.15);
-  --state-risk-bg: rgba(255, 122, 112, 0.15);
-  --state-progress-bg: rgba(79, 216, 184, 0.15);
-
-  --ev-fact: #7fb4ff;
-  --ev-fact-bg: rgba(127, 180, 255, 0.13);
-  --ev-suggestion: #a5a8ff;
-  --ev-suggestion-bg: rgba(165, 168, 255, 0.13);
-  --ev-hypothesis: #e8ab4a;
-  --ev-hypothesis-bg: rgba(232, 171, 74, 0.13);
-  --ev-gap: #8a9bbb;
-  --ev-gap-bg: rgba(138, 155, 187, 0.11);
-
-  color-scheme: dark;
+.gi-room {
+  background-color: #eef2f9;
+  background-image:
+    /* the pool of light the front panel stands in */
+    radial-gradient(ellipse 54% 40% at 50% 42%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0) 72%),
+    /* Broadridge navy, deepening toward the frame */
+    radial-gradient(
+      ellipse 120% 108% at 50% 40%,
+      rgba(0, 31, 90, 0) 30%,
+      rgba(0, 31, 90, 0.05) 62%,
+      rgba(0, 31, 90, 0.16) 100%
+    ),
+    linear-gradient(180deg, #f8fafd 0%, #eef2f9 52%, #dfe7f3 100%);
 }
 
-/* ── Glass ────────────────────────────────────────────────────────────────
-   A single translucent fill reads as tinted plastic. Glass is edges: a lit
-   rim along the top where light catches, a shadow along the bottom where it
-   falls away, and a body that samples what is behind it. `--tint` and `--rim`
-   are set per module on the element. */
+/* The colour of the module at the front, spilling onto the floor beneath it. */
+.gi-room-pool::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 74%;
+  height: 46%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, var(--pool, rgba(0, 31, 90, 0.12)), transparent 72%);
+  filter: blur(30px);
+  transition: background 700ms ease;
+}
 
-.gi-glass {
+/* Haze at the frame edge, so the ring runs out of the room rather than stopping. */
+.gi-room-vignette::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 42%, rgba(255, 255, 255, 0.045) 100%),
-    var(--tint, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--line);
-  box-shadow:
-    inset 0 1px 0 0 var(--rim, rgba(255, 255, 255, 0.22)),
-    inset 0 -1px 0 0 rgba(0, 0, 0, 0.28);
-}
-
-/** The real thing. Reserved for panels near the front of the ring. */
-.gi-glass-live {
-  backdrop-filter: blur(26px) saturate(150%);
-  -webkit-backdrop-filter: blur(26px) saturate(150%);
-}
-
-/**
- * The stand-in. Nine live backdrop-filters composited over a full-screen
- * shader drops frames on integrated graphics, and once a panel is rotated and
- * dimmed the difference is not visible — so only the front of the ring pays
- * for real refraction.
- */
-.gi-glass-flat {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.015) 45%, rgba(255, 255, 255, 0.04) 100%),
-    var(--tint, rgba(255, 255, 255, 0.04)),
-    rgba(6, 14, 30, 0.72);
-}
-
-/* Inner tiles: shallower than the panel that holds them, or the card reads
-   as a stack of equal sheets rather than as one object with detail on it. */
-.gi-tile {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018));
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.09);
-}
-
-/* ── The gallery stage ────────────────────────────────────────────────────── */
-
-.gi-gallery {
-  background: var(--surface-0);
+    linear-gradient(90deg, rgba(238, 242, 249, 0.92) 0%, rgba(238, 242, 249, 0) 13%, rgba(238, 242, 249, 0) 87%, rgba(238, 242, 249, 0.92) 100%),
+    radial-gradient(ellipse 88% 84% at 50% 44%, transparent 56%, rgba(0, 31, 90, 0.09) 100%);
 }
 
 /* The wave field sits behind everything and is never interactive. */
@@ -538,45 +453,67 @@ body {
   pointer-events: none;
 }
 
-/* A held breath of light at the horizon, under the ring. */
-.gi-gallery-pool::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 8%;
-  width: 78%;
-  height: 42%;
-  transform: translateX(-50%);
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 50% 50% at 50% 50%,
-    var(--pool, rgba(91, 155, 255, 0.16)),
-    transparent 70%
-  );
-  filter: blur(28px);
+/* ── Glass ────────────────────────────────────────────────────────────────
+   A single translucent white fill reads as tracing paper. Glass is edges and
+   weight: a lit top rim, a coloured hairline that belongs to the module, and a
+   long soft navy shadow underneath that says the panel is in the air rather
+   than printed on the ground. `--tint` and `--rim` are set per module. */
+
+.gi-glass {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.99) 0%,
+      rgba(255, 255, 255, 0.95) 48%,
+      rgba(255, 255, 255, 0.985) 100%
+    ),
+    var(--tint, rgba(255, 255, 255, 0.9));
+  border: 1px solid var(--rim, rgba(255, 255, 255, 0.9));
+  box-shadow:
+    0 62px 104px -44px rgba(0, 31, 90, 0.42),
+    0 26px 50px -24px rgba(0, 31, 90, 0.2),
+    0 2px 5px rgba(0, 31, 90, 0.05),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1);
 }
 
-/* Vignette, so the ring falls away into the room at the frame edges. */
-.gi-gallery-vignette::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 82% 78% at 50% 46%,
-    transparent 52%,
-    rgba(2, 6, 16, 0.34) 84%,
-    rgba(2, 6, 16, 0.66) 100%
-  );
+/** The real thing. Reserved for panels near the front of the ring. */
+.gi-glass-live {
+  backdrop-filter: blur(30px) saturate(170%);
+  -webkit-backdrop-filter: blur(30px) saturate(170%);
 }
 
 /**
- * The ring.
- *
- * `filter: blur()` flattens `preserve-3d`, so depth on the cylinder comes from
- * foreshortening, opacity and a scrim — never from blur. Back-facing panels
- * are left visible on purpose: that is what shows the reverse of a dashboard.
+ * The stand-in. Nine live backdrop-filters composited over a full-screen shader
+ * drops frames on integrated graphics, and once a panel is turned away and
+ * hazed the difference is not visible — so only the front of the ring pays for
+ * real refraction.
  */
+.gi-glass-flat {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0.95) 48%, rgba(255, 255, 255, 0.985) 100%),
+    var(--tint, rgba(255, 255, 255, 0.9)),
+    #ffffff;
+}
+
+/* Inner wells. A white tile on a white panel has no edge, so detail is recessed
+   into the panel with a faint navy wash rather than raised out of it. */
+.gi-tile {
+  background: linear-gradient(180deg, rgba(0, 31, 90, 0.025), rgba(0, 31, 90, 0.05));
+  border: 1px solid rgba(0, 31, 90, 0.06);
+}
+
+/* A well that carries a visualisation rather than figures — flatter, so the
+   drawing inside it is the only thing with structure. */
+.gi-plot {
+  background: linear-gradient(180deg, rgba(0, 31, 90, 0.02), rgba(0, 31, 90, 0.038));
+  border: 1px solid rgba(0, 31, 90, 0.05);
+}
+
+/* ── The ring ─────────────────────────────────────────────────────────────
+   `filter: blur()` flattens `preserve-3d`, so depth on the cylinder comes from
+   foreshortening, haze and a scrim — never from blur. Back-facing panels are
+   left visible on purpose: that is what shows the reverse of a dashboard. */
+
 .gi-ring {
   transform-style: preserve-3d;
   will-change: transform;
@@ -587,4 +524,35 @@ body {
   backface-visibility: visible;
   -webkit-backface-visibility: visible;
   transform-style: preserve-3d;
+}
+
+/**
+ * Float.
+ *
+ * Each panel sits at its own height on the ring (`--fy`) so the row is a
+ * skyline rather than a shelf, and drifts through a few pixels on a long, slow
+ * cycle. It is the only motion in the room besides the water, and at 11s it is
+ * felt rather than watched. Reduced motion stops it dead — the offsets stay,
+ * so the composition survives without the drift.
+ */
+@keyframes gi-float {
+  0%,
+  100% {
+    transform: translate3d(0, calc(var(--fy, 0px) - 6px), 0);
+  }
+  50% {
+    transform: translate3d(0, calc(var(--fy, 0px) + 6px), 0);
+  }
+}
+
+.gi-float {
+  transform: translate3d(0, var(--fy, 0px), 0);
+  animation: gi-float 11s ease-in-out infinite;
+  animation-delay: var(--fd, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gi-float {
+    animation: none;
+  }
 }

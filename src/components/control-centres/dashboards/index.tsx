@@ -3,377 +3,536 @@
 /**
  * The nine dashboards.
  *
- * Each is the same frame filled with its own module's truth, every figure read
- * from the ontology through `select.ts` and `series.ts`. Deltas appear only
- * where a real period-on-period comparison exists — `deltaOf` returns null
- * rather than inventing one, and the tile simply omits it.
+ * Each answers a different question, so each is drawn in a different form: a
+ * distribution for Growth, a divided whole for Accounts, a funnel for Deals, a
+ * map for Markets, an orbit for People, a time axis for Delivery, a network for
+ * the Knowledge Graph, a globe for Global, a flow for Evidence. Nothing here
+ * shares a layout with anything else — from across the room the ring should read
+ * as nine different objects, not one object nine times.
+ *
+ * Every figure is read from the ontology. Deltas appear only where a real
+ * period-on-period comparison exists; `deltaOf` returns null rather than
+ * inventing one, and the figure simply omits it.
  */
-import { AreaAxis, AreaChart, BarList } from "./charts";
-import { DashPanel, DashboardFrame, type Kpi, type Signal } from "./shell";
+import { Globe, RegionMap } from "../viz/geo";
+import { Beeswarm, BarList, Funnel, Horizon, Segments } from "../viz/plots";
+import { FlowChain, Network, RadialGroups, Treemap } from "../viz/structure";
+import { GlassStat, Head, Legend, Note, Plot, Rail, Stat } from "./shell";
 import { MODULE_PALETTE } from "@/lib/gi/palette";
 import type { ModuleId } from "@/lib/gi/metrics";
+import { graphScale } from "@/lib/gi/metrics";
 import {
-  graphScale,
-  marketActivity,
-  SUMMARY_BY_MODULE,
-} from "@/lib/gi/metrics";
+  buyingGroups,
+  dealFunnel,
+  deliveryStats,
+  gbpShort,
+  globeMarkers,
+  latestChanges,
+  marketHeat,
+  markerCounts,
+  movedMarkets,
+  ontologyGraph,
+  peopleCoverage,
+  portfolioCells,
+  prioritySwarm,
+  provenanceFlow,
+  regionRows,
+  renewalHorizon,
+  topHubs,
+  topReasons,
+} from "@/lib/gi/gallery";
 import {
-  accountsByFootprint,
-  averageHealthPct,
   buyingRoleCoverage,
-  closeDateSlips,
-  dealStateCounts,
-  dealsByValue,
   deliveryByLifecycle,
   deltaOf,
   evidenceByMonth,
-  evidenceByState,
   eventsByMonth,
-  eventsByMonthOfType,
-  gbpShort,
-  graphByClass,
   hypothesesByMonth,
-  marketsByRegion,
-  pipelineByCloseMonth,
-  pipelineByStage,
-  renewalValueWithin,
-  renewalsByMonth,
   topMarkets,
-  topOpportunityValue,
+  trendOrNull,
 } from "@/lib/gi/series";
 import {
   allAccounts,
   allEvents,
-  allEvidence,
   allHypotheses,
   allOpportunities,
-  allPeople,
-  allServiceRelationships,
+  dealState,
+  healthScore,
+  recentEvents,
 } from "@/lib/gi/select";
 
-/** A KPI whose delta is derived from its own series, or omitted entirely. */
-function withDelta(base: Omit<Kpi, "delta" | "trend">, series?: Kpi["spark"]): Kpi {
-  const d = series ? deltaOf(series) : null;
-  return { ...base, spark: series, ...(d ?? {}) };
-}
+const shell = "flex h-full min-h-0 flex-col gap-2.5";
 
-const chartRow = (
-  id: ModuleId,
-  chart: { title: string; subtitle: string; points: ReturnType<typeof eventsByMonth>; format?: (v: number) => string },
-  list: { title: string; subtitle: string; rows: ReturnType<typeof topMarkets> },
-) => {
-  const palette = MODULE_PALETTE[id];
-  return (
-    <>
-      <DashPanel title={chart.title} subtitle={chart.subtitle}>
-        <AreaChart points={chart.points} palette={palette} id={id} height={92} />
-        <AreaAxis points={chart.points} />
-      </DashPanel>
-      <DashPanel title={list.title} subtitle={list.subtitle}>
-        <BarList rows={list.rows} palette={palette} />
-      </DashPanel>
-    </>
-  );
-};
-
-/* ── Growth ───────────────────────────────────────────────────────────────── */
+/* ── Growth — a distribution ──────────────────────────────────────────────── */
 
 function GrowthDashboard() {
-  const s = SUMMARY_BY_MODULE.growth();
+  const palette = MODULE_PALETTE.growth;
+  const swarm = prioritySwarm();
+  const reasons = topReasons(3);
+  const events = eventsByMonth();
   const hyp = hypothesesByMonth();
-  const events = eventsByMonth();
-  const high = allHypotheses().filter((h) => h.state === "system-suggestion").length;
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Priority accounts", value: s.metrics[0].value, note: "scored high" }),
-    withDelta({ label: "Potential value", value: s.metrics[1].value, note: "indicative" }),
-    withDelta({ label: "Verified changes", value: s.metrics[2].value, note: "last 45 days" }, events),
-    withDelta({ label: "Cross-sell", value: s.metrics[3].value, note: "existing clients" }),
-    withDelta({ label: "Hypotheses", value: String(allHypotheses().length), note: "open" }, hyp),
-    withDelta({ label: "System-backed", value: String(high), note: "evidence-reasoned" }),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "info", lead: "Schroders scores 73", rest: "— verified activity in three host markets against an existing relationship." },
-    { tone: "risk", lead: "Provider model unknown", rest: "on the highest-scoring account. Validate before any approach." },
-    { tone: "progress", lead: "24 cross-sell hypotheses", rest: "sit with clients we already serve." },
-  ];
+  const high = swarm.filter((s) => s.x >= 60).length;
+  const value = allAccounts().reduce(
+    (sum, a) =>
+      sum +
+      allHypotheses()
+        .filter((h) => h.accountId === a.id)
+        .reduce((s, h) => s + (h.potentialValue ?? 0), 0),
+    0,
+  );
 
   return (
-    <DashboardFrame eyebrow="Growth · Opportunity engine" range="45d" kpis={kpis} signals={signals} palette={MODULE_PALETTE.growth}>
-      {chartRow(
-        "growth",
-        { title: "Hypotheses created", subtitle: "Reasons to engage, per month", points: hyp },
-        { title: "Value by account", subtitle: "Indicative, ranked", rows: topOpportunityValue(5) },
-      )}
-    </DashboardFrame>
+    <div className={shell}>
+      <Head question="Which accounts changed in a way that makes us relevant?" range="45d" palette={palette} />
+
+      <div className="grid shrink-0 grid-cols-4 gap-4">
+        <Stat label="Scored high" value={String(high)} note={`of ${swarm.length} accounts`} palette={palette} />
+        <Stat label="Indicative value" value={gbpShort(value)} note="across open reasons" palette={palette} />
+        <Stat
+          label="Verified changes"
+          value={String(recentEvents(45).length)}
+          note="last 45 days"
+          palette={palette}
+          spark={trendOrNull(events)}
+          {...(deltaOf(events) ?? {})}
+        />
+        <Stat
+          label="Open reasons"
+          value={String(allHypotheses().length)}
+          note="hypotheses on file"
+          palette={palette}
+          spark={trendOrNull(hyp)}
+          {...(deltaOf(hyp) ?? {})}
+        />
+      </div>
+
+      <Plot
+        title="Priority across the portfolio"
+        subtitle="one dot per account · filled = existing client"
+        className="shrink-0"
+      >
+        <Beeswarm
+          points={swarm}
+          palette={palette}
+          bands={[
+            { from: 0, to: 35, label: "low" },
+            { from: 35, to: 60, label: "medium" },
+            { from: 60, to: 100, label: "high" },
+          ]}
+          height={116}
+        />
+      </Plot>
+
+      {/* The three highest-scoring reasons, as sentences rather than as scores.
+          A number tells a seller where to look; only the sentence tells them
+          what to say. */}
+      <div className="grid min-h-0 flex-1 grid-cols-3 gap-2">
+        {reasons.map((r) => (
+          <div key={r.id} className="gi-tile flex min-w-0 flex-col justify-center overflow-hidden rounded-xl px-3 py-2">
+            <div className="flex items-baseline gap-2">
+              <p className="min-w-0 flex-1 truncate text-[10.5px] font-semibold text-[var(--text-1)]">
+                {r.account}
+              </p>
+              <span
+                className="shrink-0 text-[9px] font-bold tabular-nums"
+                style={{ color: palette.ink }}
+              >
+                {r.score}
+              </span>
+            </div>
+            <p className="mt-1 truncate text-[9.5px] leading-tight text-[var(--text-3)]">{r.title}</p>
+          </div>
+        ))}
+      </div>
+
+      <Note>Priority is 0–100, after a penalty for what we still do not know about the account.</Note>
+    </div>
   );
 }
 
-/* ── Delivery ─────────────────────────────────────────────────────────────── */
-
-function DeliveryDashboard() {
-  const s = SUMMARY_BY_MODULE.delivery();
-  const renewals = renewalsByMonth();
-  const live = allServiceRelationships().filter((r) => r.lifecycle === "live").length;
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Renewals 180d", value: s.metrics[0].value, note: "windows open" }),
-    withDelta({ label: "Renewal value", value: gbpShort(renewalValueWithin(180)), note: "recurring" }, renewals),
-    withDelta({ label: "Expansion", value: s.metrics[1].value, note: "conversations" }),
-    withDelta({ label: "To review", value: s.metrics[2].value, note: "account changes" }),
-    withDelta({ label: "Delivery risk", value: s.metrics[3].value, note: "needs support" }),
-    withDelta({ label: "Live services", value: String(live), note: "operating" }),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "risk", lead: "abrdn renewal deferred twice", rest: "— service is operating, the relationship is not." },
-    { tone: "progress", lead: "Two stable clients", rest: "have new fund-market activity that may justify a joint review." },
-    { tone: "info", lead: "Janus Henderson at 76 days", rest: "with no agreed scope and eleven weeks of silence." },
-  ];
-
-  return (
-    <DashboardFrame eyebrow="Delivery · Client health" range="180d" kpis={kpis} signals={signals} palette={MODULE_PALETTE.delivery}>
-      {chartRow(
-        "delivery",
-        { title: "Recurring value reaching renewal", subtitle: "By month out from today", points: renewals },
-        { title: "Lifecycle", subtitle: "Services by stage", rows: deliveryByLifecycle() },
-      )}
-    </DashboardFrame>
-  );
-}
-
-/* ── Markets ──────────────────────────────────────────────────────────────── */
-
-function MarketsDashboard() {
-  const s = SUMMARY_BY_MODULE.markets();
-  const events = eventsByMonth();
-  const activity = marketActivity();
-  const domiciles = new Set(allEvents().map((e) => e.domicileMarketId).filter(Boolean)).size;
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Relevant events", value: s.metrics[0].value, note: "all sources" }, events),
-    withDelta({ label: "Account-linked", value: s.metrics[1].value, note: "matched groups" }),
-    withDelta({ label: "To review", value: s.metrics[2].value, note: "unactioned" }),
-    withDelta({ label: "Rising markets", value: s.metrics[3].value, note: "6+ events" }),
-    withDelta({ label: "Host markets", value: String(activity.length), note: "with activity" }),
-    withDelta({ label: "Domiciles", value: String(domiciles), note: "fund origin" }),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "info", lead: "Luxembourg leads at 39 events", rest: "— domicile concentration, not distribution demand." },
-    { tone: "risk", lead: "Germany and Italy rising", rest: "with the highest client-linked change this month." },
-    { tone: "progress", lead: "Every event is source-linked", rest: "to a regulatory or fund-data record." },
-  ];
-
-  return (
-    <DashboardFrame eyebrow="Markets · Fund movement" range="6mo" kpis={kpis} signals={signals} palette={MODULE_PALETTE.markets}>
-      {chartRow(
-        "markets",
-        { title: "Verified changes detected", subtitle: "Per month", points: events },
-        { title: "Markets", subtitle: "By account-linked events", rows: topMarkets(5) },
-      )}
-    </DashboardFrame>
-  );
-}
-
-/* ── Knowledge Graph ──────────────────────────────────────────────────────── */
-
-function KnowledgeGraphDashboard() {
-  const s = SUMMARY_BY_MODULE["knowledge-graph"]();
-  const scale = graphScale();
-  const evidence = evidenceByMonth();
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Entities", value: s.metrics[0].value, note: "addressable" }),
-    withDelta({ label: "Links", value: s.metrics[1].value, note: "resolved" }),
-    withDelta({ label: "New this week", value: s.metrics[2].value, note: "changes" }),
-    withDelta({ label: "Source-linked", value: s.metrics[3].value, note: "active facts" }),
-    withDelta({ label: "Object classes", value: String(graphByClass().length), note: "in the model" }),
-    withDelta({ label: "Records", value: String(allEvidence().length), note: "evidence" }, evidence),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "progress", lead: `${scale.sourceLinkedPct}% of active facts`, rest: "trace to a source you can open." },
-    { tone: "info", lead: "Schroders connects", rest: "to three funds, seven host markets and two Broadridge services." },
-    { tone: "risk", lead: "One conflicting record", rest: "— two sources disagree on a Spanish effective date." },
-  ];
-
-  return (
-    <DashboardFrame eyebrow="Knowledge Graph · Connected view" range="All" kpis={kpis} signals={signals} palette={MODULE_PALETTE["knowledge-graph"]}>
-      {chartRow(
-        "knowledge-graph",
-        { title: "Records captured", subtitle: "Evidence per month", points: evidence },
-        { title: "Objects by class", subtitle: "What the model holds", rows: graphByClass() },
-      )}
-    </DashboardFrame>
-  );
-}
-
-/* ── Accounts ─────────────────────────────────────────────────────────────── */
+/* ── Accounts — a divided whole ───────────────────────────────────────────── */
 
 function AccountsDashboard() {
-  const s = SUMMARY_BY_MODULE.accounts();
-  const events = eventsByMonth();
-  const accounts = allAccounts();
-  const clients = accounts.filter((a) => a.relationship === "existing-client").length;
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Strategic", value: s.metrics[0].value, note: "tier one" }),
-    withDelta({ label: "Changed", value: s.metrics[1].value, note: "this month" }, events),
-    withDelta({ label: "Need action", value: s.metrics[2].value, note: "attention or risk" }),
-    withDelta({ label: "Renewals 180d", value: s.metrics[3].value, note: "windows open" }),
-    withDelta({ label: "Existing clients", value: String(clients), note: `of ${accounts.length}` }),
-    withDelta({ label: "Prospects", value: String(accounts.length - clients), note: "no relationship" }),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "info", lead: "Schroders", rest: "has new UCITS activity in three markets against an existing document relationship." },
-    { tone: "risk", lead: "13 accounts need action", rest: "— each has changed with no response recorded." },
-    { tone: "progress", lead: "Every account", rest: "carries what changed, where we stand and what to do next." },
-  ];
+  const palette = MODULE_PALETTE.accounts;
+  const cells = portfolioCells();
+  const markers = markerCounts();
+  const clients = allAccounts().filter((a) => a.relationship === "existing-client").length;
 
   return (
-    <DashboardFrame eyebrow="Accounts · Portfolio" range="30d" kpis={kpis} signals={signals} palette={MODULE_PALETTE.accounts}>
-      {chartRow(
-        "accounts",
-        { title: "Account-linked change", subtitle: "Verified events per month", points: events },
-        { title: "Footprint", subtitle: "Markets touched", rows: accountsByFootprint(5) },
-      )}
-    </DashboardFrame>
+    <div className={shell}>
+      <Head question="What is the current picture across the portfolio?" palette={palette}>
+        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
+          {cells.length} accounts · {clients} clients
+        </span>
+      </Head>
+
+      <div className="gi-plot min-h-0 flex-1 overflow-hidden rounded-xl p-2">
+        <Treemap cells={cells} width={840} height={272} />
+      </div>
+
+      <div className="flex shrink-0 items-center justify-between gap-4">
+        <Legend items={markers.map((m) => ({ label: `${m.label} · ${m.count}`, tone: m.tone }))} />
+        <Note>Sized by the number of markets an account&rsquo;s funds are sold into.</Note>
+      </div>
+    </div>
   );
 }
 
-/* ── Global ───────────────────────────────────────────────────────────────── */
-
-function GlobalDashboard() {
-  const s = SUMMARY_BY_MODULE.global();
-  const events = eventsByMonth();
-  const regions = marketsByRegion();
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Markets", value: s.metrics[0].value, note: "with active work" }),
-    withDelta({ label: "Client groups", value: s.metrics[1].value, note: "strategic" }),
-    withDelta({ label: "Opportunity", value: s.metrics[2].value, note: "pipeline + potential" }),
-    withDelta({ label: "New signals", value: s.metrics[3].value, note: "last 30 days" }, events),
-    withDelta({ label: "Regions", value: String(regions.length), note: "represented" }),
-    withDelta({ label: "Territories", value: "6", note: "covered" }),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "info", lead: "European fund expansion", rest: "is generating linked work across London, Luxembourg, Dublin and Frankfurt." },
-    { tone: "progress", lead: "Two APAC markets", rest: "entered via an Irish range extension." },
-    { tone: "risk", lead: "17 of 20 markets", rest: "sit in Europe — concentration, not coverage." },
-  ];
-
-  return (
-    <DashboardFrame eyebrow="Global · Worldwide footprint" range="30d" kpis={kpis} signals={signals} palette={MODULE_PALETTE.global}>
-      {chartRow(
-        "global",
-        { title: "Market signals", subtitle: "Detected per month, worldwide", points: events },
-        { title: "By region", subtitle: "Markets carrying work", rows: regions },
-      )}
-    </DashboardFrame>
-  );
-}
-
-/* ── Deals ────────────────────────────────────────────────────────────────── */
+/* ── Deals — a funnel ─────────────────────────────────────────────────────── */
 
 function DealsDashboard() {
-  const s = SUMMARY_BY_MODULE.deals();
-  const pipeline = pipelineByCloseMonth(6);
-  const counts = dealStateCounts();
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Active pipeline", value: s.metrics[0].value, note: `${allOpportunities().length} deals` }, pipeline),
-    withDelta({ label: "Healthy", value: String(counts.healthy), note: "forecast-ready" }),
-    withDelta({ label: "Watch", value: String(counts.watch), note: "conditions missing" }),
-    withDelta({ label: "Intervene", value: String(counts.intervene), note: "act now" }),
-    withDelta({ label: "Avg health", value: `${averageHealthPct()}%`, note: "seven components" }),
-    withDelta({ label: "Date slips", value: String(closeDateSlips()), note: "across pipeline" }),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "risk", lead: "Two late-stage deals", rest: "have no confirmed economic buyer or joint decision date." },
-    { tone: "info", lead: "Nordea at £640k is Watch", rest: "— problem and sponsor confirmed, decision route is not." },
-    { tone: "progress", lead: "£7.0m sits at Decision", rest: "with owner, criteria and timing established." },
-  ];
+  const palette = MODULE_PALETTE.deals;
+  const deals = allOpportunities();
+  const stages = dealFunnel();
+  const total = deals.reduce((s, d) => s + d.value, 0);
+  const intervene = deals.filter((d) => dealState(d) === "intervene").length;
+  const slips = deals.reduce((s, d) => s + d.closeDateMoves, 0);
+  const avg = Math.round((deals.reduce((s, d) => s + healthScore(d), 0) / Math.max(deals.length, 1)) * 100);
+  const worst = [...deals].sort((a, b) => healthScore(a) - healthScore(b)).slice(0, 4);
 
   return (
-    <DashboardFrame eyebrow="Deals · Pipeline truth" range="8mo" kpis={kpis} signals={signals} palette={MODULE_PALETTE.deals}>
-      {chartRow(
-        "deals",
-        { title: "Pipeline by close month", subtitle: "Forecast value landing", points: pipeline },
-        { title: "By stage", subtitle: "Change through Outcome", rows: pipelineByStage() },
-      )}
-    </DashboardFrame>
+    <div className={shell}>
+      <Head question="What would have to be true for these to close?" palette={palette} />
+
+      <div className="grid shrink-0 grid-cols-4 gap-2.5">
+        <GlassStat label="Open pipeline" value={gbpShort(total)} note={`${deals.length} opportunities`} />
+        <GlassStat label="Average health" value={`${avg}%`} note="across six conditions" />
+        <GlassStat
+          label="Need intervention"
+          value={String(intervene)}
+          note="a condition is missing"
+          tone={intervene ? "var(--state-risk)" : undefined}
+        />
+        <GlassStat
+          label="Close dates moved"
+          value={String(slips)}
+          note="times, across the book"
+          tone={slips ? "var(--state-attention)" : undefined}
+        />
+      </div>
+
+      <div className="grid min-h-0 flex-1 grid-cols-[1fr_0.85fr] gap-2.5">
+        <Plot title="Value by stage" subtitle="a snapshot, not a conversion rate">
+          <Funnel stages={stages} palette={palette} width={252} height={208} />
+        </Plot>
+
+        <div className="gi-tile flex min-h-0 flex-col rounded-xl px-3 py-2.5">
+          <p className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
+            Weakest conditions
+          </p>
+          <ul className="mt-2 flex min-h-0 flex-1 flex-col justify-between">
+            {worst.map((d) => (
+              <li key={d.id} className="min-w-0">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="truncate text-[10px] font-semibold text-[var(--text-1)]">{d.name}</p>
+                  <span className="shrink-0 text-[9.5px] font-semibold tabular-nums text-[var(--text-3)]">
+                    {gbpShort(d.value)}
+                  </span>
+                </div>
+                <div className="mt-1.5">
+                  <Segments values={Object.values(d.health)} palette={palette} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <Note>Each segment is one of the six conditions a deal needs. Faint means unproven, not absent.</Note>
+    </div>
   );
 }
 
-/* ── People ───────────────────────────────────────────────────────────────── */
+/* ── Markets — a map ──────────────────────────────────────────────────────── */
+
+function MarketsDashboard() {
+  const palette = MODULE_PALETTE.markets;
+  const heat = marketHeat();
+  const moved = movedMarkets(4);
+  const changes = latestChanges(3);
+
+  return (
+    <div className={shell}>
+      <Head question="Where are fund groups moving, and does it create a reason?" range="Europe" palette={palette} />
+
+      <div className="grid min-h-0 flex-1 grid-cols-[1.42fr_1fr] gap-2.5">
+        <div className="gi-plot min-h-0 overflow-hidden rounded-xl p-1.5">
+          <RegionMap values={heat} markers={moved} palette={palette} width={470} height={288} />
+        </div>
+
+        <div className="flex min-h-0 flex-col gap-2.5">
+          <div className="grid shrink-0 grid-cols-2 gap-4">
+            <Stat
+              label="Markets moving"
+              value={String(Object.keys(heat).length)}
+              note="with recorded change"
+              palette={palette}
+              size="sm"
+            />
+            <Stat
+              label="Verified changes"
+              value={String(allEvents().filter((e) => e.state === "verified-fact").length)}
+              note="sourced and dated"
+              palette={palette}
+              size="sm"
+            />
+          </div>
+
+          <Plot title="Most change" subtitle="numbered on the map" className="shrink-0">
+            <BarList rows={topMarkets(5)} palette={palette} labelWidth={74} ranked />
+          </Plot>
+
+          <Rail
+            title="What moved"
+            palette={palette}
+            items={changes.map((c) => ({
+              id: c.id,
+              lead: c.market,
+              rest: c.headline,
+            }))}
+          />
+        </div>
+      </div>
+
+      <Note>Shading is the count of recorded changes, on a root scale so Luxembourg does not flatten the rest.</Note>
+    </div>
+  );
+}
+
+/* ── People — an orbit ────────────────────────────────────────────────────── */
 
 function PeopleDashboard() {
-  const s = SUMMARY_BY_MODULE.people();
-  const execChanges = eventsByMonthOfType("new-executive");
-  const external = allPeople().filter((p) => !p.internal);
-  const sourced = external.filter((p) => p.identity.verified && p.identity.sourceId).length;
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Buying groups", value: s.metrics[0].value, note: "active deals" }),
-    withDelta({ label: "No sponsor", value: s.metrics[1].value, note: "executive missing" }),
-    withDelta({ label: "Leadership change", value: s.metrics[2].value, note: "appointments" }, execChanges),
-    withDelta({ label: "Warm routes", value: s.metrics[3].value, note: "identified" }),
-    withDelta({ label: "Client contacts", value: String(external.length), note: "mapped" }),
-    withDelta({ label: "Sourced", value: `${sourced}/${external.length}`, note: "public record" }),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "risk", lead: "No procurement or legal contact", rest: "is mapped anywhere in the portfolio." },
-    { tone: "info", lead: "13 of 14 deals", rest: "have no identified executive decision owner." },
-    { tone: "progress", lead: "Every named contact", rest: "carries a public source and a stated role confidence." },
-  ];
+  const palette = MODULE_PALETTE.people;
+  const groups = buyingGroups();
+  const coverage = peopleCoverage();
 
   return (
-    <DashboardFrame eyebrow="People · Buying system" range="6mo" kpis={kpis} signals={signals} palette={MODULE_PALETTE.people}>
-      {chartRow(
-        "people",
-        { title: "Leadership changes", subtitle: "Appointments detected per month", points: execChanges },
-        { title: "Role coverage", subtitle: "Contacts mapped by buying role", rows: buyingRoleCoverage() },
-      )}
-    </DashboardFrame>
+    <div className={shell}>
+      <Head question="Who matters here, and what is the route to them?" palette={palette} />
+
+      <div className="grid min-h-0 flex-1 grid-cols-[1fr_1.05fr] gap-2.5">
+        <div className="gi-plot min-h-0 overflow-hidden rounded-xl p-1">
+          <RadialGroups groups={groups} palette={palette} centreLabel="BR" width={330} height={286} />
+        </div>
+
+        <div className="flex min-h-0 flex-col gap-2.5">
+          <div className="grid shrink-0 grid-cols-2 gap-4">
+            <Stat
+              label="People identified"
+              value={String(coverage.mapped)}
+              note={`across ${coverage.orgs} organisations`}
+              palette={palette}
+              size="sm"
+            />
+            <Stat
+              label="Relationships recorded"
+              value={String(coverage.withRelationship)}
+              note={coverage.withRelationship === 0 ? "none yet — this is the gap" : "with a route in"}
+              palette={palette}
+              size="sm"
+            />
+          </div>
+
+          {/* The key to the numbered nodes on the orbit. */}
+          <div className="gi-tile shrink-0 rounded-xl px-3 py-2.5">
+            <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
+              Organisations
+            </p>
+            <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-[5px]">
+              {groups.map((g, i) => (
+                <li key={g.id} className="flex min-w-0 items-baseline gap-1.5">
+                  <span
+                    className="shrink-0 text-[8.5px] font-bold tabular-nums"
+                    style={{ color: palette.ink }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="truncate text-[9.5px] text-[var(--text-2)]">{g.label}</span>
+                  <span className="ml-auto shrink-0 text-[9px] tabular-nums text-[var(--text-4)]">
+                    {g.members.length}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <Plot title="Buying roles covered" subtitle={`${coverage.rolesCovered} of ${coverage.rolesExpected} filled`} className="min-h-0 flex-1">
+            <BarList rows={buyingRoleCoverage()} palette={palette} labelWidth={72} />
+          </Plot>
+
+          <Legend
+            items={[
+              { label: "Relationship recorded", tone: palette.base },
+              { label: "Identified only", tone: palette.ink, hollow: true },
+            ]}
+          />
+        </div>
+      </div>
+
+      <Note>Names and titles come from sources. A buying role is always inferred — it is never asserted as fact.</Note>
+    </div>
   );
 }
 
-/* ── Evidence ─────────────────────────────────────────────────────────────── */
+/* ── Delivery — a time axis ───────────────────────────────────────────────── */
 
-function EvidenceDashboard() {
-  const s = SUMMARY_BY_MODULE.evidence();
-  const evidence = evidenceByMonth();
-  const facts = allEvidence().filter((e) => e.state === "verified-fact").length;
-
-  const kpis: Kpi[] = [
-    withDelta({ label: "Source-linked", value: s.metrics[0].value, note: "active insights" }),
-    withDelta({ label: "Need review", value: s.metrics[1].value, note: "flagged" }),
-    withDelta({ label: "Conflicting", value: s.metrics[2].value, note: "records disagree" }),
-    withDelta({ label: "Source feeds", value: s.metrics[3].value, note: "distinct kinds" }),
-    withDelta({ label: "Records", value: String(allEvidence().length), note: "held" }, evidence),
-    withDelta({ label: "Verified facts", value: String(facts), note: "with a source" }),
-  ];
-
-  const signals: Signal[] = [
-    { tone: "risk", lead: "One conflicting pair", rest: "— a secondary record dates the Spanish notification a week earlier." },
-    { tone: "info", lead: "Two system suggestions", rest: "carry no direct source; they are derived from other records." },
-    { tone: "progress", lead: "Every high-priority action", rest: "is backed by at least one verified record." },
-  ];
+function DeliveryDashboard() {
+  const palette = MODULE_PALETTE.delivery;
+  const stats = deliveryStats();
+  const horizon = renewalHorizon();
 
   return (
-    <DashboardFrame eyebrow="Evidence · Trust workspace" range="6mo" kpis={kpis} signals={signals} palette={MODULE_PALETTE.evidence}>
-      {chartRow(
-        "evidence",
-        { title: "Records captured", subtitle: "Evidence per month", points: evidence },
-        { title: "By state", subtitle: "What the system claims to know", rows: evidenceByState() },
-      )}
-    </DashboardFrame>
+    <div className={shell}>
+      <Head question="Are we delivering, and what is coming toward us?" range="12m" palette={palette} />
+
+      <div className="grid shrink-0 grid-cols-4 gap-4">
+        <Stat label="Live services" value={String(stats.live)} note={`of ${stats.services} relationships`} palette={palette} />
+        <Stat label="Renewals in 180d" value={String(stats.renewals180)} note="windows open" palette={palette} />
+        <Stat label="Value at renewal" value={gbpShort(stats.value180)} note="recurring, next 180 days" palette={palette} />
+        <Stat label="Needs support" value={String(stats.atRisk)} note="health below stable" palette={palette} />
+      </div>
+
+      <Plot title="Every renewal, on the date it falls" subtitle="sized by recurring value" className="min-h-0 flex-1">
+        <Horizon items={horizon} palette={palette} height={150} />
+      </Plot>
+
+      <div className="grid shrink-0 grid-cols-[1.3fr_1fr] items-end gap-4">
+        <div className="gi-tile rounded-xl px-3 py-2.5">
+          <BarList rows={deliveryByLifecycle()} palette={palette} labelWidth={78} />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Legend items={[{ label: "Renewal", tone: palette.base }, { label: "Needs support", tone: "var(--state-risk)", hollow: true }]} />
+          <Note>Clustering matters more than the count: two renewals in one week is one conversation.</Note>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Knowledge Graph — a network ──────────────────────────────────────────── */
+
+function KnowledgeGraphDashboard() {
+  const palette = MODULE_PALETTE["knowledge-graph"];
+  const { nodes, links } = ontologyGraph();
+  const scale = graphScale();
+
+  return (
+    <div className={shell}>
+      <Head question="How are account, fund, market, person, deal and evidence connected?" palette={palette}>
+        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
+          {scale.entities} objects · {scale.links} links
+        </span>
+      </Head>
+
+      <div className="gi-plot min-h-0 flex-1 overflow-hidden rounded-xl p-2">
+        <Network nodes={nodes} links={links} palette={palette} width={840} height={278} />
+      </div>
+
+      <div className="flex shrink-0 items-center justify-between gap-4">
+        <div className="flex items-center gap-6">
+          <Stat label="Source-linked" value={`${scale.sourceLinkedPct}%`} note="of evidence cites a source" palette={palette} size="sm" />
+          <Stat label="Object classes" value={String(nodes.length)} note="one shared vocabulary" palette={palette} size="sm" />
+        </div>
+        <Note>Every number is a live count. The skeleton is authored; the mass on it is not.</Note>
+      </div>
+    </div>
+  );
+}
+
+/* ── Global — a globe ─────────────────────────────────────────────────────── */
+
+function GlobalDashboard() {
+  const palette = MODULE_PALETTE.global;
+  const markers = globeMarkers();
+  const regions = regionRows();
+  const hubs = topHubs(4);
+  const active = markers.filter((m) => m.weight > 0).length;
+
+  return (
+    <div className={shell}>
+      <Head question="Where in the world do we have interest, and what is live there?" palette={palette} />
+
+      <div className="grid min-h-0 flex-1 grid-cols-[0.92fr_1fr] gap-3">
+        <div className="min-h-0 overflow-hidden">
+          <Globe markers={markers} palette={palette} originId="gb" id="global" size={300} />
+        </div>
+
+        <div className="flex min-h-0 flex-col gap-2.5">
+          <div className="grid shrink-0 grid-cols-2 gap-4">
+            <Stat label="Markets covered" value={String(markers.length)} note={`${active} with activity`} palette={palette} size="sm" />
+            <Stat label="Regions live" value={String(regions.length)} note="carrying open work" palette={palette} size="sm" />
+          </div>
+
+          <Plot title="Where the change is" subtitle="by region" className="shrink-0">
+            <BarList rows={regions} palette={palette} labelWidth={96} />
+          </Plot>
+
+          <div className="gi-tile flex min-h-0 flex-1 flex-col rounded-xl px-3 py-2.5">
+            <p className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
+              Busiest hubs
+            </p>
+            <ul className="mt-2 flex min-h-0 flex-1 flex-col justify-between">
+              {hubs.map((h) => (
+                <li key={h.id} className="flex min-w-0 items-baseline gap-2">
+                  <span className="truncate text-[10px] font-semibold text-[var(--text-1)]">{h.hub}</span>
+                  <span className="truncate text-[9px] text-[var(--text-4)]">{h.market}</span>
+                  <span className="ml-auto shrink-0 text-[9.5px] font-semibold tabular-nums text-[var(--text-2)]">
+                    {h.events} changes
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <Note>Arcs run from London to every market with recorded activity, along the great circle.</Note>
+    </div>
+  );
+}
+
+/* ── Evidence — a flow ────────────────────────────────────────────────────── */
+
+function EvidenceDashboard() {
+  const palette = MODULE_PALETTE.evidence;
+  const flow = provenanceFlow();
+  const trend = evidenceByMonth();
+
+  return (
+    <div className={shell}>
+      <Head question="Why should I trust this fact, score or recommendation?" palette={palette} />
+
+      <div className="grid shrink-0 grid-cols-4 gap-4">
+        <Stat
+          label="Evidence records"
+          value={String(flow.stats.records)}
+          note="claims on file"
+          palette={palette}
+          spark={trendOrNull(trend)}
+          {...(deltaOf(trend) ?? {})}
+        />
+        <Stat label="Carry a source" value={`${Math.round((flow.stats.sourced / Math.max(flow.stats.records, 1)) * 100)}%`} note={`${flow.stats.sourced} of ${flow.stats.records}`} palette={palette} />
+        <Stat label="Verified fact" value={String(flow.stats.verified)} note="the rest is inference" palette={palette} />
+        <Stat
+          label="Conflicting"
+          value={String(flow.stats.conflicts)}
+          note={flow.stats.conflicts ? "two sources disagree" : "none recorded"}
+          palette={palette}
+        />
+      </div>
+
+      <div className="gi-plot min-h-0 flex-1 overflow-hidden rounded-xl px-3 pb-2 pt-2.5">
+        <FlowChain
+          columns={flow.columns as Parameters<typeof FlowChain>[0]["columns"]}
+          links={flow.links as Parameters<typeof FlowChain>[0]["links"]}
+          palette={palette}
+          width={824}
+          height={244}
+        />
+      </div>
+
+      <Note>Ribbons are counted from the records themselves — nothing here is a connection we assumed.</Note>
+    </div>
   );
 }
 
@@ -381,15 +540,12 @@ function EvidenceDashboard() {
 
 export const DASHBOARDS: Record<ModuleId, () => React.JSX.Element> = {
   growth: GrowthDashboard,
-  delivery: DeliveryDashboard,
-  markets: MarketsDashboard,
-  "knowledge-graph": KnowledgeGraphDashboard,
   accounts: AccountsDashboard,
-  global: GlobalDashboard,
   deals: DealsDashboard,
+  markets: MarketsDashboard,
   people: PeopleDashboard,
+  delivery: DeliveryDashboard,
+  "knowledge-graph": KnowledgeGraphDashboard,
+  global: GlobalDashboard,
   evidence: EvidenceDashboard,
 };
-
-/** Referenced by the Deals dashboard's ranked list when value ordering is wanted. */
-export { dealsByValue };

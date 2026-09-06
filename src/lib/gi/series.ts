@@ -45,11 +45,24 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const monthKey = (iso: string) => iso.slice(0, 7);
 const monthLabel = (key: string) => MONTHS[Number(key.slice(5, 7)) - 1] ?? key;
 
-/** The N months ending at the reference date, oldest first. */
+/**
+ * The N months ending at the last *complete* month, oldest first.
+ *
+ * The reference date is the 6th, so the current month is a fifth of the way
+ * through. Including it puts a partial bucket at the end of every series, which
+ * makes each sparkline fall off a cliff and each period-on-period delta read
+ * something like −72% — an artefact of the calendar being asked to compare six
+ * days against thirty-one. Dropping the incomplete month is the only honest
+ * comparison available; the alternative is annualising, which invents data.
+ */
 function monthWindow(count: number, endIso: string = TODAY): string[] {
   const [y, m] = endIso.split("-").map(Number);
+  const day = Number(endIso.slice(8, 10));
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  const complete = day >= daysInMonth ? 0 : 1;
+
   const keys: string[] = [];
-  for (let i = count - 1; i >= 0; i--) {
+  for (let i = count - 1 + complete; i >= complete; i--) {
     const total = y * 12 + (m - 1) - i;
     const yy = Math.floor(total / 12);
     const mm = (total % 12) + 1;
@@ -103,15 +116,52 @@ export function eventsByMonthOfType(type: string, months = 6): Point[] {
 }
 
 /**
- * Period-on-period movement for a series, so a KPI only ever shows a delta it
+ * Period-on-period movement for a series, so a figure only ever shows a delta it
  * can actually compute. Returns null when there is nothing to compare against —
  * an absent delta is honest, an invented one is not.
+ *
+ * A base under three is treated as no base at all. One record last month and
+ * thirty-seven this month is arithmetically +3600%, and a tile reading "+3600%"
+ * tells a seller nothing except that the denominator was tiny. Small-base rates
+ * are noise wearing the costume of a measurement.
  */
+const MIN_BASE = 3;
+
+/**
+ * And a series where one bucket holds most of the total is not a trend at all.
+ *
+ * Several object types in the ontology carry a single load date, so their
+ * monthly series is a spike with flat ground either side. The arithmetic still
+ * produces a percentage — "+800%" — but what it measures is when the data was
+ * captured, not anything that happened in the business. A figure that changes
+ * when the loader runs is not a business metric, so no delta is shown.
+ */
+const MAX_CONCENTRATION = 0.6;
+
+/**
+ * Whether a series is a trend at all, rather than a load date wearing one.
+ * A sparkline drawn from a spike is as misleading as the percentage would be,
+ * so the same test gates both.
+ */
+export function isTrend(points: Point[]): boolean {
+  if (points.length < 2) return false;
+  const total = points.reduce((s, p) => s + p.value, 0);
+  if (total <= 0) return false;
+  return Math.max(...points.map((p) => p.value)) / total <= MAX_CONCENTRATION;
+}
+
+/** The series, or nothing — for passing straight into a sparkline. */
+export function trendOrNull(points: Point[]): Point[] | undefined {
+  return isTrend(points) ? points : undefined;
+}
+
 export function deltaOf(points: Point[]): { delta: string; trend: "up" | "down" | "flat" } | null {
   if (points.length < 2) return null;
+  if (!isTrend(points)) return null;
+
   const latest = points[points.length - 1].value;
   const prior = points[points.length - 2].value;
-  if (prior === 0) return latest === 0 ? null : { delta: "new", trend: "up" };
+  if (prior < MIN_BASE) return null;
   const pct = Math.round(((latest - prior) / prior) * 100);
   if (pct === 0) return { delta: "0%", trend: "flat" };
   return { delta: `${pct > 0 ? "+" : ""}${pct}%`, trend: pct > 0 ? "up" : "down" };

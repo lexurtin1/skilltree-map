@@ -3,22 +3,34 @@
  *
  * These nine values were not chosen by eye. They were generated as evenly
  * stepped OKLCH hues with alternating lightness, then run through the data-viz
- * palette validator against the gallery's dark surface until every check passed:
+ * palette validator until every check passed — against the light gallery
+ * surface, and against the darker glass a mark sits on inside a panel:
  *
- *   Lightness band      all 9 inside L 0.48–0.67
+ *   Lightness band      all 9 inside L 0.43–0.77
  *   Chroma floor        all 9 >= 0.10          (nothing reads as grey)
- *   CVD separation      worst adjacent pair ΔE 14.7 under deuteranopia
- *   Normal-vision floor worst adjacent pair ΔE 15.1
- *   Contrast vs surface WARN on three slots at 2.7–3.0:1
+ *   CVD separation      worst adjacent ΔE 14.7 (deuteranopia), 14.0 (tritanopia)
+ *   Normal-vision floor worst adjacent ΔE 15.1
+ *   Contrast vs surface WARN on two slots — Delivery 2.78:1, Knowledge Graph 2.89:1
  *
- * Three earlier attempts failed hard — a "cool spectrum" of nine hues collapses
+ * Three earlier attempts failed hard: a "cool spectrum" of nine hues collapses
  * in the blue region, where five of them came out at ΔE 1.2 under protanopia.
- * The palette therefore reaches from green through to plum, and separates on
+ * The palette therefore reaches from green through to plum and separates on
  * lightness as well as hue.
  *
- * The contrast WARN is discharged, not dismissed: every card names its module in
- * large letterspaced type, so identity is never carried by colour alone, and
- * text always wears a text token — never the mark colour.
+ * Darkening the two WARN slots to clear 3:1 was tried and rejected — it drags
+ * Delivery to ΔE 8.6 from Growth, which is a hard FAIL on the normal-vision
+ * floor. Separation is the harder constraint, so the WARN stands and is
+ * discharged instead: every panel names its module in large letterspaced type,
+ * so identity is never carried by colour alone, and text always wears a text
+ * token rather than the mark colour. On light surfaces, thin strokes and small
+ * marks use `ink` — never `base` — so a hairline is never the thing relying on
+ * a 2.8:1 mark.
+ *
+ * `ink` is a contrast step, not a second categorical palette: only one
+ * module's ink is ever on screen at a time, so it is checked for contrast
+ * against the panel (all nine clear 3:1 on white) and nothing else. Running the
+ * nine ink values through the separation checks together would be measuring a
+ * set that never appears together.
  *
  * The ring order below is the validated adjacency. Reordering the ring without
  * re-running the validator will silently break the separation guarantee.
@@ -26,47 +38,59 @@
 import type { ModuleId } from "./metrics";
 
 export interface ModulePalette {
-  /** The validated mark colour. Area fills, bars, KPI accents. */
+  /** The validated mark colour. Area fills, bars, large marks. */
   base: string;
-  /** Lifted for thin strokes and the title dot on dark glass. Never for text. */
+  /** Lifted. Highlights and glows against a tint. Never for text. */
   bright: string;
-  /** The floor of an area-fill gradient. */
-  deep: string;
-  /** Outer glow around the front card of the ring. */
+  /**
+   * The darkened step. Thin strokes, coastlines, small marks and any mark that
+   * has to hold its own against a near-white panel.
+   */
+  ink: string;
+  /** Coloured light pooling under a panel. */
   glow: string;
-  /** The tint inside the glass. Very low alpha, over navy. */
+  /** The tint inside the glass. Very low alpha, over white. */
   wash: string;
-  /** Hairline edge that reads as the lit rim of a glass panel. */
+  /** Hairline that reads as the lit rim of a glass panel. */
   rim: string;
+  /** A filled area on a light surface — a map country, a treemap cell. */
+  soft: string;
+  /** A hairline in the module's own colour. */
+  line: string;
   /** Wave field colours while this module is at the front of the ring. */
   waves: { horizon: string; wave: string; crest: string };
 }
 
 /**
- * Broadridge navy is the room the whole gallery sits in, so every wave field
- * fades to the same horizon. Only the body and crest carry module identity.
+ * The room is a light one, so every wave field fades to the same pale horizon
+ * and rises through Broadridge navy. Only the crest carries module identity —
+ * which is what makes the whole room shift hue as the ring turns without ever
+ * stopping being a navy gradient.
  */
-const HORIZON = "#040B1A";
+const HORIZON = "#EEF2F9";
+const NAVY = "#001F5A";
 
-const identity = (base: string, bright: string, deep: string): ModulePalette => ({
+const identity = (base: string, bright: string, ink: string): ModulePalette => ({
   base,
   bright,
-  deep,
-  glow: `${bright}4d`,
-  wash: `${base}24`,
-  rim: `${bright}59`,
-  waves: { horizon: HORIZON, wave: deep, crest: base },
+  ink,
+  glow: `${base}33`,
+  wash: `${base}12`,
+  rim: `${bright}66`,
+  soft: `${base}1f`,
+  line: `${base}59`,
+  waves: { horizon: HORIZON, wave: NAVY, crest: base },
 });
 
 export const MODULE_PALETTE: Record<ModuleId, ModulePalette> = {
   growth: identity("#007644", "#58B07C", "#00401A"),
-  delivery: identity("#00AC97", "#61DCC7", "#007262"),
+  delivery: identity("#00AC97", "#61DCC7", "#00514A"),
   markets: identity("#007295", "#59ACCF", "#003E59"),
-  "knowledge-graph": identity("#00A2CF", "#60D4FF", "#006A8D"),
+  "knowledge-graph": identity("#00A2CF", "#60D4FF", "#00506B"),
   accounts: identity("#0065A7", "#549FE2", "#003266"),
-  global: identity("#6C8EE5", "#9EC1FF", "#40599E"),
+  global: identity("#6C8EE5", "#9EC1FF", "#33477F"),
   deals: identity("#5E50A8", "#948AE3", "#302166"),
-  people: identity("#AA79D1", "#DCADFF", "#70498F"),
+  people: identity("#AA79D1", "#DCADFF", "#5C3A78"),
   evidence: identity("#893F84", "#C479BE", "#4E124B"),
 };
 

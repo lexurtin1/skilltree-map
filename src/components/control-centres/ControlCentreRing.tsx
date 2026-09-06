@@ -30,12 +30,35 @@ const CARD_W = 880;
 const CARD_H = 495; /* 16:9 */
 const COUNT = RING_ORDER.length;
 const STEP_DEG = 360 / COUNT;
+
 /**
- * Ring radius. The chord between adjacent panels is 2R·sin(180/9) = 0.684R, so
- * R = W/0.684 seats them edge to edge. A little under that gives the overlap the
- * reference has without burying the neighbours.
+ * Ring radius, derived rather than dialled in.
+ *
+ * The chord between adjacent panels is 2R·sin(180/9) = 0.684R, so R = W/0.684
+ * seats them edge to edge *in three dimensions*. On screen they are closer than
+ * that, because a neighbour at 40° has swung 0.234R further from the camera and
+ * is drawn smaller. Working the projection through at perspective d = 2.1R:
+ *
+ *   scale   d / (d + 0.234R)          = 0.90
+ *   centre  0.643R × 0.90             = 0.579R from the middle of the frame
+ *   width   (W/2) × 0.90 × cos40°     = 0.345W of half-width
+ *
+ * so the gap between the front panel's edge and its neighbour's is
+ * 0.579R − 0.345W − 0.5W. At the old 0.92 factor that came out negative — the
+ * panels overlapped by about 90px, which is what made the ring read as a stack.
+ * 1.22 puts roughly a sixth of a panel of clear air between them.
  */
-const RADIUS = Math.round((CARD_W / 0.684) * 0.92);
+const RADIUS = Math.round((CARD_W / 0.684) * 1.22);
+
+/**
+ * Resting height of each panel, in design pixels.
+ *
+ * A ring of nine identical rectangles at one height is a shelf. Lifting them by
+ * different amounts turns the same geometry into a skyline, and it is the single
+ * cheapest thing that makes the panels look like they are floating rather than
+ * mounted. The sequence is authored, not generated, so it stays put.
+ */
+const FLOAT_Y = [-18, 10, -30, 4, -12, 22, -24, 14, -6];
 /** Pointer travel, in px, before a press becomes a drag rather than a click. */
 const DRAG_THRESHOLD = 6;
 /** Fraction of a step that counts as a committed drag rather than a nudge. */
@@ -112,7 +135,18 @@ export function ControlCentreRing({
       const el = stageRef.current;
       if (!el) return;
       const { width, height } = el.getBoundingClientRect();
-      setScale(Math.max(0.26, Math.min(0.98, Math.min(width / (CARD_W * 1.42), height / (CARD_H * 1.16)))));
+      /* Sized to leave the neighbours visible on either side rather than to
+         make the front panel as large as it will go. The multiplier is what
+         decides how much of the ring is in frame; the cylinder maths above is
+         what decides that the panels never touch, at any of these sizes.
+
+         On a narrow screen the ring is allowed to run further off the sides.
+         Holding the same framing there would shrink the front panel to about
+         440px, at which point the dashboard on it stops being readable — and an
+         unreadable dashboard framed beautifully is worth less than a readable
+         one with its neighbours cropped. */
+      const framing = width < 1280 ? 1.86 : 2.3;
+      setScale(Math.max(0.24, Math.min(0.84, Math.min(width / (CARD_W * framing), height / (CARD_H * 1.34)))));
     };
     fit();
     window.addEventListener("resize", fit);
@@ -264,7 +298,16 @@ export function ControlCentreRing({
             width: 0,
             height: 0,
             transform: `translate(-50%, -46%) scale(${scale})`,
-            perspective: `${RADIUS * 2.1}px`,
+            /* Camera distance.
+               At 2.1R the cylinder is nearly an orthographic strip: panels more
+               than one slot out fly off the sides of the frame before they have
+               turned far enough to show their backs, and the ring stops reading
+               as a ring. Bringing the camera in to 1.6R shortens the far side
+               enough that the panels at 100–126° — the mirrored ones — curve
+               back into view at the edges, which is the whole point of a clear
+               carousel. It is also what produces the keystone on the
+               neighbours. */
+            perspective: `${RADIUS * 1.6}px`,
             perspectiveOrigin: "50% 50%",
           }}
         >
@@ -284,9 +327,12 @@ export function ControlCentreRing({
 
             /* A slot is 40°, so anything past 2.25 slots is turned more than
                90° away and is showing its back. Those are the mirrored panels —
-               the reason this is a clear carousel — so they are kept. Only the
-               far side of the ring, directly behind the front card, is culled. */
-            if (distance > 4.2) return null;
+               the reason this is a clear carousel — so they are kept.
+               Past 3.15 slots (126°) a panel has swung round to sit squarely
+               *behind* the front one, where it shows through the glass and puts
+               a second dashboard on top of the one you are reading. Those are
+               culled; the mirrored ones off to the side are not. */
+            if (distance > 3.15) return null;
 
             return (
               <div
@@ -298,7 +344,7 @@ export function ControlCentreRing({
                   left: -CARD_W / 2,
                   top: -CARD_H / 2,
                   transform: `rotateY(${i * STEP_DEG}deg) translateZ(${RADIUS}px)`,
-                  opacity: Math.max(0.14, 1 - distance * 0.19),
+                  opacity: Math.max(0.2, 1 - distance * 0.145),
                   zIndex: Math.round(100 - distance * 10),
                   pointerEvents: distance > 2.25 ? "none" : "auto",
                 }}
@@ -311,34 +357,49 @@ export function ControlCentreRing({
                   if (active) remember(id);
                 }}
               >
-                {active && (
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute -inset-6 -z-10 rounded-[32px]"
-                    style={{
-                      background: `radial-gradient(ellipse 60% 55% at 50% 60%, ${MODULE_PALETTE[id].glow}, transparent 70%)`,
-                      filter: "blur(34px)",
-                    }}
+                <div
+                  className="gi-float absolute inset-0"
+                  style={
+                    {
+                      "--fy": `${FLOAT_Y[i % FLOAT_Y.length]}px`,
+                      /* Negative delays start every panel mid-cycle, so they
+                         drift out of step instead of breathing in unison. */
+                      "--fd": `${-(i * 1.3).toFixed(1)}s`,
+                    } as React.CSSProperties
+                  }
+                >
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute -inset-8 -z-10 rounded-[36px]"
+                      style={{
+                        background: `radial-gradient(ellipse 58% 54% at 50% 62%, ${MODULE_PALETTE[id].glow}, transparent 72%)`,
+                        filter: "blur(38px)",
+                      }}
+                    />
+                  )}
+
+                  <ControlCentreCard
+                    module={mod}
+                    active={active}
+                    distance={distance}
+                    onSeat={() => seat(i)}
                   />
-                )}
-                <ControlCentreCard
-                  module={mod}
-                  active={active}
-                  distance={distance}
-                  onSeat={() => seat(i)}
-                />
-                {/* Scrim: the room falling across a panel as it turns away.
-                    A gradient, not a blur — blur would flatten the cylinder. */}
-                {distance > 0.12 && (
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 rounded-2xl"
-                    style={{
-                      background: "rgba(3, 8, 20, 1)",
-                      opacity: Math.min(0.08 + distance * 0.2, 0.72),
-                    }}
-                  />
-                )}
+
+                  {/* Haze: the room's air thickening across a panel as it turns
+                      away. A pale wash rather than a blur — blur flattens
+                      `preserve-3d` and would collapse the cylinder. */}
+                  {distance > 0.12 && (
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute inset-0 rounded-[20px]"
+                      style={{
+                        background: "#eef2f9",
+                        opacity: Math.min(0.05 + distance * 0.16, 0.62),
+                      }}
+                    />
+                  )}
+                </div>
               </div>
             );
           })}
@@ -364,7 +425,7 @@ export function ControlCentreRing({
                   className="block h-[5px] rounded-full transition-all duration-300"
                   style={{
                     width: i === frontSlot ? 24 : 5,
-                    background: i === frontSlot ? "var(--text-1)" : "rgba(255,255,255,0.24)",
+                    background: i === frontSlot ? MODULE_PALETTE[id].base : "rgba(0,31,90,0.2)",
                   }}
                 />
               </button>
@@ -387,7 +448,7 @@ function StepButton({ side, onClick }: { side: "left" | "right"; onClick: () => 
       type="button"
       onClick={onClick}
       aria-label={side === "left" ? "Previous control centre" : "Next control centre"}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.12] bg-white/[0.04] text-[var(--text-2)] transition-colors hover:border-white/30 hover:text-[var(--text-1)]"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(0,31,90,0.12)] bg-white/70 text-[var(--text-2)] shadow-[0_2px_6px_-2px_rgba(0,31,90,0.16)] backdrop-blur-sm transition-colors hover:border-[rgba(0,31,90,0.3)] hover:text-[var(--text-1)]"
     >
       <Icon size={15} />
     </button>

@@ -1,7 +1,7 @@
 /**
  * The module registry.
  *
- * Navigation, the Control Centres carousel and every breadcrumb read from this
+ * Navigation, the gallery ring and every breadcrumb read from this
  * one list, so a module's name, description and route can never disagree
  * between the card that opens it and the page it opens.
  *
@@ -133,20 +133,18 @@ export const TASKS_MODULE = {
   Icon: TasksIcon,
 };
 
-/** Primary navigation. The rest live under "More" so the bar stays readable. */
-export const PRIMARY_NAV: Array<{ label: string; href: string }> = [
-  { label: "Control Centres", href: "/" },
-  { label: "Global", href: "/global" },
-  { label: "Accounts", href: "/accounts" },
-  { label: "Deals", href: "/deals" },
-  { label: "Markets", href: "/markets" },
-  { label: "People", href: "/people" },
-];
-
-export const SECONDARY_NAV: Array<{ label: string; href: string }> = [
-  { label: "Growth", href: "/growth" },
-  { label: "Delivery", href: "/delivery" },
-  { label: "Knowledge Graph", href: "/knowledge-graph" },
-  { label: "Evidence", href: "/evidence" },
-  { label: "Tasks", href: "/tasks" },
-];
+/**
+ * Navigation.
+ *
+ * The bar carries three controls and nothing else: search, the one action a
+ * seller starts a day with, and a menu. Every destination lives behind the menu,
+ * grouped, rather than being spread across a row of tabs that had grown to
+ * eleven items and still could not fit them all.
+ *
+ * The gallery itself is not a nav item — the logo is the way home, which is what
+ * a logo is for.
+ */
+export const NAV_MODULES: Array<{ label: string; href: string }> = MODULES.map((m) => ({
+  label: m.label,
+  href: m.href,
+}));

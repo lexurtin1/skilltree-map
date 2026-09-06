@@ -144,6 +144,9 @@ export const ArrowRightIcon = ({ size = 16, className = "" }: P) =>
 export const ChevronDownIcon = ({ size = 14, className = "" }: P) =>
   svg(size, className, <path d="M4 6.2 8 10.2l4-4" />);
 
+export const MenuIcon = ({ size = 14, className = "" }: P) =>
+  svg(size, className, <><path d="M2.5 4.5h11" /><path d="M2.5 8h11" /><path d="M2.5 11.5h11" /></>);
+
 export const ExternalIcon = ({ size = 12, className = "" }: P) =>
   svg(size, className, <><path d="M9 3h4v4" /><path d="M13 3 7.4 8.6" /><path d="M11.6 9.6v3a1 1 0 0 1-1 1H3.4a1 1 0 0 1-1-1V5.4a1 1 0 0 1 1-1h3" /></>);
 

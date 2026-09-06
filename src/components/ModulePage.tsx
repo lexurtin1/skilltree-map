@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eyebrow, Panel } from "./ui/Panel";
+import { Panel } from "./ui/Panel";
 import { ArrowLeftIcon } from "./ui/Icons";
 
 /**
@@ -30,14 +30,13 @@ export function ModulePage({
             className="inline-flex items-center gap-1 rounded px-1 py-0.5 font-medium transition-colors hover:text-[var(--brand)]"
           >
             <ArrowLeftIcon size={12} />
-            Control Centres
+            All modules
           </Link>
           <span aria-hidden>/</span>
           <span className="text-[var(--text-3)]">{label}</span>
         </nav>
 
         <header className="mb-5">
-          <Eyebrow className="mb-1.5">Control Centre</Eyebrow>
           <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-[var(--text-1)]">
             {label}
           </h1>
@@ -51,7 +50,7 @@ export function ModulePage({
             <p className="text-[13px] font-semibold text-[var(--text-2)]">In development</p>
             <p className="mx-auto mt-1.5 max-w-[52ch] text-[12.5px] leading-relaxed text-[var(--text-3)]">
               {phase ??
-                "This module is built in a later phase. Its data model, metrics and state language are already live — the Control Centres card for it is reading real values from the shared ontology now."}
+                "This module is built in a later phase. Its data model, metrics and state language are already live — the gallery panel for it is reading real values from the shared ontology now."}
             </p>
           </Panel>
         )}

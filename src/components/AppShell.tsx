@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandLogo } from "./BrandLogo";
-import { PRIMARY_NAV, SECONDARY_NAV, TASKS_MODULE } from "./modules";
+import { NAV_MODULES, TASKS_MODULE } from "./modules";
 import { PrepareMeSheet } from "./prepare/PrepareMeSheet";
 import {
-  ChevronDownIcon,
   FullscreenIcon,
+  MenuIcon,
   PrepareIcon,
   SearchIcon,
   TasksIcon,
@@ -40,206 +40,198 @@ function hrefFor(ref: ObjectRef): string {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [prepareOpen, setPrepareOpen] = useState(false);
-  const pathname = usePathname();
-  /* The gallery is the only dark room in the product. The chrome belongs to the
-     room it is in, or a white strip sits over the waves and reads as a seam. */
-  const dark = pathname === "/";
 
   return (
-    <div
-      className="relative flex h-full flex-col"
-      data-surface={dark ? "dark" : undefined}
-      style={{ background: dark ? "#040b1a" : "var(--surface-0)" }}
-    >
-      <TopBar onPrepare={() => setPrepareOpen(true)} dark={dark} />
+    <div className="relative flex h-full flex-col" style={{ background: "var(--surface-0)" }}>
+      <TopBar onPrepare={() => setPrepareOpen(true)} />
       <main className="relative min-h-0 flex-1">{children}</main>
-      <FooterRail dark={dark} />
+      <FooterRail />
       {prepareOpen && <PrepareMeSheet onClose={() => setPrepareOpen(false)} />}
     </div>
   );
 }
 
-/* ── Top bar ──────────────────────────────────────────────────────────────── */
+/* ── Top bar ──────────────────────────────────────────────────────────────
+   Three controls, and the logo.
 
-function TopBar({ onPrepare, dark }: { onPrepare: () => void; dark: boolean }) {
+   The bar had eleven destinations in it, six inline and five behind an
+   overflow, and still could not fit them below 1280px. Tabs are the wrong shape
+   for nine peers: none of them is more important than the others, so promoting
+   six of them was an arbitrary decision the user then had to work around.
+
+   What is left is search, the one action a seller opens the day with, and a
+   menu holding every destination in named groups. The gallery is not in the
+   menu — the logo is the way home, which is what a logo is for. */
+
+function TopBar({ onPrepare }: { onPrepare: () => void }) {
   const pathname = usePathname();
   const taskCount = useMemo(() => openTaskCount(), []);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement>(null);
-
-  const toggleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.();
-    else void document.exitFullscreen?.();
-  }, []);
-
-  /* Close the overflow menu when the route changes. Adjusting state during
-     render is the documented pattern for this; an effect would render the
-     stale open menu for a frame first. */
-  const [lastPath, setLastPath] = useState(pathname);
-  if (pathname !== lastPath) {
-    setLastPath(pathname);
-    setMoreOpen(false);
-  }
-
-  useEffect(() => {
-    if (!moreOpen) return;
-    const onDown = (e: MouseEvent) => {
-      if (!moreRef.current?.contains(e.target as Node)) setMoreOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMoreOpen(false);
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [moreOpen]);
-
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
-
-  const secondaryActive = SECONDARY_NAV.some((s) => isActive(s.href));
 
   return (
     <header
-      className={`relative z-50 flex shrink-0 items-center gap-3 border-b px-3 sm:px-4 ${
-        dark
-          ? "border-white/[0.08] bg-[rgba(6,14,30,0.72)] backdrop-blur-xl"
-          : "border-[var(--line)] bg-[var(--surface-1)]"
-      }`}
+      className="relative z-50 flex shrink-0 items-center gap-3 border-b border-[var(--line)] bg-[var(--surface-1)] px-3 sm:px-4"
       style={{ height: "var(--topbar-h)" }}
     >
-      <Link
-        href="/"
-        className="flex shrink-0 items-center gap-2.5"
-        aria-label="Broadridge Growth Intelligence — Control Centres"
-      >
-        <BrandLogo variant={dark ? "lockupOnDark" : "lockup"} height={dark ? 18 : 22} priority />
+      <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Broadridge Growth Intelligence — home">
+        <BrandLogo variant="lockup" height={22} priority />
         <span className="hidden h-5 w-px bg-[var(--line)] lg:block" aria-hidden />
         <span className="hidden text-[12.5px] font-semibold tracking-[-0.01em] text-[var(--text-2)] lg:block">
           Growth Intelligence
         </span>
       </Link>
 
-      <GlobalSearch />
+      <div className="ml-auto flex min-w-0 items-center gap-2">
+        <GlobalSearch />
 
-      <nav className="ml-auto flex items-center gap-0.5" aria-label="Primary">
-        {PRIMARY_NAV.map((tab) => (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            aria-current={isActive(tab.href) ? "page" : undefined}
-            className={`hidden rounded-md px-2.5 py-1.5 text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-colors xl:block ${
-              isActive(tab.href)
-                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
-                : "text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
-
-        <div className="relative" ref={moreRef}>
-          <button
-            type="button"
-            onClick={() => setMoreOpen((v) => !v)}
-            aria-expanded={moreOpen}
-            aria-haspopup="menu"
-            className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-colors ${
-              secondaryActive
-                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
-                : "text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
-            }`}
-          >
-            <span className="xl:hidden">Menu</span>
-            <span className="hidden xl:inline">More</span>
-            <ChevronDownIcon size={12} />
-          </button>
-          {moreOpen && (
-            <div
-              role="menu"
-              className="gi-rise absolute right-0 top-[calc(100%+6px)] w-52 overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface-1)] py-1"
-              style={{ boxShadow: "var(--shadow-3)" }}
-            >
-              {/* Primary destinations are listed here too, and hide themselves
-                  once the inline bar appears at xl. */}
-              {PRIMARY_NAV.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  role="menuitem"
-                  className={`block px-3 py-2 text-[12.5px] transition-colors hover:bg-[var(--surface-2)] xl:hidden ${
-                    isActive(item.href)
-                      ? "font-semibold text-[var(--brand)]"
-                      : "text-[var(--text-2)]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <span className="my-1 block h-px bg-[var(--line-soft)] xl:hidden" aria-hidden />
-              {SECONDARY_NAV.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  role="menuitem"
-                  className={`block px-3 py-2 text-[12.5px] transition-colors hover:bg-[var(--surface-2)] ${
-                    isActive(item.href)
-                      ? "font-semibold text-[var(--brand)]"
-                      : "text-[var(--text-2)]"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </nav>
-
-      <div className="flex shrink-0 items-center gap-1.5">
         <button
           type="button"
           onClick={onPrepare}
-          className="inline-flex items-center gap-1.5 rounded-md bg-[var(--brand)] px-3 py-[7px] text-[12px] font-semibold text-white transition-colors hover:bg-[var(--brand-bright)]"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--brand)] px-3 py-[7px] text-[12px] font-semibold text-white transition-colors hover:bg-[var(--brand-bright)]"
         >
           <PrepareIcon size={14} />
           <span className="hidden sm:inline">Prepare me</span>
         </button>
 
-        <Link
-          href={TASKS_MODULE.href}
-          aria-label={`Tasks — ${taskCount} open`}
-          className={`relative inline-flex items-center gap-1.5 rounded-md border px-2.5 py-[7px] text-[12px] font-semibold transition-colors ${
-            isActive("/tasks")
-              ? "border-[var(--brand-soft)] bg-[var(--chip-bg)] text-[var(--chip-fg)]"
-              : "border-[var(--line)] text-[var(--text-2)] hover:border-[var(--brand-bright)] hover:text-[var(--brand)]"
-          }`}
-        >
-          <TasksIcon size={14} />
-          <span className="hidden sm:inline">Tasks</span>
-          <span className="rounded-full bg-[var(--state-attention)] px-1.5 py-[1px] text-[10px] font-bold leading-[14px] text-white tabular-nums">
-            {taskCount}
-          </span>
-        </Link>
-
-        <button
-          type="button"
-          onClick={toggleFullscreen}
-          aria-label="Toggle fullscreen"
-          className="hidden h-8 w-8 items-center justify-center rounded-md border border-[var(--line)] text-[var(--text-3)] transition-colors hover:border-[var(--brand-bright)] hover:text-[var(--brand)] lg:inline-flex"
-        >
-          <FullscreenIcon size={14} />
-        </button>
-
-        <span
-          title="Signed in as James Howard, Strategic Account Director"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-bold text-white"
-        >
-          JH
-        </span>
+        <NavMenu pathname={pathname} taskCount={taskCount} />
       </div>
     </header>
+  );
+}
+
+/* ── The menu ─────────────────────────────────────────────────────────────
+   Everything the bar used to hold, in named groups so nine peers read as nine
+   peers. Tasks keeps its live count here and repeats it as a dot on the button,
+   because a number you have to open a menu to see is a number nobody sees. */
+
+function NavMenu({ pathname, taskCount }: { pathname: string; taskCount: number }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+
+  /* Close on navigation. Adjusting state during render is the documented
+     pattern for this; an effect would show the stale open menu for a frame. */
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.();
+    else void document.exitFullscreen?.();
+  }, []);
+
+  return (
+    <div className="relative shrink-0" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`Menu — ${taskCount} open tasks`}
+        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-[7px] text-[12px] font-semibold transition-colors ${
+          open
+            ? "border-[var(--brand-soft)] bg-[var(--chip-bg)] text-[var(--chip-fg)]"
+            : "border-[var(--line)] text-[var(--text-2)] hover:border-[var(--brand-bright)] hover:text-[var(--brand)]"
+        }`}
+      >
+        <MenuIcon size={14} />
+        <span className="hidden sm:inline">Menu</span>
+        {taskCount > 0 && (
+          <span className="h-[6px] w-[6px] rounded-full bg-[var(--state-attention)]" aria-hidden />
+        )}
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="gi-rise absolute right-0 top-[calc(100%+8px)] w-[280px] overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface-1)] py-2"
+          style={{ boxShadow: "var(--shadow-3)" }}
+        >
+          <MenuHeading>Modules</MenuHeading>
+          <div className="grid grid-cols-2 gap-x-1 px-1.5">
+            {NAV_MODULES.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                role="menuitem"
+                className={`truncate rounded-md px-2 py-[7px] text-[12px] transition-colors hover:bg-[var(--surface-2)] ${
+                  isActive(item.href) ? "font-semibold text-[var(--brand)]" : "text-[var(--text-2)]"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <span className="my-2 block h-px bg-[var(--line-soft)]" aria-hidden />
+
+          <MenuHeading>Work</MenuHeading>
+          <div className="px-1.5">
+            <Link
+              href={TASKS_MODULE.href}
+              role="menuitem"
+              className={`flex items-center gap-2 rounded-md px-2 py-[7px] text-[12px] transition-colors hover:bg-[var(--surface-2)] ${
+                isActive("/tasks") ? "font-semibold text-[var(--brand)]" : "text-[var(--text-2)]"
+              }`}
+            >
+              <TasksIcon size={14} />
+              Tasks
+              <span className="ml-auto rounded-full bg-[var(--state-attention)] px-1.5 py-[1px] text-[10px] font-bold leading-[14px] tabular-nums text-white">
+                {taskCount}
+              </span>
+            </Link>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                toggleFullscreen();
+              }}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-[7px] text-left text-[12px] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]"
+            >
+              <FullscreenIcon size={14} />
+              Full screen
+            </button>
+          </div>
+
+          <span className="my-2 block h-px bg-[var(--line-soft)]" aria-hidden />
+
+          <div className="flex items-center gap-2.5 px-3.5 pb-1 pt-0.5">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[10.5px] font-bold text-white">
+              JH
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[12px] font-semibold text-[var(--text-1)]">James Howard</span>
+              <span className="block truncate text-[10.5px] text-[var(--text-4)]">Strategic Account Director</span>
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MenuHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="px-3.5 pb-1.5 text-[9.5px] font-bold uppercase tracking-[0.12em] text-[var(--text-4)]">
+      {children}
+    </p>
   );
 }
 
@@ -312,7 +304,7 @@ function GlobalSearch() {
   };
 
   return (
-    <div ref={boxRef} className="relative hidden min-w-0 flex-1 md:block md:max-w-[300px] lg:max-w-[360px]">
+    <div ref={boxRef} className="relative hidden min-w-0 md:block md:w-[190px] lg:w-[260px]">
       <label className="relative block">
         <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-4)]">
           <SearchIcon size={14} />
@@ -330,7 +322,7 @@ function GlobalSearch() {
           aria-expanded={open && results.length > 0}
           aria-controls="gi-search-results"
           aria-autocomplete="list"
-          placeholder="Search accounts, funds, people, markets, deals"
+          placeholder="Search"
           className="w-full rounded-md border border-[var(--line)] bg-[var(--surface-0)] py-[7px] pl-8 pr-12 text-[12.5px] text-[var(--text-1)] outline-none transition-colors placeholder:text-[var(--text-4)] focus:border-[var(--brand-bright)] focus:bg-[var(--surface-1)]"
         />
         <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-[var(--line)] bg-[var(--surface-1)] px-1.5 py-[1px] text-[10px] font-medium text-[var(--text-4)] lg:block">
@@ -386,14 +378,10 @@ function GlobalSearch() {
 
 /* ── Footer rail ──────────────────────────────────────────────────────────── */
 
-function FooterRail({ dark }: { dark: boolean }) {
+function FooterRail() {
   return (
     <footer
-      className={`relative z-40 flex shrink-0 items-center justify-between gap-4 border-t px-4 text-[10.5px] text-[var(--text-4)] ${
-        dark
-          ? "border-white/[0.07] bg-[rgba(6,14,30,0.72)] backdrop-blur-xl"
-          : "border-[var(--line)] bg-[var(--surface-1)]"
-      }`}
+      className="relative z-40 flex shrink-0 items-center justify-between gap-4 border-t border-[var(--line)] bg-[var(--surface-1)] px-4 text-[10.5px] text-[var(--text-4)]"
       style={{ height: "var(--footrail-h)" }}
     >
       <p className="truncate">
