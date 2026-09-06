@@ -47,15 +47,9 @@ function TopBar() {
         </button>
 
         <Link href="/" className="flex min-w-0 items-center gap-3">
-          <BrandLogo variant="mark" height={36} priority />
-          <div className="min-w-0 leading-tight">
-            <p className="truncate text-[14px] font-semibold tracking-tight text-[var(--copper)]">
-              Broadridge
-            </p>
-            <p className="truncate text-[11px] text-[var(--ink-2)]">
-              Ontology
-            </p>
-          </div>
+          <BrandLogo variant="lockup" height={32} priority />
+          <span className="hidden h-6 w-px bg-[var(--line)] sm:block" aria-hidden />
+          <p className="truncate text-[12px] text-[var(--ink-2)]">Ontology</p>
         </Link>
 
         <label className="relative ml-2 hidden min-w-[180px] max-w-[240px] flex-1 sm:block">

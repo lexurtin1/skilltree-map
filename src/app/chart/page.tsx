@@ -3,8 +3,8 @@ import { BrandLogo } from "@/components/BrandLogo";
 export default function ChartPage() {
   return (
     <div className="flex h-full flex-col items-center justify-center bg-[var(--bg)] px-6 text-center">
-      <div className="mb-8 rounded-md bg-[#0a0a0a] px-6 py-4">
-        <BrandLogo variant="lockup" height={40} />
+      <div className="mb-8">
+        <BrandLogo variant="lockup" height={48} />
       </div>
       <p className="mb-3 text-[11px] font-bold tracking-[0.14em] text-[var(--copper)]">
         AUTONOMY MATRIX
