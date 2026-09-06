@@ -1,115 +1,103 @@
 "use client";
 
 import Link from "next/link";
-import { PREVIEWS } from "./previews";
-import { StatusMarker, markerRingStyle } from "../ui/StateChips";
-import { ArrowRightIcon } from "../ui/Icons";
+import { DASHBOARDS } from "./dashboards";
+import { MODULE_PALETTE } from "@/lib/gi/palette";
 import type { ModuleDef } from "../modules";
-import { SUMMARY_BY_MODULE } from "@/lib/gi/metrics";
-import { STATE_MARKERS } from "@/lib/gi/taxonomy";
 
 /**
- * One Control Centre card.
+ * One panel on the ring.
  *
- * The whole card is one link, so a mouse click anywhere lands and a keyboard
- * user gets a single focusable target with a full description. The miniature
- * fills the upper two thirds; the name only appears large at the bottom, in a
- * title band, so the working preview is what you read first and the label is
- * what you read to confirm.
+ * A 16:9 sheet of glass carrying a full dashboard, with the module's name set
+ * large and letterspaced in a band along the bottom. The dashboard is what you
+ * read; the band is what you confirm.
  *
- * Inactive cards are inert — hidden from assistive technology and from the tab
- * order — because reaching them is the carousel's job, not the card's.
+ * Three glass tiers by distance from the front. Only the nearest panels get a
+ * real `backdrop-filter` — nine live refraction layers composited over a
+ * full-screen shader drops frames, and once a panel is rotated and dimmed the
+ * difference is not visible.
+ *
+ * Back-facing panels are deliberately left legible-as-composition: the browser
+ * mirrors them for free, and that reversed dashboard is the whole point of a
+ * clear carousel.
  */
 export function ControlCentreCard({
   module: mod,
   active,
+  distance,
+  onSeat,
 }: {
   module: ModuleDef;
   active: boolean;
+  /** Ring positions away from the front, 0 = front. */
+  distance: number;
+  /** Rotate this panel to the front. */
+  onSeat: () => void;
 }) {
-  const summary = SUMMARY_BY_MODULE[mod.id]();
-  const Preview = PREVIEWS[mod.id];
+  const palette = MODULE_PALETTE[mod.id];
+  const Dashboard = DASHBOARDS[mod.id];
   const { Icon } = mod;
-  const marker = STATE_MARKERS[summary.marker];
+
+  /* Real refraction only where it can be seen. */
+  const glassTier = distance <= 1.2 ? "gi-glass-live" : "gi-glass-flat";
 
   const body = (
     <>
-      {/* The miniature. Inert by design — the card is the control. */}
-      <div className="min-h-0 flex-1 px-3.5 pt-3.5" aria-hidden style={{ pointerEvents: "none" }}>
-        <div className="h-full overflow-hidden rounded-lg bg-[var(--surface-2)] p-2">
-          <Preview />
-        </div>
+      <div className="min-h-0 flex-1 px-5 pb-2 pt-4">
+        <Dashboard />
       </div>
 
-      <div className="grid shrink-0 grid-cols-4 gap-x-3 px-4 pt-3">
-        {summary.metrics.slice(0, 4).map((m) => (
-          <div key={m.label} className="min-w-0">
-            <p className="text-[14px] font-semibold leading-none tracking-[-0.02em] text-[var(--text-1)] tabular-nums">
-              {m.value}
-            </p>
-            <p className="mt-1 truncate text-[9.5px] leading-tight text-[var(--text-3)]">
-              {m.label}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Title band. The cinematic beat: the name, large and spaced, over the
-          single sentence that says why this view matters right now. */}
-      <div className="mt-3 shrink-0 border-t border-[var(--line-soft)] bg-[var(--brand-wash)] px-4 py-3">
-        <div className="flex items-center gap-2.5">
+      <div
+        className="shrink-0 border-t px-6 pb-4 pt-3"
+        style={{ borderColor: "rgba(255,255,255,0.08)" }}
+      >
+        <div className="flex items-center gap-3">
           <span
-            className="h-[7px] w-[7px] shrink-0 rounded-full"
-            style={{ background: marker.color }}
-            aria-hidden
+            className="h-2 w-2 shrink-0 rounded-full"
+            style={{ background: palette.bright, boxShadow: `0 0 12px ${palette.glow}` }}
           />
-          <h3 className="min-w-0 flex-1 truncate text-[17px] font-semibold uppercase leading-none tracking-[0.13em] text-[var(--text-1)]">
+          <h3 className="min-w-0 flex-1 truncate text-[21px] font-medium uppercase leading-none tracking-[0.19em] text-[var(--text-1)]">
             {mod.label}
           </h3>
-          <span className="shrink-0 text-[var(--brand-soft)]" aria-hidden>
-            <Icon size={17} />
+          <span className="shrink-0" style={{ color: palette.bright, opacity: 0.7 }}>
+            <Icon size={20} />
           </span>
         </div>
-
-        <p className="mt-2 line-clamp-2 text-[11.5px] leading-snug text-[var(--text-2)]">
-          {summary.insight}
+        <p className="mt-2 truncate text-[12px] leading-none text-[var(--text-3)]">
+          {mod.description}
         </p>
-
-        <div className="mt-2.5 flex items-center justify-between gap-2">
-          <StatusMarker marker={summary.marker} size="sm" />
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-[6px] text-[11.5px] font-semibold transition-colors ${
-              active
-                ? "bg-[var(--brand)] text-white"
-                : "border border-[var(--line)] text-[var(--text-3)]"
-            }`}
-          >
-            Open {mod.label}
-            <ArrowRightIcon size={12} />
-          </span>
-        </div>
       </div>
     </>
   );
 
-  const shell = "flex h-full w-full flex-col overflow-hidden rounded-xl bg-[var(--surface-1)] text-left";
+  const shell = `gi-glass ${glassTier} flex h-full w-full flex-col overflow-hidden rounded-2xl text-left`;
+  const style = {
+    "--tint": palette.wash,
+    "--rim": palette.rim,
+  } as React.CSSProperties;
 
-  if (!active) {
+  if (active) {
     return (
-      <div className={shell} style={markerRingStyle(summary.marker)} aria-hidden>
+      <Link
+        href={mod.href}
+        className={`${shell} outline-offset-8`}
+        style={style}
+        aria-label={`Open ${mod.label}. ${mod.description}`}
+      >
         {body}
-      </div>
+      </Link>
     );
   }
 
   return (
-    <Link
-      href={mod.href}
-      className={`${shell} outline-offset-4`}
-      style={markerRingStyle(summary.marker)}
-      aria-label={`Open ${mod.label}. ${mod.description} ${summary.insight}`}
+    <button
+      type="button"
+      onClick={onSeat}
+      className={shell}
+      style={style}
+      aria-label={`${mod.label} — bring to front`}
     >
       {body}
-    </Link>
+    </button>
   );
 }

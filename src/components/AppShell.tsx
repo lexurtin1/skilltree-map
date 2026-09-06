@@ -40,12 +40,20 @@ function hrefFor(ref: ObjectRef): string {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [prepareOpen, setPrepareOpen] = useState(false);
+  const pathname = usePathname();
+  /* The gallery is the only dark room in the product. The chrome belongs to the
+     room it is in, or a white strip sits over the waves and reads as a seam. */
+  const dark = pathname === "/";
 
   return (
-    <div className="relative flex h-full flex-col bg-[var(--surface-0)]">
-      <TopBar onPrepare={() => setPrepareOpen(true)} />
+    <div
+      className="relative flex h-full flex-col"
+      data-surface={dark ? "dark" : undefined}
+      style={{ background: dark ? "#040b1a" : "var(--surface-0)" }}
+    >
+      <TopBar onPrepare={() => setPrepareOpen(true)} dark={dark} />
       <main className="relative min-h-0 flex-1">{children}</main>
-      <FooterRail />
+      <FooterRail dark={dark} />
       {prepareOpen && <PrepareMeSheet onClose={() => setPrepareOpen(false)} />}
     </div>
   );
@@ -53,7 +61,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
 /* ── Top bar ──────────────────────────────────────────────────────────────── */
 
-function TopBar({ onPrepare }: { onPrepare: () => void }) {
+function TopBar({ onPrepare, dark }: { onPrepare: () => void; dark: boolean }) {
   const pathname = usePathname();
   const taskCount = useMemo(() => openTaskCount(), []);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -94,7 +102,11 @@ function TopBar({ onPrepare }: { onPrepare: () => void }) {
 
   return (
     <header
-      className="relative z-50 flex shrink-0 items-center gap-3 border-b border-[var(--line)] bg-[var(--surface-1)] px-3 sm:px-4"
+      className={`relative z-50 flex shrink-0 items-center gap-3 border-b px-3 sm:px-4 ${
+        dark
+          ? "border-white/[0.08] bg-[rgba(6,14,30,0.72)] backdrop-blur-xl"
+          : "border-[var(--line)] bg-[var(--surface-1)]"
+      }`}
       style={{ height: "var(--topbar-h)" }}
     >
       <Link
@@ -102,7 +114,7 @@ function TopBar({ onPrepare }: { onPrepare: () => void }) {
         className="flex shrink-0 items-center gap-2.5"
         aria-label="Broadridge Growth Intelligence — Control Centres"
       >
-        <BrandLogo variant="lockup" height={22} priority />
+        <BrandLogo variant={dark ? "lockupOnDark" : "lockup"} height={dark ? 18 : 22} priority />
         <span className="hidden h-5 w-px bg-[var(--line)] lg:block" aria-hidden />
         <span className="hidden text-[12.5px] font-semibold tracking-[-0.01em] text-[var(--text-2)] lg:block">
           Growth Intelligence
@@ -119,7 +131,7 @@ function TopBar({ onPrepare }: { onPrepare: () => void }) {
             aria-current={isActive(tab.href) ? "page" : undefined}
             className={`hidden rounded-md px-2.5 py-1.5 text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-colors xl:block ${
               isActive(tab.href)
-                ? "bg-[var(--brand-tint)] text-[var(--brand)]"
+                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
                 : "text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
             }`}
           >
@@ -135,7 +147,7 @@ function TopBar({ onPrepare }: { onPrepare: () => void }) {
             aria-haspopup="menu"
             className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[11.5px] font-semibold uppercase tracking-[0.05em] transition-colors ${
               secondaryActive
-                ? "bg-[var(--brand-tint)] text-[var(--brand)]"
+                ? "bg-[var(--chip-bg)] text-[var(--chip-fg)]"
                 : "text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text-1)]"
             }`}
           >
@@ -200,7 +212,7 @@ function TopBar({ onPrepare }: { onPrepare: () => void }) {
           aria-label={`Tasks — ${taskCount} open`}
           className={`relative inline-flex items-center gap-1.5 rounded-md border px-2.5 py-[7px] text-[12px] font-semibold transition-colors ${
             isActive("/tasks")
-              ? "border-[var(--brand-soft)] bg-[var(--brand-tint)] text-[var(--brand)]"
+              ? "border-[var(--brand-soft)] bg-[var(--chip-bg)] text-[var(--chip-fg)]"
               : "border-[var(--line)] text-[var(--text-2)] hover:border-[var(--brand-bright)] hover:text-[var(--brand)]"
           }`}
         >
@@ -374,10 +386,14 @@ function GlobalSearch() {
 
 /* ── Footer rail ──────────────────────────────────────────────────────────── */
 
-function FooterRail() {
+function FooterRail({ dark }: { dark: boolean }) {
   return (
     <footer
-      className="relative z-40 flex shrink-0 items-center justify-between gap-4 border-t border-[var(--line)] bg-[var(--surface-1)] px-4 text-[10.5px] text-[var(--text-4)]"
+      className={`relative z-40 flex shrink-0 items-center justify-between gap-4 border-t px-4 text-[10.5px] text-[var(--text-4)] ${
+        dark
+          ? "border-white/[0.07] bg-[rgba(6,14,30,0.72)] backdrop-blur-xl"
+          : "border-[var(--line)] bg-[var(--surface-1)]"
+      }`}
       style={{ height: "var(--footrail-h)" }}
     >
       <p className="truncate">
