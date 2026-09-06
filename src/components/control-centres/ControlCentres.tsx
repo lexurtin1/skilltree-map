@@ -21,11 +21,12 @@ import type { ModuleId } from "@/lib/gi/metrics";
  * You already know you are in the gallery; what you need to know is what you are
  * looking at, and that changes as the ring turns.
  *
- * The wave field is loaded on demand so `ogl` never reaches a module page, and
- * takes its crest colour from the front panel — so the whole room shifts hue as
- * the ring turns while staying, underneath, the same navy gradient.
+ * The gradient is React Bits' Grainient, ported to TypeScript. It is loaded on
+ * demand so `ogl` never reaches a module page, and takes its middle stop from
+ * the panel at the front — so the whole room shifts hue as the ring turns while
+ * staying, underneath, the same navy gradient.
  */
-const GradientWaves = dynamic(() => import("./GradientWaves"), {
+const Grainient = dynamic(() => import("./Grainient"), {
   ssr: false,
   loading: () => null,
 });
@@ -61,23 +62,31 @@ export function ControlCentres({ initialCard }: { initialCard: string | null }) 
       className="gi-room gi-room-pool gi-room-vignette relative flex h-full flex-col overflow-hidden"
       style={{ "--pool": palette.glow } as React.CSSProperties}
     >
-      <GradientWaves
-        horizonColor={palette.waves.horizon}
-        waveColor={palette.waves.wave}
-        crestColor={palette.waves.crest}
-        speed={0.18}
-        amplitude={2.2}
-        waveScale={0.5}
-        swell={28}
-        turbulence={14}
-        tilt={1.2}
-        height={4.1}
-        fogDepth={19}
-        detail="low"
-        brightness={1.12}
-        opacity={0.34}
-        parallaxStrength={0.22}
-        grainIntensity={0.02}
+      <Grainient
+        color1={palette.gradient.pale}
+        color2={palette.gradient.accent}
+        color3={palette.gradient.navy}
+        lightMode
+        /* Tuned to be a room rather than a picture: slow, low contrast, barely
+           saturated, and only a third opaque over the page's own ground. A
+           gradient you notice is a gradient competing with the exhibits. */
+        timeSpeed={0.1}
+        warpStrength={1}
+        warpFrequency={3.4}
+        warpSpeed={1.1}
+        warpAmplitude={72}
+        blendAngle={-18}
+        blendSoftness={0.34}
+        rotationAmount={140}
+        noiseScale={1.3}
+        grainAmount={0.055}
+        grainScale={2.6}
+        contrast={1.06}
+        saturation={0.94}
+        gamma={1.04}
+        zoom={1.08}
+        centerY={0.06}
+        opacity={0.58}
       />
 
       <header className="relative z-10 shrink-0 px-6 pb-1 pt-6 text-center">

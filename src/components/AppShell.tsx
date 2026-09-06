@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandLogo } from "./BrandLogo";
-import { NAV_MODULES, TASKS_MODULE } from "./modules";
+import { MODULES, TASKS_MODULE } from "./modules";
+import { MODULE_PALETTE } from "@/lib/gi/palette";
 import { PrepareMeSheet } from "./prepare/PrepareMeSheet";
 import {
+  CloseIcon,
   FullscreenIcon,
   MenuIcon,
   PrepareIcon,
@@ -40,12 +42,40 @@ function hrefFor(ref: ObjectRef): string {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [prepareOpen, setPrepareOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const taskCount = useMemo(() => openTaskCount(), []);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  /* Close on navigation. Adjusting state during render is the documented
+     pattern for this; an effect would show the stale open menu for a frame. */
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    setMenuOpen(false);
+  }
 
   return (
     <div className="relative flex h-full flex-col" style={{ background: "var(--surface-0)" }}>
-      <TopBar onPrepare={() => setPrepareOpen(true)} />
+      <TopBar
+        onPrepare={() => setPrepareOpen(true)}
+        menuOpen={menuOpen}
+        onToggleMenu={() => setMenuOpen((v) => !v)}
+        menuButtonRef={menuButtonRef}
+        taskCount={taskCount}
+      />
       <main className="relative min-h-0 flex-1">{children}</main>
       <FooterRail />
+      {/* A sibling of the bar, not a child of it: the panel is a fixed overlay
+          across the whole app, and nesting it inside the header would put it
+          inside the header's stacking context and count it as a bar control. */}
+      <NavPanel
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        pathname={pathname}
+        taskCount={taskCount}
+        returnFocusTo={menuButtonRef}
+      />
       {prepareOpen && <PrepareMeSheet onClose={() => setPrepareOpen(false)} />}
     </div>
   );
@@ -63,10 +93,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
    menu holding every destination in named groups. The gallery is not in the
    menu — the logo is the way home, which is what a logo is for. */
 
-function TopBar({ onPrepare }: { onPrepare: () => void }) {
-  const pathname = usePathname();
-  const taskCount = useMemo(() => openTaskCount(), []);
-
+function TopBar({
+  onPrepare,
+  menuOpen,
+  onToggleMenu,
+  menuButtonRef,
+  taskCount,
+}: {
+  onPrepare: () => void;
+  menuOpen: boolean;
+  onToggleMenu: () => void;
+  menuButtonRef: React.RefObject<HTMLButtonElement | null>;
+  taskCount: number;
+}) {
   return (
     <header
       className="relative z-50 flex shrink-0 items-center gap-3 border-b border-[var(--line)] bg-[var(--surface-1)] px-3 sm:px-4"
@@ -92,44 +131,77 @@ function TopBar({ onPrepare }: { onPrepare: () => void }) {
           <span className="hidden sm:inline">Prepare me</span>
         </button>
 
-        <NavMenu pathname={pathname} taskCount={taskCount} />
+        <button
+          ref={menuButtonRef}
+          type="button"
+          onClick={onToggleMenu}
+          aria-expanded={menuOpen}
+          aria-controls="gi-menu"
+          aria-label={`Menu — ${taskCount} open tasks`}
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-[7px] text-[12px] font-semibold transition-colors ${
+            menuOpen
+              ? "border-[var(--brand-soft)] bg-[var(--chip-bg)] text-[var(--chip-fg)]"
+              : "border-[var(--line)] text-[var(--text-2)] hover:border-[var(--brand-bright)] hover:text-[var(--brand)]"
+          }`}
+        >
+          {menuOpen ? <CloseIcon size={14} /> : <MenuIcon size={14} />}
+          <span className="hidden sm:inline">Menu</span>
+          {taskCount > 0 && !menuOpen && (
+            <span className="h-[6px] w-[6px] rounded-full bg-[var(--state-attention)]" aria-hidden />
+          )}
+        </button>
       </div>
     </header>
   );
 }
 
 /* ── The menu ─────────────────────────────────────────────────────────────
+   React Bits' StaggeredMenu, rebuilt on this stack.
+
    Everything the bar used to hold, in named groups so nine peers read as nine
-   peers. Tasks keeps its live count here and repeats it as a dot on the button,
+   peers rather than six promoted and five hidden. Each destination hovers to
+   its own module colour, which is the same hue that panel wears on the ring —
+   so the menu and the gallery agree about what is what.
+
+   Tasks keeps its live count here and repeats it as a dot on the button,
    because a number you have to open a menu to see is a number nobody sees. */
 
-function NavMenu({ pathname, taskCount }: { pathname: string; taskCount: number }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+function NavPanel({
+  open,
+  onClose,
+  pathname,
+  taskCount,
+  returnFocusTo,
+}: {
+  open: boolean;
+  onClose: () => void;
+  pathname: string;
+  taskCount: number;
+  returnFocusTo: React.RefObject<HTMLButtonElement | null>;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
 
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
-
-  /* Close on navigation. Adjusting state during render is the documented
-     pattern for this; an effect would show the stale open menu for a frame. */
-  const [lastPath, setLastPath] = useState(pathname);
-  if (pathname !== lastPath) {
-    setLastPath(pathname);
-    setOpen(false);
-  }
 
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (!rootRef.current?.contains(t) && !returnFocusTo.current?.contains(t)) onClose();
     };
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        returnFocusTo.current?.focus();
+      }
+    };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
     };
-  }, [open]);
+  }, [open, onClose, returnFocusTo]);
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) void document.documentElement.requestFullscreen?.();
@@ -137,56 +209,40 @@ function NavMenu({ pathname, taskCount }: { pathname: string; taskCount: number 
   }, []);
 
   return (
-    <div className="relative shrink-0" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label={`Menu — ${taskCount} open tasks`}
-        className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-[7px] text-[12px] font-semibold transition-colors ${
-          open
-            ? "border-[var(--brand-soft)] bg-[var(--chip-bg)] text-[var(--chip-fg)]"
-            : "border-[var(--line)] text-[var(--text-2)] hover:border-[var(--brand-bright)] hover:text-[var(--brand)]"
-        }`}
-      >
-        <MenuIcon size={14} />
-        <span className="hidden sm:inline">Menu</span>
-        {taskCount > 0 && (
-          <span className="h-[6px] w-[6px] rounded-full bg-[var(--state-attention)]" aria-hidden />
-        )}
-      </button>
+    /* Kept mounted so it can transition out, and inert while closed so the nine
+       links behind it never appear in the tab order. */
+    <div ref={rootRef} className="sm-root" data-open={open || undefined} inert={!open}>
+      <span className="sm-scrim" aria-hidden onClick={onClose} />
 
-      {open && (
-        <div
-          role="menu"
-          className="gi-rise absolute right-0 top-[calc(100%+8px)] w-[280px] overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface-1)] py-2"
-          style={{ boxShadow: "var(--shadow-3)" }}
-        >
+      {/* The two layers that arrive before the panel does. */}
+      <span className="sm-layer" aria-hidden style={{ background: "var(--brand)", "--sm-d": "0ms" } as React.CSSProperties} />
+      <span className="sm-layer" aria-hidden style={{ background: "var(--brand-tint)", "--sm-d": "80ms" } as React.CSSProperties} />
+
+      <nav id="gi-menu" className="sm-panel" aria-label="All destinations" style={{ "--sm-d": "150ms" } as React.CSSProperties}>
+        <div>
           <MenuHeading>Modules</MenuHeading>
-          <div className="grid grid-cols-2 gap-x-1 px-1.5">
-            {NAV_MODULES.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                role="menuitem"
-                className={`truncate rounded-md px-2 py-[7px] text-[12px] transition-colors hover:bg-[var(--surface-2)] ${
-                  isActive(item.href) ? "font-semibold text-[var(--brand)]" : "text-[var(--text-2)]"
-                }`}
-              >
-                {item.label}
-              </Link>
+          <ul className="sm-list mt-3 flex flex-col gap-1.5" data-numbered>
+            {MODULES.map((m, i) => (
+              <li key={m.href} className="sm-item" style={{ "--i": i } as React.CSSProperties}>
+                <Link
+                  href={m.href}
+                  className="sm-link"
+                  style={{ "--sm-accent": MODULE_PALETTE[m.id].ink } as React.CSSProperties}
+                  aria-current={isActive(m.href) ? "page" : undefined}
+                >
+                  {m.label}
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
+        </div>
 
-          <span className="my-2 block h-px bg-[var(--line-soft)]" aria-hidden />
-
+        <div className="sm-item" style={{ "--i": MODULES.length } as React.CSSProperties}>
           <MenuHeading>Work</MenuHeading>
-          <div className="px-1.5">
+          <div className="mt-2 flex flex-col gap-0.5">
             <Link
               href={TASKS_MODULE.href}
-              role="menuitem"
-              className={`flex items-center gap-2 rounded-md px-2 py-[7px] text-[12px] transition-colors hover:bg-[var(--surface-2)] ${
+              className={`flex items-center gap-2 rounded-md px-2 py-[7px] text-[13px] transition-colors hover:bg-[var(--surface-2)] ${
                 isActive("/tasks") ? "font-semibold text-[var(--brand)]" : "text-[var(--text-2)]"
               }`}
             >
@@ -198,40 +254,38 @@ function NavMenu({ pathname, taskCount }: { pathname: string; taskCount: number 
             </Link>
             <button
               type="button"
-              role="menuitem"
               onClick={() => {
-                setOpen(false);
+                onClose();
                 toggleFullscreen();
               }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-[7px] text-left text-[12px] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]"
+              className="flex w-full items-center gap-2 rounded-md px-2 py-[7px] text-left text-[13px] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]"
             >
               <FullscreenIcon size={14} />
               Full screen
             </button>
           </div>
-
-          <span className="my-2 block h-px bg-[var(--line-soft)]" aria-hidden />
-
-          <div className="flex items-center gap-2.5 px-3.5 pb-1 pt-0.5">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[10.5px] font-bold text-white">
-              JH
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-[12px] font-semibold text-[var(--text-1)]">James Howard</span>
-              <span className="block truncate text-[10.5px] text-[var(--text-4)]">Strategic Account Director</span>
-            </span>
-          </div>
         </div>
-      )}
+
+        <div
+          className="sm-item mt-auto flex items-center gap-2.5 border-t border-[var(--line-soft)] pt-4"
+          style={{ "--i": MODULES.length + 1 } as React.CSSProperties}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-bold text-white">
+            JH
+          </span>
+          <span className="min-w-0">
+            <span className="block truncate text-[12.5px] font-semibold text-[var(--text-1)]">James Howard</span>
+            <span className="block truncate text-[11px] text-[var(--text-4)]">Strategic Account Director</span>
+          </span>
+        </div>
+      </nav>
     </div>
   );
 }
 
 function MenuHeading({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3.5 pb-1.5 text-[9.5px] font-bold uppercase tracking-[0.12em] text-[var(--text-4)]">
-      {children}
-    </p>
+    <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-[var(--text-4)]">{children}</p>
   );
 }
 

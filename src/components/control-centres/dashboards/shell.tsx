@@ -48,7 +48,7 @@ export function Stat({
   palette: ModulePalette;
   size?: "sm" | "md" | "lg";
 }) {
-  const figure = size === "lg" ? "text-[34px]" : size === "md" ? "text-[25px]" : "text-[18px]";
+  const figure = size === "lg" ? "text-[38px]" : size === "md" ? "text-[28px]" : "text-[20px]";
   return (
     <div className="min-w-0">
       <div className="flex items-baseline gap-1.5">
@@ -213,10 +213,10 @@ export function Head({
   return (
     <div className="flex shrink-0 items-center gap-2.5">
       <span
-        className="h-[7px] w-[7px] shrink-0 rounded-full"
-        style={{ background: palette.base, boxShadow: `0 0 0 3px ${palette.soft}` }}
+        className="h-[8px] w-[8px] shrink-0 rounded-full"
+        style={{ background: palette.base, boxShadow: `0 0 0 3.5px ${palette.soft}` }}
       />
-      <p className="min-w-0 flex-1 truncate text-[12.5px] font-semibold tracking-[-0.012em] text-[var(--text-1)]">
+      <p className="min-w-0 flex-1 truncate text-[13.5px] font-semibold tracking-[-0.014em] text-[var(--text-1)]">
         {question}
       </p>
       {children}

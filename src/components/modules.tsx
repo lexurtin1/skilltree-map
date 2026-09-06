@@ -142,9 +142,6 @@ export const TASKS_MODULE = {
  * eleven items and still could not fit them all.
  *
  * The gallery itself is not a nav item — the logo is the way home, which is what
- * a logo is for.
+ * a logo is for. The menu renders `MODULES` directly, so a module can never be
+ * in the ring and missing from the navigation.
  */
-export const NAV_MODULES: Array<{ label: string; href: string }> = MODULES.map((m) => ({
-  label: m.label,
-  href: m.href,
-}));

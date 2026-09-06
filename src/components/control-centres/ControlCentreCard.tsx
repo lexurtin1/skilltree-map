@@ -51,13 +51,21 @@ export function ControlCentreCard({
         <Dashboard />
       </div>
 
-      <div className="shrink-0 border-t border-[rgba(0,31,90,0.08)] px-6 pb-4 pt-3">
+      <div className="relative shrink-0 px-6 pb-4 pt-3.5">
+        {/* The rule under the dashboard is the module's colour, fading out —
+            a hairline in neutral grey here would be the one part of the panel
+            that belonged to no module. */}
+        <span
+          aria-hidden
+          className="absolute inset-x-0 top-0 h-px"
+          style={{ background: `linear-gradient(90deg, ${palette.line}, rgba(0,31,90,0.06) 62%, transparent)` }}
+        />
         <div className="flex items-center gap-3">
           <span
             className="h-2 w-2 shrink-0 rounded-full"
             style={{ background: palette.base, boxShadow: `0 0 0 4px ${palette.soft}` }}
           />
-          <h3 className="min-w-0 flex-1 truncate text-[22px] font-medium uppercase leading-none tracking-[0.2em] text-[var(--text-1)]">
+          <h3 className="min-w-0 flex-1 truncate text-[23px] font-medium uppercase leading-none tracking-[0.21em] text-[var(--text-1)]">
             {mod.label}
           </h3>
           <span className="shrink-0" style={{ color: palette.ink, opacity: 0.62 }}>
@@ -70,7 +78,16 @@ export function ControlCentreCard({
   );
 
   const shell = `gi-glass ${glassTier} flex h-full w-full flex-col overflow-hidden rounded-[20px] text-left`;
-  const style = { "--tint": palette.wash, "--rim": palette.rim } as React.CSSProperties;
+  const style = {
+    "--tint": palette.wash,
+    "--rim": palette.rim,
+    /* Everything inside the panel reads from these, so a module's colour runs
+       from the light on its top edge through to the wells under its charts. */
+    "--crown": `${palette.base}14`,
+    "--well-0": `${palette.base}0d`,
+    "--well-1": `${palette.base}1c`,
+    "--well-line": `${palette.base}26`,
+  } as React.CSSProperties;
 
   if (active) {
     return (

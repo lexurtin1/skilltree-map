@@ -57,17 +57,21 @@ export interface ModulePalette {
   soft: string;
   /** A hairline in the module's own colour. */
   line: string;
-  /** Wave field colours while this module is at the front of the ring. */
-  waves: { horizon: string; wave: string; crest: string };
+  /**
+   * The three stops the gradient field mixes while this module is at the front
+   * of the ring. Pale, module, navy — so the room stays a Broadridge navy
+   * gradient whichever panel is facing you, and only its middle changes hue.
+   */
+  gradient: { pale: string; accent: string; navy: string };
 }
 
 /**
- * The room is a light one, so every wave field fades to the same pale horizon
- * and rises through Broadridge navy. Only the crest carries module identity —
- * which is what makes the whole room shift hue as the ring turns without ever
- * stopping being a navy gradient.
+ * The room is a light one, so the gradient reaches from a pale sky down into
+ * Broadridge navy. Only the middle stop carries module identity — which is what
+ * makes the whole room shift hue as the ring turns without ever stopping being
+ * a navy gradient.
  */
-const HORIZON = "#EEF2F9";
+const PALE = "#F2F6FC";
 const NAVY = "#001F5A";
 
 const identity = (base: string, bright: string, ink: string): ModulePalette => ({
@@ -79,7 +83,7 @@ const identity = (base: string, bright: string, ink: string): ModulePalette => (
   rim: `${bright}66`,
   soft: `${base}1f`,
   line: `${base}59`,
-  waves: { horizon: HORIZON, wave: NAVY, crest: base },
+  gradient: { pale: PALE, accent: base, navy: NAVY },
 });
 
 export const MODULE_PALETTE: Record<ModuleId, ModulePalette> = {
