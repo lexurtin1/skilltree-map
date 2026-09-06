@@ -4,21 +4,25 @@ import Image from "next/image";
 
 type BrandLogoProps = {
   /**
-   * mark — official square emblem
-   * lockup — official mark + wordmark for light surfaces (no black plate)
-   * lockupOnDark — full PNG lockup (black background baked in; dark surfaces only)
+   * mark — official navy mark for light surfaces
+   * lockup — official primary lockup (navy on transparent) for light surfaces
+   * lockupOnDark — user-provided black-background lockup (dark plates only)
    */
   variant?: "mark" | "lockup" | "lockupOnDark";
   className?: string;
-  /** Pixel height for the image / mark. */
   height?: number;
   priority?: boolean;
 };
 
-const MARK_ASPECT = 910 / 1024;
-const LOCKUP_ASPECT = 1024 / 206;
+/** Official Broadridge primary lockup aspect (viewBox content ~336×72). */
+const PRIMARY_ASPECT = 597 / 128;
+const MARK_LIGHT_ASPECT = 1083 / 1200;
+const DARK_LOCKUP_ASPECT = 1024 / 206;
 
-/** Official Broadridge brand assets. */
+/**
+ * Broadridge logos for light UI use the official primary assets (#001F5A).
+ * The black/navy split PNGs are dark-surface assets and must not be used on pale pages.
+ */
 export function BrandLogo({
   variant = "mark",
   className = "",
@@ -26,7 +30,7 @@ export function BrandLogo({
   priority = false,
 }: BrandLogoProps) {
   if (variant === "lockupOnDark") {
-    const w = Math.round(height * LOCKUP_ASPECT);
+    const w = Math.round(height * DARK_LOCKUP_ASPECT);
     return (
       <Image
         src="/brand/broadridge-lockup.png"
@@ -39,36 +43,29 @@ export function BrandLogo({
     );
   }
 
-  const markW = Math.round(height * MARK_ASPECT);
-  const mark = (
+  if (variant === "lockup") {
+    const w = Math.round(height * PRIMARY_ASPECT);
+    return (
+      <Image
+        src="/brand/broadridge-primary.png"
+        alt="Broadridge"
+        width={w}
+        height={height}
+        className={`object-contain object-left ${className}`}
+        priority={priority}
+      />
+    );
+  }
+
+  const w = Math.round(height * MARK_LIGHT_ASPECT);
+  return (
     <Image
-      src="/brand/broadridge-mark.png"
-      alt={variant === "mark" ? "Broadridge" : ""}
-      width={markW}
+      src="/brand/broadridge-mark-light.png"
+      alt="Broadridge"
+      width={w}
       height={height}
-      className={`shrink-0 rounded-sm object-contain ${variant === "mark" ? className : ""}`}
-      aria-hidden={variant !== "mark"}
+      className={`shrink-0 object-contain ${className}`}
       priority={priority}
     />
-  );
-
-  if (variant === "mark") return mark;
-
-  // Light-surface lockup: official mark + navy wordmark (matches brand, no black box)
-  return (
-    <span
-      className={`inline-flex items-center gap-3 ${className}`}
-      role="img"
-      aria-label="Broadridge"
-    >
-      {mark}
-      <span
-        className="font-semibold tracking-tight text-[var(--copper)]"
-        style={{ fontSize: Math.round(height * 0.55), lineHeight: 1 }}
-      >
-        Broadridge
-        <sup className="ml-0.5 text-[0.45em] font-normal">®</sup>
-      </span>
-    </span>
   );
 }
