@@ -80,7 +80,6 @@ export function NodeConstellation({
 
   if (!centre || !layout) return null;
 
-  const centreDomain = DOMAIN_BY_ID[centre.domain];
 
   return (
     <div className="relative" style={{ width: 0, height: 0 }}>

@@ -1,33 +1,110 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Broadridge Growth Intelligence — light theme token scale.
+
+   The product is a calm operational environment, not a dark command deck.
+   Depth is built from layered white surfaces, hairline rules and soft navy
+   shadows. Colour is rationed: it means state, never decoration.
+
+   Three colour channels are kept strictly separate so they can be read
+   together on the same element without collision:
+
+     brand    → Broadridge identity, primary actions, selection
+     state    → how something is doing        (quiet/new/attention/risk/…)
+     evidence → how far something is trusted  (fact/suggestion/hypothesis/gap)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 :root {
-  --bg: #f5f7fa;
-  --bg-2: #eef2f7;
-  --bg-3: #ffffff;
-  --ivory: #0b1f33;
-  --ivory-2: #3d4f63;
-  --ink-2: #5b6b7c;
-  --ink-3: #8a96a5;
-  --copper: #001f5a;
-  --line: #d0d7e2;
-  --lnrgb: 91, 107, 124;
-  --glass: #ffffff;
-  --font-sans: var(--font-plex);
-  --font-serif: var(--font-plex);
+  /* ── Surfaces ─────────────────────────────────────────────────────────── */
+  --surface-0: #f4f6fa; /* page ground */
+  --surface-1: #ffffff; /* panels, cards, sheets */
+  --surface-2: #eaeff6; /* canvas + inset wells (graph, globe, maps) */
+  --surface-3: #dfe6f0; /* recessed / pressed */
+  --surface-inv: #0b1f33; /* rare: tooltips, toasts */
+
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --text-1: #0b1f33; /* primary */
+  --text-2: #3d4f63; /* secondary body */
+  --text-3: #5b6b7c; /* supporting / labels */
+  --text-4: #8794a5; /* meta, placeholders, disabled */
+
+  /* ── Brand ────────────────────────────────────────────────────────────── */
+  --brand: #001f5a; /* Broadridge navy */
   --brand-bright: #00568f;
-  --ink-mix: #0b1f33;
+  --brand-soft: #c9d7ec;
+  --brand-tint: #e9eff8;
+  --brand-wash: #f3f6fc;
+
+  /* ── Lines ────────────────────────────────────────────────────────────── */
+  --line: #d5dce8;
+  --line-soft: #e7ecf4;
+  --line-strong: #b6c3d7;
+  --grid-line: rgba(0, 31, 90, 0.045);
+
+  /* ── State markers (§4 state system) ──────────────────────────────────── */
+  --state-quiet: #7f8da0;
+  --state-new: #1a5fc4;
+  --state-attention: #a86c0c;
+  --state-risk: #b42318;
+  --state-progress: #1c7a52;
+
+  --state-quiet-bg: #eff2f6;
+  --state-new-bg: #e8f0fd;
+  --state-attention-bg: #fdf3e3;
+  --state-risk-bg: #fdeceb;
+  --state-progress-bg: #e8f5ef;
+
+  /* ── Evidence states (§18 trust indicators) ───────────────────────────── */
+  --ev-fact: #14477e;
+  --ev-fact-bg: #e9f0f9;
+  --ev-suggestion: #4a4f9c;
+  --ev-suggestion-bg: #eeeef9;
+  --ev-hypothesis: #8a5a08;
+  --ev-hypothesis-bg: #fdf4e6;
+  --ev-gap: #5b6b7c;
+  --ev-gap-bg: #eff2f6;
+
+  /* ── Elevation — navy-tinted, never neutral grey ──────────────────────── */
+  --shadow-1: 0 1px 2px rgba(11, 31, 51, 0.06), 0 1px 1px rgba(11, 31, 51, 0.04);
+  --shadow-2: 0 4px 12px -2px rgba(11, 31, 51, 0.1), 0 2px 4px -2px rgba(11, 31, 51, 0.06);
+  --shadow-3: 0 18px 40px -12px rgba(11, 31, 51, 0.2), 0 6px 14px -6px rgba(11, 31, 51, 0.1);
+  --shadow-4: 0 44px 88px -28px rgba(11, 31, 51, 0.3), 0 14px 30px -14px rgba(11, 31, 51, 0.14);
+
+  /* ── Type ─────────────────────────────────────────────────────────────── */
+  --font-sans: var(--font-plex);
+  --font-serif: var(--font-plex-serif);
+
+  /* ── Layout ───────────────────────────────────────────────────────────── */
+  --topbar-h: 56px;
+  --footrail-h: 28px;
+
+  /* Legacy aliases — retired as modules migrate. Do not use in new code. */
+  --bg: var(--surface-0);
+  --bg-2: var(--surface-2);
+  --bg-3: var(--surface-1);
+  --ivory: var(--text-1);
+  --ivory-2: var(--text-2);
+  --ink-2: var(--text-3);
+  --ink-3: var(--text-4);
+  --copper: var(--brand);
+  --lnrgb: 91, 107, 124;
 }
 
 @theme inline {
-  --color-bg: var(--bg);
-  --color-bg-2: var(--bg-2);
-  --color-ivory: var(--ivory);
-  --color-ivory-2: var(--ivory-2);
-  --color-ink-2: var(--ink-2);
-  --color-ink-3: var(--ink-3);
-  --color-copper: var(--copper);
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-text-1: var(--text-1);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-4: var(--text-4);
+  --color-brand: var(--brand);
+  --color-brand-bright: var(--brand-bright);
+  --color-line: var(--line);
   --font-sans: var(--font-plex);
-  --font-serif: var(--font-plex);
+  --font-serif: var(--font-plex-serif);
 }
 
 * {
@@ -42,23 +119,171 @@ body {
 
 body {
   margin: 0;
-  background: var(--bg);
-  background-image: radial-gradient(
-    ellipse 80% 60% at 50% 0%,
-    rgba(0, 86, 143, 0.06),
-    transparent 55%
-  );
-  color: var(--ivory);
+  background: var(--surface-0);
+  color: var(--text-1);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  background: var(--copper);
+  background: var(--brand);
   color: #ffffff;
 }
 
-/* Map line draw */
+/* Focus is a product feature here — never remove it, only shape it. */
+:focus-visible {
+  outline: 2px solid var(--brand-bright);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Ambient depth ────────────────────────────────────────────────────────
+   A fine grid plus a single soft overhead light. Both are near-invisible in
+   isolation; together they stop large pale areas reading as flat paper. */
+
+.gi-grid {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.gi-vignette::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 46% at 50% -4%, rgba(0, 86, 143, 0.07), transparent 62%),
+    radial-gradient(ellipse 100% 60% at 50% 106%, rgba(11, 31, 51, 0.05), transparent 62%);
+}
+
+/* Very low-opacity grain, applied to large canvases only. */
+.gi-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Thin, unobtrusive scrollbars inside panels. */
+.gi-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+.gi-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.gi-scroll::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 8px;
+}
+.gi-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── Motion ───────────────────────────────────────────────────────────────
+   Reserved for meaning: something is new, something needs attention, or a
+   panel is arriving. Nothing loops for decoration. */
+
+@keyframes gi-pulse-once {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.82);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes gi-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gi-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes gi-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* One pulse when a node is newly changed or newly selected — then silence. */
+.gi-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--pulse, var(--state-new));
+  pointer-events: none;
+  animation: gi-pulse-once 1.5s ease-out 1 forwards;
+}
+
+.gi-rise {
+  animation: gi-rise 0.34s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.gi-fade {
+  animation: gi-fade 0.3s ease both;
+  animation-delay: var(--d, 0s);
+}
+
+.gi-sheet-in {
+  animation: gi-sheet-in 0.28s cubic-bezier(0.22, 0.9, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Knowledge Graph renderer — legacy animation classes.
+
+   The constellation renderer in `components/graph/` is retargeted onto the
+   Growth Intelligence ontology in a later phase. These classes are the visual
+   language it already speaks; they are kept here so that work starts from a
+   renderer that still looks right rather than one quietly stripped of its
+   motion. Motion remains reserved for urgency and upside.
+   ───────────────────────────────────────────────────────────────────────── */
+
 @keyframes drawline {
   to {
     stroke-dashoffset: 0;
@@ -82,17 +307,6 @@ body {
   }
 }
 
-@keyframes treein {
-  from {
-    opacity: 0;
-    transform: translateY(34px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .path-draw {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
@@ -112,121 +326,6 @@ body {
   animation-delay: var(--d, 0s);
 }
 
-/* Living hub particle field — orbiting cloud */
-.hub-brain {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.hub-haze {
-  animation: hubHaze 6s ease-in-out infinite alternate;
-  transform-origin: center;
-  transform-box: fill-box;
-}
-
-.hub-orbit {
-  transform-box: view-box;
-  transform-origin: 0 0;
-  transform: rotate(var(--phase, 0deg));
-  animation: hubOrbit linear infinite;
-  will-change: transform;
-}
-
-.hub-orbit-rev {
-  animation-name: hubOrbitRev;
-}
-
-.hub-dot {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: hubWobble ease-in-out infinite alternate;
-}
-
-.hub-core {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: hubPulse 2.4s ease-in-out infinite;
-}
-
-.hub-core-b {
-  animation-delay: -1.1s;
-  animation-duration: 3.1s;
-}
-
-.hub-core-c {
-  animation-delay: -0.6s;
-  animation-duration: 2.8s;
-}
-
-@keyframes hubOrbit {
-  from {
-    transform: rotate(var(--phase, 0deg));
-  }
-  to {
-    transform: rotate(calc(var(--phase, 0deg) + 360deg));
-  }
-}
-
-@keyframes hubOrbitRev {
-  from {
-    transform: rotate(var(--phase, 0deg));
-  }
-  to {
-    transform: rotate(calc(var(--phase, 0deg) - 360deg));
-  }
-}
-
-@keyframes hubWobble {
-  0% {
-    transform: translate(0, 0) scale(0.85);
-    opacity: 0.35;
-  }
-  100% {
-    transform: translate(var(--wobble-x, 3px), var(--wobble-y, -2px)) scale(1.25);
-    opacity: 1;
-  }
-}
-
-@keyframes hubHaze {
-  0% {
-    opacity: 0.35;
-    transform: scale(0.92);
-  }
-  100% {
-    opacity: 0.7;
-    transform: scale(1.06);
-  }
-}
-
-@keyframes hubPulse {
-  0%,
-  100% {
-    opacity: 0.7;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.4);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hub-dot,
-  .hub-orbit,
-  .hub-orbit-rev,
-  .hub-haze,
-  .hub-core,
-  .hub-core-b,
-  .hub-core-c {
-    animation: none !important;
-  }
-}
-
-/* ── Company Map node semantics ─────────────────────────────────────────────
-   Motion is reserved for genuinely urgent or emerging signals. Everything
-   else on the map stays still. `--halo` is set per node from its status. */
-
 .cm-signal::after,
 .cm-glow::after,
 .cm-urgent::after {
@@ -243,12 +342,12 @@ body {
 }
 
 .cm-glow::after {
-  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--halo, #4fd1a5) 40%, transparent);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--halo, #1c7a52) 40%, transparent);
   animation: cmGlow 4.4s ease-in-out infinite alternate;
 }
 
 .cm-urgent::after {
-  border: 1.5px solid color-mix(in srgb, var(--halo, #e04b4b) 75%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--halo, #b42318) 75%, transparent);
   animation: cmUrgent 2.4s ease-out infinite;
 }
 
@@ -257,10 +356,7 @@ body {
     opacity: 0.5;
     transform: scale(0.86);
   }
-  70% {
-    opacity: 0;
-    transform: scale(1.45);
-  }
+  70%,
   100% {
     opacity: 0;
     transform: scale(1.45);
@@ -281,21 +377,46 @@ body {
     opacity: 0.9;
     transform: scale(0.9);
   }
-  75% {
-    opacity: 0;
-    transform: scale(1.7);
-  }
+  75%,
   100% {
     opacity: 0;
     transform: scale(1.7);
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cm-signal::after,
-  .cm-glow::after,
-  .cm-urgent::after {
-    animation: none !important;
-    opacity: 0.55;
-  }
+/* ─────────────────────────────────────────────────────────────────────────────
+   Control Centres stage.
+
+   A light theme cannot lean on glow for depth, and a white card on a white
+   ground has no edge at all. So the stage is lit instead: a bright pool where
+   the front card sits, falling away to a soft navy at the edges of the frame.
+   The cards read as objects under a light rather than shapes on paper.
+
+   All three layers are painted behind the cards, never over them.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.gi-stage {
+  background-color: var(--surface-0);
+  background-image:
+    /* the pool the front card sits in */
+    radial-gradient(
+      ellipse 58% 46% at 50% 50%,
+      rgba(255, 255, 255, 0.95),
+      rgba(255, 255, 255, 0) 64%
+    ),
+    /* the fall-off toward the frame */
+    radial-gradient(
+      ellipse 116% 104% at 50% 46%,
+      rgba(0, 31, 90, 0) 34%,
+      rgba(0, 31, 90, 0.055) 66%,
+      rgba(0, 31, 90, 0.13) 100%
+    ),
+    /* the fine grid, kept faint enough to read as texture */
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    58px 58px,
+    58px 58px;
 }
