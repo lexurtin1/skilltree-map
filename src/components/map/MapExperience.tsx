@@ -18,7 +18,6 @@ import { MapChrome, type MapMode } from "./MapChrome";
 import { CONSTELLATION_EXTENT, NodeConstellation } from "./NodeConstellation";
 import { NodeDetailPanel } from "./NodeDetailPanel";
 import { SkyWheel, W_STEP } from "./SkyWheel";
-import { Starfield } from "./Starfield";
 
 type View =
   | { kind: "overview" }
@@ -388,8 +387,6 @@ export function MapExperience() {
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-[var(--bg)]">
-      <Starfield />
-
       <CameraWorld
         camera={camera}
         onCameraChange={setCamera}

@@ -1,19 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0e1118;
-  --bg-2: #20242d;
-  --bg-3: #161a22;
-  --ivory: #e9e4d6;
-  --ivory-2: #b9b4a6;
-  --ink-2: #8a8da0;
-  --ink-3: #565a6e;
-  --copper: #c58b5f;
-  --line: rgba(233, 228, 214, 0.14);
-  --lnrgb: 233, 228, 214;
-  --glass: rgba(14, 17, 24, 0.78);
-  --font-sans: var(--font-jakarta);
-  --font-serif: var(--font-marcellus);
+  --bg: #f5f7fa;
+  --bg-2: #eef2f7;
+  --bg-3: #ffffff;
+  --ivory: #0b1f33;
+  --ivory-2: #3d4f63;
+  --ink-2: #5b6b7c;
+  --ink-3: #8a96a5;
+  --copper: #00568f;
+  --line: #d0d7e2;
+  --lnrgb: 91, 107, 124;
+  --glass: #ffffff;
+  --font-sans: var(--font-plex);
+  --font-serif: var(--font-plex);
+  --brand-bright: #0077c8;
+  --ink-mix: #0b1f33;
 }
 
 @theme inline {
@@ -24,8 +26,8 @@
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-copper: var(--copper);
-  --font-sans: var(--font-jakarta);
-  --font-serif: var(--font-marcellus);
+  --font-sans: var(--font-plex);
+  --font-serif: var(--font-plex);
 }
 
 * {
@@ -42,11 +44,10 @@ body {
   margin: 0;
   background: var(--bg);
   background-image: radial-gradient(
-    circle,
-    rgba(232, 235, 242, 0.05) 1px,
-    transparent 1px
+    ellipse 80% 60% at 50% 0%,
+    rgba(0, 86, 143, 0.06),
+    transparent 55%
   );
-  background-size: 14px 14px;
   color: var(--ivory);
   font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -54,31 +55,7 @@ body {
 
 ::selection {
   background: var(--copper);
-  color: #131315;
-}
-
-/* Starfield */
-.bgstar {
-  position: absolute;
-  border-radius: 50%;
-  background: #cdc9e0;
-  animation: twinkle 6s ease-in-out infinite;
-}
-
-@keyframes twinkle {
-  0%,
-  100% {
-    opacity: 0.45;
-  }
-  50% {
-    opacity: 0.1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bgstar {
-    animation: none !important;
-  }
+  color: #ffffff;
 }
 
 /* Map line draw */

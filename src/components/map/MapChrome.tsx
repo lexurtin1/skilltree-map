@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/BrandLogo";
 import type { Crumb, DomainId } from "@/lib/company-map";
 import { DOMAIN_BY_ID } from "@/lib/company-map";
 
@@ -44,20 +45,20 @@ export function MapChrome({
   return (
     <>
       {mode !== "overview" && (
-        <div className="absolute left-4 top-[4.5rem] z-30 flex max-w-[min(560px,calc(100vw-2rem))] flex-wrap items-center gap-2">
+        <div className="absolute left-4 top-3 z-30 flex max-w-[min(560px,calc(100vw-2rem))] flex-wrap items-center gap-2">
           {onBack && (
             <button
               type="button"
               data-ui
               onClick={onBack}
-              className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--glass)] px-3 py-2 text-[11px] font-bold tracking-[0.14em] text-[var(--ivory-2)] backdrop-blur-md transition hover:border-[var(--copper)] hover:text-[var(--ivory)]"
+              className="flex items-center gap-2 rounded-md border border-[var(--line)] bg-[var(--bg-3)] px-3 py-2 text-[11px] font-semibold text-[var(--ivory-2)] shadow-sm transition hover:border-[var(--copper)] hover:text-[var(--copper)]"
             >
-              ← BACK
+              ← Back
             </button>
           )}
           <nav
             data-ui
-            className="flex flex-wrap items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--glass)] px-3 py-2 backdrop-blur-md"
+            className="flex flex-wrap items-center gap-1 rounded-md border border-[var(--line)] bg-[var(--bg-3)] px-3 py-2 shadow-sm"
             aria-label="Map trail"
           >
             {trail.map((crumb, i) => {
@@ -73,10 +74,10 @@ export function MapChrome({
                     type="button"
                     disabled={last}
                     onClick={() => onCrumb?.(crumb)}
-                    className={`max-w-[180px] truncate text-[11px] tracking-[0.06em] transition ${
+                    className={`max-w-[180px] truncate text-[11px] transition ${
                       last
-                        ? "cursor-default text-[var(--ivory)]"
-                        : "text-[var(--ink-2)] hover:text-[var(--ivory)]"
+                        ? "cursor-default font-semibold text-[var(--ivory)]"
+                        : "text-[var(--ink-2)] hover:text-[var(--copper)]"
                     }`}
                     style={color && !last ? { color } : undefined}
                   >
@@ -94,18 +95,17 @@ export function MapChrome({
           type="button"
           data-ui
           onClick={onPrevDomain}
-          className="absolute left-3 top-1/2 z-30 -translate-y-1/2 text-left text-[var(--ivory-2)] transition hover:text-[var(--ivory)]"
+          className="absolute left-3 top-1/2 z-30 -translate-y-1/2 text-left text-[var(--ivory-2)] transition hover:text-[var(--copper)]"
         >
           <div className="mb-1 text-[18px] opacity-70">‹</div>
           <div
-            className="max-w-[72px] text-[11px] tracking-[0.16em]"
+            className="max-w-[72px] text-[11px] font-medium tracking-[0.04em]"
             style={{
-              fontFamily: "var(--font-serif), serif",
               writingMode: "vertical-rl",
               transform: "rotate(180deg)",
             }}
           >
-            {edgeLeft.toUpperCase()}
+            {edgeLeft}
           </div>
         </button>
       )}
@@ -115,28 +115,27 @@ export function MapChrome({
           type="button"
           data-ui
           onClick={onNextDomain}
-          className="absolute right-3 top-1/2 z-30 -translate-y-1/2 text-right text-[var(--ivory-2)] transition hover:text-[var(--ivory)]"
+          className="absolute right-3 top-1/2 z-30 -translate-y-1/2 text-right text-[var(--ivory-2)] transition hover:text-[var(--copper)]"
         >
           <div className="mb-1 text-[18px] opacity-70">›</div>
           <div
-            className="ml-auto max-w-[72px] text-[11px] tracking-[0.16em]"
-            style={{ fontFamily: "var(--font-serif), serif", writingMode: "vertical-rl" }}
+            className="ml-auto max-w-[72px] text-[11px] font-medium tracking-[0.04em]"
+            style={{ writingMode: "vertical-rl" }}
           >
-            {edgeRight.toUpperCase()}
+            {edgeRight}
           </div>
         </button>
       )}
 
-      {/* Caption sits in the clear band under the graph — never on top of nodes */}
       <div className="pointer-events-none absolute bottom-5 left-1/2 z-30 -translate-x-1/2 px-4 text-center sm:bottom-6">
         <p
-          className="text-[26px] tracking-[0.18em] sm:text-[32px]"
-          style={{ fontFamily: "var(--font-serif), serif", color: captionColor ?? "var(--ivory)" }}
+          className="text-[24px] font-semibold tracking-tight sm:text-[28px]"
+          style={{ color: captionColor ?? "var(--ivory)" }}
         >
-          {captionTitle.toUpperCase()}
+          {captionTitle}
         </p>
         {captionSubtitle && (
-          <p className="mt-1 text-[11px] text-[var(--ink-2)]">{captionSubtitle}</p>
+          <p className="mt-1 text-[12px] text-[var(--ink-2)]">{captionSubtitle}</p>
         )}
         {mode === "overview" && (
           <div className="pointer-events-auto mt-2 flex items-center justify-center gap-8 text-[var(--ivory-2)]">
@@ -144,7 +143,7 @@ export function MapChrome({
               type="button"
               data-ui
               onClick={onPrevDomain}
-              className="text-xl leading-none transition hover:text-[var(--ivory)]"
+              className="text-xl leading-none transition hover:text-[var(--copper)]"
               aria-label="Previous domain"
             >
               ‹
@@ -153,7 +152,7 @@ export function MapChrome({
               type="button"
               data-ui
               onClick={onNextDomain}
-              className="text-xl leading-none transition hover:text-[var(--ivory)]"
+              className="text-xl leading-none transition hover:text-[var(--copper)]"
               aria-label="Next domain"
             >
               ›
@@ -163,11 +162,12 @@ export function MapChrome({
       </div>
 
       <div data-ui className="absolute bottom-4 right-4 z-30 flex items-center gap-2">
-        <div className="flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--glass)] px-2 py-1.5 backdrop-blur-md">
+        <BrandLogo variant="mark" height={22} className="opacity-90" />
+        <div className="flex items-center gap-1 rounded-md border border-[var(--line)] bg-[var(--bg-3)] px-2 py-1.5 shadow-sm">
           <button
             type="button"
             onClick={onZoomOut}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--ivory-2)] transition hover:text-[var(--ivory)]"
+            className="flex h-7 w-7 items-center justify-center rounded text-[var(--ivory-2)] transition hover:text-[var(--copper)]"
             aria-label="Zoom out"
           >
             −
@@ -175,7 +175,7 @@ export function MapChrome({
           <button
             type="button"
             onClick={onZoomReset}
-            className="w-11 rounded-full text-center text-[11px] tabular-nums text-[var(--ink-2)] transition hover:text-[var(--ivory)]"
+            className="w-11 rounded text-center text-[11px] tabular-nums text-[var(--ink-2)] transition hover:text-[var(--copper)]"
             title="Reset zoom (0)"
             aria-label="Reset zoom"
           >
@@ -184,7 +184,7 @@ export function MapChrome({
           <button
             type="button"
             onClick={onZoomIn}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--ivory-2)] transition hover:text-[var(--ivory)]"
+            className="flex h-7 w-7 items-center justify-center rounded text-[var(--ivory-2)] transition hover:text-[var(--copper)]"
             aria-label="Zoom in"
           >
             +

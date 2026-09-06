@@ -46,7 +46,7 @@ export function NodeDetailPanel({
   return (
     <aside
       data-ui
-      className="absolute bottom-4 left-3 top-16 z-40 flex w-[min(390px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--glass)] shadow-[0_24px_80px_-28px_rgba(0,0,0,0.75)] backdrop-blur-xl sm:left-4"
+      className="absolute bottom-4 left-3 top-3 z-40 flex w-[min(390px,calc(100vw-24px))] flex-col overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--bg-3)] shadow-[0_12px_40px_-16px_rgba(11,31,51,0.25)] sm:left-4"
       style={{ ["--c" as string]: domain.color }}
     >
       <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-5 pb-4 pt-5">
@@ -208,7 +208,7 @@ export function NodeDetailPanel({
                   <span
                     className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full"
                     style={{
-                      background: `color-mix(in srgb, ${DOMAIN_BY_ID[connection.node.domain].color} 20%, #12151d)`,
+                      background: `color-mix(in srgb, ${DOMAIN_BY_ID[connection.node.domain].color} 20%, #0B1F33)`,
                       border: `1px solid ${STATUS[connection.node.status].color}`,
                     }}
                   >
@@ -306,7 +306,7 @@ function Chip({
     <span
       className="rounded px-1.5 py-0.5 text-[9.5px] font-bold tracking-[0.14em]"
       style={{
-        color: solid ? "#12151d" : color,
+        color: solid ? "#0B1F33" : color,
         background: solid ? color : `color-mix(in srgb, ${color} 14%, transparent)`,
         border: `1px solid color-mix(in srgb, ${color} 45%, transparent)`,
       }}

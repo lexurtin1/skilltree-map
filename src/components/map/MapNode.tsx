@@ -141,7 +141,7 @@ export function MapNode({
   const domain = DOMAIN_BY_ID[node.domain];
   const ring = nodeRing(node);
   const halo = haloColor(node);
-  const glyphColor = node.type === "entity" ? "#12151d" : STATUS[node.status].color;
+  const glyphColor = node.type === "entity" ? "#0B1F33" : STATUS[node.status].color;
   const motion = dimmed ? "" : motionClass(node);
 
   return (
@@ -205,7 +205,7 @@ export function MapNode({
         {drillable && (
           <span
             className="pointer-events-none absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full"
-            style={{ background: domain.color, boxShadow: "0 0 0 2px #0e1118" }}
+            style={{ background: domain.color, boxShadow: "0 0 0 2px #ffffff" }}
           />
         )}
       </button>
@@ -237,7 +237,6 @@ export function MapNode({
               fontSize: 13.5 * labelScale,
               maxWidth: Math.max(170, 150 * labelScale),
               color: selected ? "var(--ivory)" : "var(--ivory-2)",
-              textShadow: "0 1px 10px rgba(0,0,0,0.8)",
             }}
           >
             {node.label}
@@ -253,7 +252,6 @@ export function MapNode({
                 fontSize: 11.5 * labelScale,
                 maxWidth: Math.max(170, 150 * labelScale),
                 color: "var(--ink-2)",
-                textShadow: "0 1px 8px rgba(0,0,0,0.8)",
                 transition: "opacity 180ms ease",
               }}
             >

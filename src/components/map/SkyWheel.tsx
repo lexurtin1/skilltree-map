@@ -320,9 +320,9 @@ export function SkyWheel({
         <svg viewBox="-180 -180 360 360" width={360} height={360} className="overflow-visible">
           <defs>
             <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="rgba(233,228,214,0.22)" />
-              <stop offset="55%" stopColor="rgba(197,139,95,0.08)" />
-              <stop offset="100%" stopColor="rgba(197,139,95,0)" />
+              <stop offset="0%" stopColor="rgba(0,86,143,0.22)" />
+              <stop offset="55%" stopColor="rgba(0,119,200,0.1)" />
+              <stop offset="100%" stopColor="rgba(0,86,143,0)" />
             </radialGradient>
           </defs>
           <circle className="hub-haze" cx={0} cy={0} r={150} fill="url(#hubGlow)" opacity={0.55} />
@@ -353,7 +353,7 @@ export function SkyWheel({
             </g>
           ))}
           <circle className="hub-core" cx={-4} cy={-3} r={4.2} fill="var(--copper)" />
-          <circle className="hub-core hub-core-b" cx={9} cy={6} r={2.8} fill="var(--ivory)" />
+          <circle className="hub-core hub-core-b" cx={9} cy={6} r={2.8} fill="var(--brand-bright)" />
           <circle
             className="hub-core hub-core-c"
             cx={-8}
@@ -441,25 +441,22 @@ export function SkyWheel({
                 pointerEvents: "auto",
                 transition: "opacity 220ms ease",
                 zIndex: domainHover ? 9 : 3,
-                filter: dimmed ? "grayscale(1) brightness(0.45)" : "none",
+                filter: dimmed ? "grayscale(0.85) opacity(0.5)" : "none",
               }}
             >
               <div
-                className="whitespace-nowrap text-[17px] font-medium tracking-[0.22em] text-[var(--ivory)]"
+                className="whitespace-nowrap text-[15px] font-semibold tracking-[0.04em] text-[var(--ivory)]"
                 style={{
-                  fontFamily: "var(--font-serif), serif",
                   color: domainHover ? domain.color : undefined,
-                  textShadow: "0 1px 12px rgba(0,0,0,0.65)",
                   transition: "color 180ms ease",
                 }}
               >
-                {domain.label.toUpperCase()}
+                {domain.label}
               </div>
               <div
-                className="mt-1 whitespace-nowrap text-[11px] tracking-[0.04em]"
+                className="mt-1 whitespace-nowrap text-[11px] tracking-[0.02em]"
                 style={{
                   color: domainHover ? "var(--ivory-2)" : "var(--ink-2)",
-                  textShadow: "0 1px 8px rgba(0,0,0,0.55)",
                 }}
               >
                 {domain.subtitle}
@@ -626,7 +623,7 @@ function MiniTree({
             <span
               className="rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-[0.16em]"
               style={{
-                background: "rgba(12,14,18,0.9)",
+                background: "var(--bg-3)",
                 color: domain.color,
                 border: `1px solid color-mix(in srgb, ${domain.color} 45%, transparent)`,
               }}
@@ -649,7 +646,7 @@ function MiniTree({
           height: 64,
           marginLeft: -32,
           marginTop: -32,
-          background: "rgba(233,228,214,0.05)",
+          background: "var(--bg-3)",
           border: `1.5px solid color-mix(in srgb, ${domain.color} 65%, transparent)`,
           boxShadow: `0 0 0 6px color-mix(in srgb, ${domain.color} 7%, transparent)`,
           cursor: "pointer",
@@ -702,7 +699,7 @@ const HUB_DOTS = (() => {
         orbit,
         phase: t * 360 + (rnd() - 0.5) * 28,
         r: 0.7 + rnd() * (orbit < 35 ? 2.4 : 1.8),
-        fill: k % 4 === 0 ? "#E9E4D6" : DOMAINS[k % N].color,
+        fill: k % 4 === 0 ? "#00568F" : DOMAINS[k % N].color,
         op: 0.28 + rnd() * 0.55,
         spin: shell.spin0 + rnd() * (shell.spin1 - shell.spin0),
         delay: -rnd() * 40,

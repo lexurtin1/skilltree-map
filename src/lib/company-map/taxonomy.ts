@@ -20,7 +20,7 @@ export const DOMAINS: DomainMeta[] = [
     id: "customers",
     label: "Customers",
     subtitle: "value, relationships, retention",
-    color: "#FB7185",
+    color: "#C45B6A",
     intro:
       "Where the revenue already lives. Which accounts create value, which are quietly drifting, and which have room to grow before anyone has to sell anything new.",
   },
@@ -28,7 +28,7 @@ export const DOMAINS: DomainMeta[] = [
     id: "growth",
     label: "Growth",
     subtitle: "pipeline, expansion, conversion",
-    color: "#FF9D5C",
+    color: "#C46B3A",
     intro:
       "The revenue creation system. Pipeline quality rather than pipeline volume — what is genuinely moving, what is stalled, and what is blocking the deals that matter.",
   },
@@ -36,7 +36,7 @@ export const DOMAINS: DomainMeta[] = [
     id: "market",
     label: "Market",
     subtitle: "segments, whitespace, routes to market",
-    color: "#7DD3FC",
+    color: "#2B6CB0",
     intro:
       "Where the next book of business comes from. Segments worth owning, accounts worth entering, the routes that get you in the room, and the signals that open a window.",
   },
@@ -44,7 +44,7 @@ export const DOMAINS: DomainMeta[] = [
     id: "delivery",
     label: "Delivery",
     subtitle: "execution, capacity, commitments",
-    color: "#5EEAD4",
+    color: "#0D7A6F",
     intro:
       "The ability to convert signed commitments into live customers and billed revenue. Delivery is where retention is won or lost long before a renewal date.",
   },
@@ -52,7 +52,7 @@ export const DOMAINS: DomainMeta[] = [
     id: "product",
     label: "Product",
     subtitle: "adoption, differentiation, readiness",
-    color: "#A78BFA",
+    color: "#5B6BA8",
     intro:
       "What customers actually use, what wins competitive deals, and what is ready to carry the next stage of growth. Adoption is the leading indicator for everything else.",
   },
@@ -60,7 +60,7 @@ export const DOMAINS: DomainMeta[] = [
     id: "organisation",
     label: "Organisation",
     subtitle: "ownership, capability, momentum",
-    color: "#9AA8FF",
+    color: "#4A5D8A",
     intro:
       "Who owns what, where capability is thin, and whether the company can execute the plan it has signed up to. Ownership gaps show up as delivery and pipeline gaps a quarter later.",
   },
@@ -68,7 +68,7 @@ export const DOMAINS: DomainMeta[] = [
     id: "capital",
     label: "Capital",
     subtitle: "economics, investment, runway",
-    color: "#FACC15",
+    color: "#A67C2D",
     intro:
       "The economics underneath the map. Unit margin, cash conversion, where investment is committed, and which decisions are consuming the runway.",
   },
@@ -88,12 +88,12 @@ export interface StatusMeta {
 }
 
 export const STATUS: Record<NodeStatus, StatusMeta> = {
-  healthy: { label: "Healthy", color: "#6FA98B", weight: 0.25 },
-  watch: { label: "Watch", color: "#D2A03C", weight: 0.55 },
-  risk: { label: "At risk", color: "#E0803C", weight: 0.8 },
-  critical: { label: "Critical", color: "#E04B4B", weight: 1 },
-  opportunity: { label: "Opportunity", color: "#4FD1A5", weight: 0.7 },
-  neutral: { label: "Steady", color: "#6C7080", weight: 0.15 },
+  healthy: { label: "Healthy", color: "#2F7D5B", weight: 0.25 },
+  watch: { label: "Watch", color: "#B8860B", weight: 0.55 },
+  risk: { label: "At risk", color: "#C45B1A", weight: 0.8 },
+  critical: { label: "Critical", color: "#B42318", weight: 1 },
+  opportunity: { label: "Opportunity", color: "#0D7A6F", weight: 0.7 },
+  neutral: { label: "Steady", color: "#5B6B7C", weight: 0.15 },
 };
 
 /** Statuses that earn motion in the default quiet state. */

@@ -85,10 +85,9 @@ export function NodeConstellation({
   return (
     <div className="relative" style={{ width: 0, height: 0 }}>
       <div
-        className="pointer-events-none absolute left-1/2 top-[-1000px] -translate-x-1/2 select-none whitespace-nowrap text-[104px] leading-none tracking-[0.1em] text-[rgba(233,228,214,0.03)]"
-        style={{ fontFamily: "var(--font-serif), serif" }}
+        className="pointer-events-none absolute left-1/2 top-[-1000px] -translate-x-1/2 select-none whitespace-nowrap text-[104px] font-semibold leading-none tracking-tight text-[rgba(11,31,51,0.04)]"
       >
-        {(centre.constellationTitle ?? "Constellation").toUpperCase()}
+        {centre.constellationTitle ?? "Constellation"}
       </div>
 
       <svg
@@ -102,7 +101,7 @@ export function NodeConstellation({
           r={R_SAT}
           fill="none"
           stroke="rgb(var(--lnrgb))"
-          strokeOpacity={0.05}
+          strokeOpacity={0.35}
           strokeDasharray="1 12"
         />
         <circle
@@ -151,7 +150,7 @@ export function NodeConstellation({
         >
           <span
             className="rounded px-1.5 py-0.5 text-[15px] tracking-[0.08em] text-[var(--ink-2)]"
-            style={{ background: "rgba(12,14,18,0.86)" }}
+            style={{ background: "var(--bg-3)", border: "1px solid var(--line)", boxShadow: "0 4px 16px rgba(11,31,51,0.1)" }}
           >
             {sat.relationship}
           </span>
@@ -244,13 +243,13 @@ function ExternalNode({
         e.stopPropagation();
         onFollow();
       }}
-      className="node-pop absolute -translate-x-1/2 -translate-y-1/2 rounded-xl border px-3 py-2 text-left backdrop-blur-sm transition hover:scale-[1.04]"
+      className="node-pop absolute -translate-x-1/2 -translate-y-1/2 rounded-xl border px-3 py-2 text-left  transition hover:scale-[1.04]"
       style={{
         left: x,
         top: y,
         ["--d" as string]: `${delay}s`,
         maxWidth: 330,
-        background: "rgba(12,14,18,0.82)",
+        background: "var(--bg-3)",
         borderColor: selected
           ? domain.color
           : `color-mix(in srgb, ${domain.color} 35%, transparent)`,

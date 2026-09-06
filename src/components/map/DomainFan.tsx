@@ -152,8 +152,8 @@ export function DomainFan({
   return (
     <div className="relative" style={{ width: 0, height: 0 }}>
       <div
-        className="pointer-events-none absolute left-1/2 top-[-190px] -translate-x-1/2 select-none whitespace-nowrap text-[140px] leading-none tracking-[0.12em] text-[rgba(233,228,214,0.035)]"
-        style={{ fontFamily: "var(--font-serif), serif" }}
+        className="pointer-events-none absolute left-1/2 top-[-190px] -translate-x-1/2 select-none whitespace-nowrap text-[140px] leading-none tracking-[0.12em] text-[rgba(11,31,51,0.04)]"
+        
       >
         {domain.label.toUpperCase()}
       </div>
@@ -222,7 +222,7 @@ export function DomainFan({
           width: 74,
           height: 74,
           ["--d" as string]: "0.05s",
-          background: "rgba(233,228,214,0.06)",
+          background: "var(--bg-3)",
           border: `2px solid color-mix(in srgb, ${domain.color} 70%, transparent)`,
           boxShadow:
             selectedId === domainId

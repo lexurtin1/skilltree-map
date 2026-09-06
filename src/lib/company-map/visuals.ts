@@ -48,7 +48,7 @@ export function edgeColor(
 export function nodeFill(node: Pick<CompanyMapNode, "domain" | "type">): string {
   const color = DOMAIN_BY_ID[node.domain].color;
   // Entities read as solid presence; everything else is a marker on the graph.
-  return node.type === "entity" ? color : `color-mix(in srgb, ${color} 22%, #12151d)`;
+  return node.type === "entity" ? color : `color-mix(in srgb, ${color} 28%, #ffffff)`;
 }
 
 export function nodeRing(node: Pick<CompanyMapNode, "status" | "domain">): string {
