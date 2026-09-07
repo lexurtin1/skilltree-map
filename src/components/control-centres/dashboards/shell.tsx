@@ -14,7 +14,9 @@
  * information: large figures, generous gutters, one accent colour per panel, and
  * a hairline only where a gap will not do.
  */
+import Link from "next/link";
 import { Sparkline } from "../viz/plots";
+import { ArrowRightIcon } from "../../ui/Icons";
 import type { ModulePalette } from "@/lib/gi/palette";
 import type { Point } from "@/lib/gi/series";
 
@@ -48,15 +50,15 @@ export function Stat({
   palette: ModulePalette;
   size?: "sm" | "md" | "lg";
 }) {
-  const figure = size === "lg" ? "text-[38px]" : size === "md" ? "text-[28px]" : "text-[20px]";
+  const figure = size === "lg" ? "text-[46px]" : size === "md" ? "text-[35px]" : "text-[25px]";
   return (
     <div className="min-w-0">
       <div className="flex items-baseline gap-1.5">
-        <span className="truncate text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
+        <span className="truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
           {label}
         </span>
         {delta && trend && (
-          <span className="shrink-0 text-[9px] font-bold tabular-nums" style={{ color: TREND_COLOR[trend] }}>
+          <span className="shrink-0 text-[10px] font-bold tabular-nums" style={{ color: TREND_COLOR[trend] }}>
             {TREND_GLYPH[trend]} {delta}
           </span>
         )}
@@ -65,8 +67,8 @@ export function Stat({
         {value}
       </p>
       <div className="mt-1.5 flex items-end justify-between gap-2">
-        {note && <span className="min-w-0 truncate text-[9.5px] leading-tight text-[var(--text-3)]">{note}</span>}
-        {spark && spark.length > 1 && <Sparkline points={spark} palette={palette} width={52} height={15} />}
+        {note && <span className="min-w-0 truncate text-[11px] leading-tight text-[var(--text-3)]">{note}</span>}
+        {spark && spark.length > 1 && <Sparkline points={spark} palette={palette} width={62} height={18} />}
       </div>
     </div>
   );
@@ -76,42 +78,73 @@ export function Stat({
  * The liquid-glass figure card.
  *
  * A raised, rounded, refracting tile rather than a recessed well — used where
- * the numbers are the headline rather than the supporting cast.
+ * the numbers are the headline rather than the supporting cast. Given an
+ * `href` it becomes the thing you press to go and look at what the number is
+ * made of, which is the whole reason a figure is worth putting on a screen.
  */
 export function GlassStat({
   label,
   value,
   note,
   tone,
+  href,
+  delta,
+  trend,
+  spark,
+  palette,
 }: {
   label: string;
   value: string;
   note?: string;
   /** A status colour, when the figure is a state rather than a quantity. */
   tone?: string;
+  /** Where this figure came from. Omit for a figure with nothing behind it. */
+  href?: string;
+  /** Period-on-period movement. Only ever passed where one actually exists. */
+  delta?: string;
+  trend?: Trend;
+  spark?: Point[];
+  palette?: ModulePalette;
 }) {
-  return (
-    <div
-      className="min-w-0 rounded-2xl px-3.5 py-3"
-      style={{
-        background: "linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.62))",
-        border: "1px solid rgba(255,255,255,0.9)",
-        boxShadow: "0 10px 22px -12px rgba(0,31,90,0.28), inset 0 1px 0 0 rgba(255,255,255,1)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}
-    >
-      <span className="block truncate text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
-        {label}
+  const inner = (
+    <>
+      <span className="flex items-baseline gap-1.5">
+        <span className="min-w-0 flex-1 truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
+          {label}
+        </span>
+        {delta && trend && (
+          <span className="shrink-0 text-[10px] font-bold tabular-nums" style={{ color: TREND_COLOR[trend] }}>
+            {TREND_GLYPH[trend]} {delta}
+          </span>
+        )}
+        {href && (
+          <span className="gi-story-go shrink-0 text-[var(--text-3)]" aria-hidden>
+            <ArrowRightIcon size={12} />
+          </span>
+        )}
       </span>
       <p
-        className="mt-1.5 text-[27px] font-semibold leading-none tracking-[-0.03em] tabular-nums"
+        className="mt-2 text-[33px] font-semibold leading-none tracking-[-0.03em] tabular-nums"
         style={{ color: tone ?? "var(--text-1)" }}
       >
         {value}
       </p>
-      {note && <p className="mt-1.5 truncate text-[9.5px] leading-tight text-[var(--text-3)]">{note}</p>}
-    </div>
+      <span className="mt-2 flex items-end justify-between gap-2">
+        {note && <span className="min-w-0 truncate text-[11px] leading-tight text-[var(--text-3)]">{note}</span>}
+        {spark && palette && spark.length > 1 && (
+          <Sparkline points={spark} palette={palette} width={58} height={16} />
+        )}
+      </span>
+    </>
+  );
+
+  const shell = "gi-glassstat block min-w-0 rounded-2xl px-4 py-3.5";
+  return href ? (
+    <Link href={href} className={shell + " gi-story"}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={shell}>{inner}</div>
   );
 }
 
@@ -132,8 +165,8 @@ export function Plot({
   return (
     <div className={`gi-plot relative flex min-h-0 flex-col overflow-hidden rounded-xl px-3 pb-2.5 pt-2.5 ${className}`}>
       <div className="flex shrink-0 items-baseline gap-2">
-        <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">{title}</p>
-        {subtitle && <p className="truncate text-[9px] leading-none text-[var(--text-4)]">{subtitle}</p>}
+        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">{title}</p>
+        {subtitle && <p className="truncate text-[10px] leading-none text-[var(--text-4)]">{subtitle}</p>}
       </div>
       <div className="mt-1.5 min-h-0 flex-1">{children}</div>
     </div>
@@ -147,25 +180,119 @@ export function Rail({
   palette,
 }: {
   title: string;
-  items: Array<{ id: string; lead: string; rest: string; mark?: string }>;
+  items: Array<{ id: string; lead: string; rest: string; mark?: string; href?: string }>;
   palette: ModulePalette;
 }) {
   return (
-    <div className="gi-tile flex min-h-0 flex-col rounded-xl px-3 py-2.5">
-      <p className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">{title}</p>
-      <ul className="mt-2 flex min-h-0 flex-1 flex-col justify-between gap-2">
-        {items.map((item) => (
-          <li key={item.id} className="flex min-w-0 gap-2">
-            <span
-              className="mt-[5px] h-[6px] w-[6px] shrink-0 rounded-full"
-              style={{ background: item.mark ?? palette.base }}
-            />
-            <p className="min-w-0 text-[9.5px] leading-[1.45] text-[var(--text-3)]">
-              <span className="font-semibold text-[var(--text-1)]">{item.lead}</span> {item.rest}
-            </p>
-          </li>
-        ))}
+    <div className="gi-tile flex min-h-0 flex-col rounded-xl px-2.5 py-2.5">
+      <p className="shrink-0 px-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">{title}</p>
+      <ul className="mt-2 flex min-h-0 flex-1 flex-col justify-between gap-1">
+        {items.map((item) => {
+          const body = (
+            <>
+              <span
+                className="mt-[6px] h-[6px] w-[6px] shrink-0 rounded-full"
+                style={{ background: item.mark ?? palette.base }}
+              />
+              <span className="min-w-0 flex-1 text-[11px] leading-[1.4] text-[var(--text-3)]">
+                <span className="font-semibold text-[var(--text-1)]">{item.lead}</span> {item.rest}
+              </span>
+              {item.href && (
+                <span className="gi-story-go mt-[3px] shrink-0" style={{ color: palette.ink }} aria-hidden>
+                  <ArrowRightIcon size={12} />
+                </span>
+              )}
+            </>
+          );
+          return (
+            <li key={item.id} className="min-w-0">
+              {item.href ? (
+                <Link href={item.href} className="gi-story flex min-w-0 gap-2 px-1 py-1">
+                  {body}
+                </Link>
+              ) : (
+                <span className="flex min-w-0 gap-2 px-1 py-1">{body}</span>
+              )}
+            </li>
+          );
+        })}
       </ul>
+    </div>
+  );
+}
+
+/**
+ * A line of real data that goes somewhere.
+ *
+ * The unit the filled-out screens are built from. A figure tells a seller where
+ * to look; only a sentence tells them what to say, and only a destination lets
+ * them act on it — so a story row carries all three: a name, the fact under it,
+ * and the object it opens.
+ */
+export function Story({
+  href,
+  lead,
+  rest,
+  value,
+  mark,
+  palette,
+  pulse,
+}: {
+  href: string;
+  lead: string;
+  rest: string;
+  /** Pinned right, tabular. A value, a count, a date. */
+  value?: string;
+  /** Overrides the module hue — used where the mark carries a state. */
+  mark?: string;
+  palette: ModulePalette;
+  /** An opportunity has been spotted on this row. */
+  pulse?: boolean;
+}) {
+  return (
+    <Link href={href} className="gi-story flex min-w-0 items-baseline gap-2 px-1.5 py-[5px]">
+      <span
+        className={`mt-[1px] h-[7px] w-[7px] shrink-0 self-start rounded-full ${pulse ? "gi-legend-pulse" : ""}`}
+        style={
+          pulse
+            ? ({ "--opp": mark ?? palette.base } as React.CSSProperties)
+            : { background: mark ?? palette.base }
+        }
+        aria-hidden
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[11.5px] font-semibold leading-tight text-[var(--text-1)]">{lead}</span>
+        <span className="mt-[2px] block truncate text-[10.5px] leading-tight text-[var(--text-3)]">{rest}</span>
+      </span>
+      {value && (
+        <span className="shrink-0 text-[11px] font-semibold tabular-nums text-[var(--text-2)]">{value}</span>
+      )}
+      <span className="gi-story-go shrink-0 self-center" style={{ color: palette.ink }} aria-hidden>
+        <ArrowRightIcon size={12} />
+      </span>
+    </Link>
+  );
+}
+
+/** A named block of story rows. The rail's louder sibling. */
+export function StoryList({
+  title,
+  subtitle,
+  children,
+  className = "",
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`gi-tile flex min-h-0 flex-col overflow-hidden rounded-xl px-2 pb-1.5 pt-2.5 ${className}`}>
+      <div className="flex shrink-0 items-baseline gap-2 px-1.5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">{title}</p>
+        {subtitle && <p className="truncate text-[10px] leading-none text-[var(--text-4)]">{subtitle}</p>}
+      </div>
+      <div className="mt-1 flex min-h-0 flex-1 flex-col justify-between">{children}</div>
     </div>
   );
 }
@@ -177,14 +304,14 @@ export function Legend({ items }: { items: Array<{ label: string; tone: string; 
       {items.map((item) => (
         <span key={item.label} className="inline-flex items-center gap-1.5">
           <span
-            className="h-[7px] w-[7px] rounded-full"
+            className="h-[8px] w-[8px] rounded-full"
             style={
               item.hollow
                 ? { border: `1.5px solid ${item.tone}`, background: "#fff" }
                 : { background: item.tone }
             }
           />
-          <span className="text-[8.5px] font-medium text-[var(--text-3)]">{item.label}</span>
+          <span className="text-[10px] font-medium text-[var(--text-3)]">{item.label}</span>
         </span>
       ))}
     </div>
@@ -213,15 +340,15 @@ export function Head({
   return (
     <div className="flex shrink-0 items-center gap-2.5">
       <span
-        className="h-[8px] w-[8px] shrink-0 rounded-full"
-        style={{ background: palette.base, boxShadow: `0 0 0 3.5px ${palette.soft}` }}
+        className="h-[9px] w-[9px] shrink-0 rounded-full"
+        style={{ background: palette.base, boxShadow: `0 0 0 4px ${palette.soft}` }}
       />
-      <p className="min-w-0 flex-1 truncate text-[13.5px] font-semibold tracking-[-0.014em] text-[var(--text-1)]">
+      <p className="min-w-0 flex-1 truncate text-[15.5px] font-semibold tracking-[-0.014em] text-[var(--text-1)]">
         {question}
       </p>
       {children}
       {range && (
-        <span className="shrink-0 rounded-md border border-[rgba(0,31,90,0.1)] px-1.5 py-[2px] text-[8.5px] font-semibold uppercase tracking-[0.08em] text-[var(--text-4)]">
+        <span className="shrink-0 rounded-full border border-[rgba(0,31,90,0.12)] bg-white/60 px-2.5 py-[3px] text-[9.5px] font-semibold uppercase tracking-[0.08em] text-[var(--text-3)]">
           {range}
         </span>
       )}
@@ -232,6 +359,6 @@ export function Head({
 /** The one sentence under a panel that says why any of it matters. */
 export function Note({ children }: { children: React.ReactNode }) {
   return (
-    <p className="shrink-0 truncate text-[10px] leading-none text-[var(--text-3)]">{children}</p>
+    <p className="shrink-0 truncate text-[11px] leading-none text-[var(--text-3)]">{children}</p>
   );
 }

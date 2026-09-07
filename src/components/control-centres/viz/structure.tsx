@@ -12,6 +12,7 @@
  * out, on the server and in the browser.
  */
 import type { ModulePalette } from "@/lib/gi/palette";
+import { squarifyLayout } from "@/lib/gi/squarify";
 
 /* ── Treemap ──────────────────────────────────────────────────────────────── */
 
@@ -25,76 +26,6 @@ export interface TreemapCell {
   note?: string;
 }
 
-interface LaidOut extends TreemapCell {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-/**
- * Squarified treemap (Bruls, Huizing, van Wijk). Plain slice-and-dice produces
- * slivers you cannot read a label in; squarifying keeps cells close to square,
- * which is the only reason a treemap is legible at this size.
- */
-function squarify(cells: TreemapCell[], x: number, y: number, w: number, h: number): LaidOut[] {
-  const total = cells.reduce((s, c) => s + c.value, 0);
-  if (total <= 0 || !cells.length) return [];
-
-  const out: LaidOut[] = [];
-  let items = [...cells].sort((a, b) => b.value - a.value);
-  let area = (w * h) / total;
-  let rx = x;
-  let ry = y;
-  let rw = w;
-  let rh = h;
-
-  const worst = (row: TreemapCell[], side: number) => {
-    const sum = row.reduce((s, c) => s + c.value * area, 0);
-    const max = Math.max(...row.map((c) => c.value * area));
-    const min = Math.min(...row.map((c) => c.value * area));
-    return Math.max((side * side * max) / (sum * sum), (sum * sum) / (side * side * min));
-  };
-
-  while (items.length) {
-    const side = Math.min(rw, rh);
-    const row: TreemapCell[] = [items[0]];
-    let i = 1;
-    while (i < items.length && worst([...row, items[i]], side) <= worst(row, side)) {
-      row.push(items[i]);
-      i++;
-    }
-
-    const sum = row.reduce((s, c) => s + c.value * area, 0);
-    const thickness = sum / side;
-
-    let offset = 0;
-    for (const cell of row) {
-      const length = (cell.value * area) / thickness;
-      if (rw >= rh) {
-        out.push({ ...cell, x: rx, y: ry + offset, w: thickness, h: length });
-      } else {
-        out.push({ ...cell, x: rx + offset, y: ry, w: length, h: thickness });
-      }
-      offset += length;
-    }
-
-    if (rw >= rh) {
-      rx += thickness;
-      rw -= thickness;
-    } else {
-      ry += thickness;
-      rh -= thickness;
-    }
-
-    items = items.slice(row.length);
-    if (rw <= 0.5 || rh <= 0.5) break;
-    area = (rw * rh) / items.reduce((s, c) => s + c.value, 0 as number) || area;
-  }
-
-  return out;
-}
-
 export function Treemap({
   cells,
   width = 430,
@@ -104,7 +35,7 @@ export function Treemap({
   width?: number;
   height?: number;
 }) {
-  const laid = squarify(cells, 0, 0, width, height);
+  const laid = squarifyLayout(cells, 0, 0, width, height);
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height: "100%", display: "block" }} aria-hidden>

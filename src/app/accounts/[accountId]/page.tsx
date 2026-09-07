@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ModulePage } from "@/components/ModulePage";
 import { getAccount } from "@/lib/gi/select";
+import { AccountStory } from "@/components/AccountStory";
 
 /** `params` is a Promise in Next 16 — synchronous access was removed. */
 export default async function AccountDetailPage({
@@ -16,7 +17,6 @@ export default async function AccountDetailPage({
     <ModulePage
       label={account.name}
       question={account.story}
-      phase="The account detail page — persistent What changed / Where we stand / What to do next header, four-lane activity timeline, Still to learn, and the Services relationship picture — is built in the next phase. This account's full record already exists in the shared ontology."
-    />
+    ><AccountStory account={account} /></ModulePage>
   );
 }

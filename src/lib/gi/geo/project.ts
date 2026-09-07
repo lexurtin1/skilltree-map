@@ -23,6 +23,17 @@ export interface Projected {
 export type Projection = (lon: number, lat: number) => Projected;
 
 /**
+ * Coordinates are rounded before they leave a projection.
+ *
+ * Node and the browser do not agree on the last bits of a chain of trig, so an
+ * unrounded marker position serialises as 332.96931260500594 on the server and
+ * 332.9693126050059 in the client — different strings for the same point, which
+ * React reports as a hydration mismatch on every marker of the globe. Three
+ * decimals is far finer than a pixel and identical in both.
+ */
+const q = (n: number) => Math.round(n * 1000) / 1000;
+
+/**
  * Orthographic — the view of a sphere from infinitely far away. This is what
  * makes a globe look like a globe rather than a flattened world.
  */
@@ -46,8 +57,8 @@ export function orthographic(opts: {
        the point has gone round the back. */
     const c = sinLat0 * sinLat + cosLat0 * cosLat * Math.cos(dLon);
     return {
-      x: cx + radius * cosLat * Math.sin(dLon),
-      y: cy - radius * (cosLat0 * sinLat - sinLat0 * cosLat * Math.cos(dLon)),
+      x: q(cx + radius * cosLat * Math.sin(dLon)),
+      y: q(cy - radius * (cosLat0 * sinLat - sinLat0 * cosLat * Math.cos(dLon))),
       visible: c >= 0,
     };
   };
@@ -79,8 +90,8 @@ export function windowed(opts: {
   const padY = (height - (lat[1] - lat[0]) * s) / 2;
 
   return (lonDeg, latDeg) => ({
-    x: padX + (lonDeg * k - x0) * s,
-    y: height - padY - (latDeg - lat[0]) * s,
+    x: q(padX + (lonDeg * k - x0) * s),
+    y: q(height - padY - (latDeg - lat[0]) * s),
     visible: true,
   });
 }

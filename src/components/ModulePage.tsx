@@ -22,8 +22,8 @@ export function ModulePage({
   phase?: string;
 }) {
   return (
-    <div className="gi-scroll h-full overflow-y-auto">
-      <div className="mx-auto w-full max-w-[1400px] px-6 py-6">
+    <div className="gi-scroll gi-module-page h-full overflow-y-auto">
+      <div className="mx-auto w-full max-w-[1680px] px-4 py-6 sm:px-8">
         <nav className="mb-4 flex items-center gap-1.5 text-[11.5px] text-[var(--text-4)]">
           <Link
             href="/"

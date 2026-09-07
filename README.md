@@ -1,62 +1,73 @@
 # Broadridge Growth Intelligence
 
-An ontology-powered commercial operating system for Broadridge's international
-funds business. Eleven modules are live views over one shared data model, so a
-single signal — a UCITS cross-border marketing event, say — reads identically
-wherever it surfaces.
+A React / TypeScript commercial intelligence prototype built with Next.js 16.3.
 
-The default landing page is **Control Centres**, a rotating gallery of live
-operational dashboards.
-
-## Build status
-
-Phase 1 of 13 is complete: the shared ontology, the state and evidence design
-system, navigation, and the Control Centres carousel with all nine cards
-reading real derived values. Every other module has a working route and header
-and is built in a later phase.
-
-| Phase | Module |
-|---|---|
-| 1 ✅ | Foundation + Control Centres |
-| 2 | Accounts · 3 Growth · 4 Markets · 5 Deals · 6 People |
-| 7 | Delivery · 8 Knowledge Graph · 9 Global · 10 Evidence · 11 Tasks |
-| 12 | Prepare me · 13 Responsive, accessibility and polish |
-
-## Principles the code holds to
-
-- **No literal metrics.** Everything a card shows is computed in
-  `src/lib/gi/metrics.ts` from the ontology. A card claiming 42 accounts over a
-  list of five would undo the product's own argument on the first click.
-- **Four visible states.** Verified fact, system suggestion, seller hypothesis
-  and still-to-learn are distinguished everywhere. Uncertain commercial
-  inference is never presented as fact.
-- **Identity and commercial state are separate.** Real people appear in real,
-  publicly sourced roles. What they will do is never asserted — see the
-  governing rules in `src/lib/gi/types.ts` and the checks that enforce them in
-  `src/lib/gi/integrity.ts`.
+The home route is **Today**, a personalised briefing for James Howard: a named
+account book, causal account context, pipeline movement, evidence-linked changes,
+Fidelity meeting preparation, and a persistent **Ask** dock that answers from the
+same mocked scenario data. Existing modules, account records, search and
+Prepare me remain available through the shared application shell.
 
 ## Develop
 
-```bash
+```sh
 npm install
-npm run dev     # http://localhost:3000
+npm run dev
+```
+
+Open http://localhost:3000. No API keys are required.
+
+## Demo sequence (executive pitch)
+
+1. Load `/` — the Fidelity **Priority action** is already visible (no interaction).
+2. Select **Fidelity International** in Your book (or leave it selected). In Ask,
+   ask *How confident are we that this is real?* — the answer cites the same
+   market / meeting evidence as the priority card.
+3. Click **Clear context** (Ask header or selected-account Clear). Ask *Which of
+   my accounts have the weakest executive coverage right now?* — the panel ranks
+   coverage gaps from the shared people records (Fidelity / Schroders / Janus).
+4. Leave Ask open. Use the bottom-right **Demo → Simulate new signal** control.
+   A new Amundi item appears under **What changed**; the chat history is unchanged.
+
+Suggested Ask chips switch automatically between book-level and account-level
+questions. Collapse Ask if you need a wider feed; expand restores the dock.
+
+## Verify
+
+```sh
 npm run lint
+npx tsc --noEmit
 npm run build
 ```
 
+Optional browser checks: `node scripts/test-today.cjs` (requires a development
+installation of Playwright and Microsoft Edge). See [Today design and implementation](TODAY-DESIGN.md)
+for the critique, ASCII wireframe, state system, data contracts, role adaptation,
+exceptional states, browser-test setup and five-task usability plan.
+
+## Data and scope
+
+Today uses an explicitly labelled, fixed illustrative scenario for 7 September
+2026 in `src/components/today/data.ts` (accounts, people, changes, priority
+action, daily briefing). The Ask panel queries that same file via keyword /
+entity matching — it does not call an LLM. Honest gap statements are returned
+when the scenario has no grounding (for example, delivery history outside M&G’s
+renewal note).
+
+People, meetings, source excerpts and commercial conditions are examples, not
+verified client records. Preparation notes and checklist completion are held
+only in memory for the current page session; there are no CRM writes.
+
+The existing modules use the broader shared ontology in `src/lib/gi/`. Today
+links to those account records where an ID exists, with a disclosure that their
+separate illustrative commercial state may differ. Revenue concentration and live
+source verification are unavailable rather than inferred from invented metrics.
+
 ## Layout
 
-```
-src/lib/gi/          the shared ontology — types, taxonomy, seed data,
-                     selectors, scoring, derived metrics, integrity checks
-src/components/ui/   the state and trust design system
-src/components/      app shell, module registry, Control Centres
-src/components/graph/  the constellation renderer, retargeted in phase 8
-```
-
-## Data
-
-Illustrative prototype data throughout. Organisation names, entity names, fund
-structures and executive appointments are public facts with sources attached;
-all commercial state — relationships, renewals, opportunity values, hypotheses
-— is illustrative and labelled as such in the interface.
+- `src/components/today/`: Today feed, Ask dock, query matcher, scenario data and scoped styles.
+- `src/components/AppShell.tsx`: shared identity, labelled navigation and utilities.
+- `src/lib/gi/`: existing ontology, selectors, metrics and illustrative records.
+- `src/app/`: routes and loading/error boundaries.
+- `scripts/test-today.cjs`: optional browser regression checks.
+- `artifacts/ui-review/today-*.png`: captured Today views.

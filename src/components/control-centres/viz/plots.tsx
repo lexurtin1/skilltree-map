@@ -197,7 +197,7 @@ export function Funnel({
   return (
     <svg viewBox={`0 0 ${width} ${height}`} style={{ width: "100%", height: "100%", display: "block" }} aria-hidden>
       {stages.map((s, i) => {
-        const w = (s.value / max) * (width - 74);
+        const w = (s.value / max) * (width - 118);
         const y = i * rowH;
         return (
           <g key={s.id}>

@@ -26,8 +26,8 @@ import type { ModuleId } from "@/lib/gi/metrics";
  * The ring holds still at rest. Only the waves behind it move.
  */
 
-const CARD_W = 880;
-const CARD_H = 495; /* 16:9 */
+const CARD_W = 1180;
+const CARD_H = 664; /* 16:9 */
 const COUNT = RING_ORDER.length;
 const STEP_DEG = 360 / COUNT;
 
@@ -58,7 +58,7 @@ const RADIUS = Math.round((CARD_W / 0.684) * 1.22);
  * cheapest thing that makes the panels look like they are floating rather than
  * mounted. The sequence is authored, not generated, so it stays put.
  */
-const FLOAT_Y = [-18, 10, -30, 4, -12, 22, -24, 14, -6];
+const FLOAT_Y = [-24, 13, -40, 5, -16, 29, -32, 19, -8];
 /** Pointer travel, in px, before a press becomes a drag rather than a click. */
 const DRAG_THRESHOLD = 6;
 /** Fraction of a step that counts as a committed drag rather than a nudge. */
@@ -135,18 +135,21 @@ export function ControlCentreRing({
       const el = stageRef.current;
       if (!el) return;
       const { width, height } = el.getBoundingClientRect();
-      /* Sized to leave the neighbours visible on either side rather than to
-         make the front panel as large as it will go. The multiplier is what
-         decides how much of the ring is in frame; the cylinder maths above is
-         what decides that the panels never touch, at any of these sizes.
+      /* How much of the ring is in frame. The cylinder maths above is what
+         decides that the panels never touch; this only decides how big they all
+         are, so it can be tuned purely on readability.
 
-         On a narrow screen the ring is allowed to run further off the sides.
-         Holding the same framing there would shrink the front panel to about
-         440px, at which point the dashboard on it stops being readable — and an
-         unreadable dashboard framed beautifully is worth less than a readable
-         one with its neighbours cropped. */
-      const framing = width < 1280 ? 1.86 : 2.3;
-      setScale(Math.max(0.24, Math.min(0.84, Math.min(width / (CARD_W * framing), height / (CARD_H * 1.34)))));
+         It used to be 2.3, which framed the ring beautifully and left the
+         screen itself around 740px wide — a dashboard you had to lean in to
+         read. The screen is the product; the neighbours are context. 1.66 puts
+         the front screen past 1000px on a normal desktop and crops the
+         neighbours harder, which is the right way round.
+
+         On a narrow screen the ring runs further off the sides still, because
+         an unreadable dashboard framed beautifully is worth less than a
+         readable one with its neighbours cropped. */
+      const framing = width < 768 ? 1.06 : 1.18;
+      setScale(Math.max(0.24, Math.min(1.06, Math.min(width / (CARD_W * framing), height / (CARD_H * 1.16)))));
     };
     fit();
     window.addEventListener("resize", fit);
@@ -359,6 +362,7 @@ export function ControlCentreRing({
               >
                 <div
                   className="gi-float absolute inset-0"
+                  data-active={active || undefined}
                   style={
                     {
                       "--fy": `${FLOAT_Y[i % FLOAT_Y.length]}px`,
@@ -368,10 +372,28 @@ export function ControlCentreRing({
                     } as React.CSSProperties
                   }
                 >
+                  {/* The shadow the screen casts on the floor of the room.
+                      Drawn outside the panel and never rotated with it, so a
+                      screen turning away keeps a shadow that lies flat. */}
+                  {distance < 1.7 && (
+                    <>
+                      <span
+                        aria-hidden
+                        className="gi-cast"
+                        style={{ opacity: Math.max(0, 1 - distance * 0.52) }}
+                      />
+                      <span
+                        aria-hidden
+                        className="gi-cast-contact"
+                        style={{ opacity: Math.max(0, 1 - distance * 0.62) }}
+                      />
+                    </>
+                  )}
+
                   {active && (
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute -inset-8 -z-10 rounded-[36px]"
+                      className="pointer-events-none absolute -inset-10 -z-10 rounded-[44px]"
                       style={{
                         background: `radial-gradient(ellipse 58% 54% at 50% 62%, ${MODULE_PALETTE[id].glow}, transparent 72%)`,
                         filter: "blur(38px)",
@@ -392,7 +414,7 @@ export function ControlCentreRing({
                   {distance > 0.12 && (
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute inset-0 rounded-[20px]"
+                      className="pointer-events-none absolute inset-0 rounded-[26px]"
                       style={{
                         background: "#eef2f9",
                         opacity: Math.min(0.05 + distance * 0.16, 0.62),

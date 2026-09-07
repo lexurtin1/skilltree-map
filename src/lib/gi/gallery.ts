@@ -68,7 +68,9 @@ export function topReasons(limit = 3) {
     .slice(0, limit)
     .map(({ h, score }) => ({
       id: h.id,
+      accountId: h.accountId,
       account: allAccounts().find((a) => a.id === h.accountId)?.name ?? h.accountId,
+      value: h.potentialValue ?? 0,
       title: h.title,
       score,
       state: h.state,
@@ -165,15 +167,28 @@ export function movedMarkets(limit = 4) {
 
 /** The most recently detected verified changes, newest first. */
 export function latestChanges(limit = 3) {
+  /* One per market. The list is headed by the market it happened in, so two
+     rows carrying the same country name read as a repeat rather than as two
+     findings — even when they are two genuinely different events. */
+  const seenMarkets = new Set<string>();
   return [...recentEvents(120)]
     .filter((e) => e.state === "verified-fact")
     .sort((a, b) => b.detectedDate.localeCompare(a.detectedDate))
+    .filter((e) => {
+      const key = e.hostMarketIds.find((m) => MARKET_BY_ID[m]) ?? e.domicileMarketId ?? "";
+      if (seenMarkets.has(key)) return false;
+      seenMarkets.add(key);
+      return true;
+    })
     .slice(0, limit)
     .map((e) => ({
       id: e.id,
       headline: e.headline,
+      marketId: e.hostMarketIds.find((m) => MARKET_BY_ID[m]) ?? e.domicileMarketId ?? "",
       market: e.hostMarketIds.map((m) => MARKET_BY_ID[m]?.name).filter(Boolean)[0] ?? "Cross-border",
+      accountId: e.accountId,
       account: allAccounts().find((a) => a.id === e.accountId)?.name ?? "",
+      detected: e.detectedDate,
     }));
 }
 

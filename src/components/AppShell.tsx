@@ -63,7 +63,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         onToggleMenu={() => setMenuOpen((v) => !v)}
         menuButtonRef={menuButtonRef}
         taskCount={taskCount}
+        pathname={pathname}
       />
+      <ModuleRail pathname={pathname} />
       <main className="relative min-h-0 flex-1">{children}</main>
       <FooterRail />
       {/* A sibling of the bar, not a child of it: the panel is a fixed overlay
@@ -81,17 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ── Top bar ──────────────────────────────────────────────────────────────
-   Three controls, and the logo.
-
-   The bar had eleven destinations in it, six inline and five behind an
-   overflow, and still could not fit them below 1280px. Tabs are the wrong shape
-   for nine peers: none of them is more important than the others, so promoting
-   six of them was an arbitrary decision the user then had to work around.
-
-   What is left is search, the one action a seller opens the day with, and a
-   menu holding every destination in named groups. The gallery is not in the
-   menu — the logo is the way home, which is what a logo is for. */
+/** Shared brand, search and preparation controls; destinations live below. */
 
 function TopBar({
   onPrepare,
@@ -99,23 +91,34 @@ function TopBar({
   onToggleMenu,
   menuButtonRef,
   taskCount,
+  pathname,
 }: {
   onPrepare: () => void;
   menuOpen: boolean;
   onToggleMenu: () => void;
   menuButtonRef: React.RefObject<HTMLButtonElement | null>;
   taskCount: number;
+  pathname: string;
 }) {
+  const isHome = pathname === "/";
+
   return (
     <header
-      className="relative z-50 flex shrink-0 items-center gap-3 border-b border-[var(--line)] bg-[var(--surface-1)] px-3 sm:px-4"
+      className="gi-bar relative z-50 flex shrink-0 items-center gap-3 px-4 sm:px-5"
       style={{ height: "var(--topbar-h)" }}
     >
-      <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Broadridge Growth Intelligence — home">
-        <BrandLogo variant="lockup" height={22} priority />
-        <span className="hidden h-5 w-px bg-[var(--line)] lg:block" aria-hidden />
-        <span className="hidden text-[12.5px] font-semibold tracking-[-0.01em] text-[var(--text-2)] lg:block">
-          Growth Intelligence
+      <Link
+        href="/"
+        className="flex shrink-0 items-center gap-3 rounded-xl px-1 py-1"
+        aria-label="Broadridge Growth Intelligence — home"
+        aria-current={isHome ? "page" : undefined}
+      >
+        <BrandLogo variant="lockup" height={44} className="w-[155px] sm:w-[205px]" priority />
+        <span className="hidden h-7 w-px bg-[var(--line)] lg:block" aria-hidden />
+        <span className="hidden text-[9.5px] font-bold uppercase leading-[1.35] tracking-[0.16em] text-[var(--text-3)] lg:block">
+          Growth
+          <br />
+          Intelligence
         </span>
       </Link>
 
@@ -125,10 +128,11 @@ function TopBar({
         <button
           type="button"
           onClick={onPrepare}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md bg-[var(--brand)] px-3 py-[7px] text-[12px] font-semibold text-white transition-colors hover:bg-[var(--brand-bright)]"
+          aria-label="Prepare me"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[var(--brand)] px-3.5 py-[8px] text-[12px] font-semibold text-white shadow-[0_6px_14px_-8px_rgba(0,31,90,0.9)] transition-colors hover:bg-[var(--brand-bright)]"
         >
           <PrepareIcon size={14} />
-          <span className="hidden sm:inline">Prepare me</span>
+          <span>Prepare me</span>
         </button>
 
         <button
@@ -138,14 +142,14 @@ function TopBar({
           aria-expanded={menuOpen}
           aria-controls="gi-menu"
           aria-label={`Menu — ${taskCount} open tasks`}
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-md border px-2.5 py-[7px] text-[12px] font-semibold transition-colors ${
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-[8px] text-[12px] font-semibold transition-colors ${
             menuOpen
               ? "border-[var(--brand-soft)] bg-[var(--chip-bg)] text-[var(--chip-fg)]"
               : "border-[var(--line)] text-[var(--text-2)] hover:border-[var(--brand-bright)] hover:text-[var(--brand)]"
           }`}
         >
           {menuOpen ? <CloseIcon size={14} /> : <MenuIcon size={14} />}
-          <span className="hidden sm:inline">Menu</span>
+          <span>Menu</span>
           {taskCount > 0 && !menuOpen && (
             <span className="h-[6px] w-[6px] rounded-full bg-[var(--state-attention)]" aria-hidden />
           )}
@@ -155,13 +159,49 @@ function TopBar({
   );
 }
 
+/** Persistent labelled destinations with an explicit Today active state. */
+function ModuleRail({ pathname }: { pathname: string }) {
+  return (
+    <nav
+      className="gi-destination-rail"
+      aria-label="Modules"
+    >
+      <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>Today</Link>
+      {MODULES.map((mod) => {
+        const palette = MODULE_PALETTE[mod.id];
+        const active = pathname.startsWith(mod.href);
+        const { Icon } = mod;
+        return (
+          <Link
+            key={mod.href}
+            href={mod.href}
+            aria-label={mod.label}
+            aria-current={active ? "page" : undefined}
+            data-active={active || undefined}
+            className="gi-destination-link"
+            style={
+              {
+                "--nav-accent": palette.base,
+                color: active ? "var(--brand)" : "var(--text-3)",
+              } as React.CSSProperties
+            }
+          >
+            <Icon size={16} />
+            <span>{mod.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 /* ── The menu ─────────────────────────────────────────────────────────────
    React Bits' StaggeredMenu, rebuilt on this stack.
 
-   Everything the bar used to hold, in named groups so nine peers read as nine
-   peers rather than six promoted and five hidden. Each destination hovers to
-   its own module colour, which is the same hue that panel wears on the ring —
-   so the menu and the gallery agree about what is what.
+   Every destination as words, in named groups, so the icon rail never has to be
+   the only way to reach something. Each destination hovers to its own module
+   colour, which is the same hue that screen wears on the ring — so the menu, the
+   bar and the gallery all agree about what is what.
 
    Tasks keeps its live count here and repeats it as a dot on the button,
    because a number you have to open a menu to see is a number nobody sees. */
@@ -219,6 +259,10 @@ function NavPanel({
       <span className="sm-layer" aria-hidden style={{ background: "var(--brand-tint)", "--sm-d": "80ms" } as React.CSSProperties} />
 
       <nav id="gi-menu" className="sm-panel" aria-label="All destinations" style={{ "--sm-d": "150ms" } as React.CSSProperties}>
+        <div className="sm-item" style={{ "--i": -1 } as React.CSSProperties}>
+          <BrandLogo variant="lockup" height={26} />
+        </div>
+
         <div>
           <MenuHeading>Modules</MenuHeading>
           <ul className="sm-list mt-3 flex flex-col gap-1.5" data-numbered>
@@ -242,7 +286,7 @@ function NavPanel({
           <div className="mt-2 flex flex-col gap-0.5">
             <Link
               href={TASKS_MODULE.href}
-              className={`flex items-center gap-2 rounded-md px-2 py-[7px] text-[13px] transition-colors hover:bg-[var(--surface-2)] ${
+              className={`flex items-center gap-2 rounded-lg px-2 py-[7px] text-[13px] transition-colors hover:bg-[var(--surface-2)] ${
                 isActive("/tasks") ? "font-semibold text-[var(--brand)]" : "text-[var(--text-2)]"
               }`}
             >
@@ -258,7 +302,7 @@ function NavPanel({
                 onClose();
                 toggleFullscreen();
               }}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-[7px] text-left text-[13px] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]"
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-[7px] text-left text-[13px] text-[var(--text-2)] transition-colors hover:bg-[var(--surface-2)]"
             >
               <FullscreenIcon size={14} />
               Full screen
@@ -358,9 +402,9 @@ function GlobalSearch() {
   };
 
   return (
-    <div ref={boxRef} className="relative hidden min-w-0 md:block md:w-[190px] lg:w-[260px]">
+    <div ref={boxRef} className="gi-global-search relative min-w-0 lg:w-[210px] xl:w-[260px]">
       <label className="relative block">
-        <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-4)]">
+        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-4)]">
           <SearchIcon size={14} />
         </span>
         <input
@@ -376,10 +420,12 @@ function GlobalSearch() {
           aria-expanded={open && results.length > 0}
           aria-controls="gi-search-results"
           aria-autocomplete="list"
+          aria-activedescendant={open && results.length > 0 ? `gi-search-result-${active}` : undefined}
           placeholder="Search"
-          className="w-full rounded-md border border-[var(--line)] bg-[var(--surface-0)] py-[7px] pl-8 pr-12 text-[12.5px] text-[var(--text-1)] outline-none transition-colors placeholder:text-[var(--text-4)] focus:border-[var(--brand-bright)] focus:bg-[var(--surface-1)]"
+          aria-label="Search accounts, people and funds"
+          className="w-full rounded-full border border-[var(--line)] bg-[var(--surface-0)] py-[8px] pl-9 pr-12 text-[12.5px] text-[var(--text-1)] outline-none transition-colors placeholder:text-[var(--text-4)] focus:border-[var(--brand-bright)] focus:bg-[var(--surface-1)]"
         />
-        <kbd className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 rounded border border-[var(--line)] bg-[var(--surface-1)] px-1.5 py-[1px] text-[10px] font-medium text-[var(--text-4)] lg:block">
+        <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-[var(--line)] bg-[var(--surface-1)] px-1.5 py-[1px] text-[10px] font-medium text-[var(--text-4)] xl:block">
           ⌘K
         </kbd>
       </label>
@@ -388,7 +434,7 @@ function GlobalSearch() {
         <div
           id="gi-search-results"
           role="listbox"
-          className="gi-rise absolute left-0 right-0 top-[calc(100%+6px)] max-h-[62vh] overflow-y-auto rounded-lg border border-[var(--line)] bg-[var(--surface-1)] py-1"
+          className="gi-rise absolute left-0 right-0 top-[calc(100%+8px)] max-h-[62vh] overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--surface-1)] py-1.5"
           style={{ boxShadow: "var(--shadow-3)" }}
         >
           {results.length === 0 ? (
@@ -399,6 +445,7 @@ function GlobalSearch() {
             results.map((ref, i) => (
               <button
                 key={`${ref.kind}-${ref.id}`}
+                id={`gi-search-result-${i}`}
                 type="button"
                 role="option"
                 aria-selected={i === active}
@@ -418,7 +465,7 @@ function GlobalSearch() {
                     </span>
                   )}
                 </span>
-                <span className="shrink-0 rounded bg-[var(--surface-2)] px-1.5 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.05em] text-[var(--text-3)]">
+                <span className="shrink-0 rounded-full bg-[var(--surface-2)] px-2 py-[2px] text-[9.5px] font-semibold uppercase tracking-[0.05em] text-[var(--text-3)]">
                   {OBJECT_KINDS[ref.kind].label}
                 </span>
               </button>
@@ -438,11 +485,13 @@ function FooterRail() {
       className="relative z-40 flex shrink-0 items-center justify-between gap-4 border-t border-[var(--line)] bg-[var(--surface-1)] px-4 text-[10.5px] text-[var(--text-4)]"
       style={{ height: "var(--footrail-h)" }}
     >
-      <p className="truncate">
-        Illustrative prototype data. Client relationships, opportunities and market activity
-        shown are examples only.
+      <p className="flex min-w-0 items-center gap-2">
+        <BrandLogo variant="mark" height={13} className="opacity-45" />
+        <span className="truncate">
+          Issuer-sourced fund profiles; commercial relationships, health and opportunities are illustrative.
+        </span>
       </p>
-      <p className="hidden shrink-0 tabular-nums sm:block">Data as at 6 September 2026</p>
+      <p className="hidden shrink-0 tabular-nums sm:block">Fund sources checked 7 Sep 2026</p>
     </footer>
   );
 }

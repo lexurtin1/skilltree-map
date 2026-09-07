@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* Persistent, labelled destinations: available without hover or opening a menu. */
+.gi-destination-rail { display: flex; align-items: stretch; gap: 9px; flex-shrink: 0; overflow-x: auto; padding: 0 28px; background: #fafcfd; border-bottom: 1px solid #d5dce8; }
+.gi-destination-rail a { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 43px; padding: 0 12px; white-space: nowrap; font-size: 11px; color: var(--text-3); border-bottom: 2px solid transparent; }
+.gi-destination-rail a[aria-current="page"] { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; background: #e9eff860; }
+.gi-destination-rail a:hover { background: #e9eff8; }
+@media (max-width: 1023px) {
+  .gi-bar { height: auto !important; min-height: var(--topbar-h); flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+  .gi-bar > div:last-child { width: 100%; }
+  .gi-global-search { flex: 1; }
+  .gi-global-search input { padding-right: 10px; }
+  .gi-global-search [role="listbox"] { width: min(330px, calc(100vw - 32px)); }
+}
+@media (max-width: 760px) { .gi-destination-rail { padding: 0 10px; gap: 0; } .gi-destination-rail a { padding: 0 10px; } }
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Broadridge Growth Intelligence — light theme token scale.
 
@@ -78,7 +92,7 @@
   --font-serif: var(--font-plex-serif);
 
   /* ── Layout ───────────────────────────────────────────────────────────── */
-  --topbar-h: 56px;
+  --topbar-h: 74px;
   --footrail-h: 28px;
 
   /* Legacy aliases — retired as modules migrate. Do not use in new code. */
@@ -402,20 +416,7 @@ body {
    same navy, so the gradient is literally moving.
    ═════════════════════════════════════════════════════════════════════════ */
 
-.gi-room {
-  background-color: #eef2f9;
-  background-image:
-    /* the pool of light the front panel stands in */
-    radial-gradient(ellipse 54% 40% at 50% 42%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0) 72%),
-    /* Broadridge navy, deepening toward the frame */
-    radial-gradient(
-      ellipse 120% 108% at 50% 40%,
-      rgba(0, 31, 90, 0) 30%,
-      rgba(0, 31, 90, 0.05) 62%,
-      rgba(0, 31, 90, 0.16) 100%
-    ),
-    linear-gradient(180deg, #f8fafd 0%, #eef2f9 52%, #dfe7f3 100%);
-}
+.gi-room { background: #eef2f9; }
 
 /* The colour of the module at the front, spilling onto the floor beneath it. */
 .gi-room-pool::before {
@@ -477,17 +478,19 @@ body {
   background:
     linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.99) 0%,
-      rgba(255, 255, 255, 0.95) 48%,
-      rgba(255, 255, 255, 0.985) 100%
+      rgba(255, 255, 255, 0.84) 0%,
+      rgba(255, 255, 255, 0.64) 48%,
+      rgba(255, 255, 255, 0.78) 100%
     ),
-    var(--tint, rgba(255, 255, 255, 0.9));
+    transparent;
   border: 1px solid var(--rim, rgba(255, 255, 255, 0.9));
   box-shadow:
-    0 62px 104px -44px rgba(0, 31, 90, 0.42),
-    0 26px 50px -24px rgba(0, 31, 90, 0.2),
-    0 2px 5px rgba(0, 31, 90, 0.05),
-    inset 0 1px 0 0 rgba(255, 255, 255, 1);
+    0 96px 150px -50px rgba(0, 31, 90, 0.5),
+    0 52px 88px -36px rgba(0, 31, 90, 0.28),
+    0 18px 34px -16px rgba(0, 31, 90, 0.16),
+    0 2px 5px rgba(0, 31, 90, 0.06),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
 }
 
 /** The real thing. Reserved for panels near the front of the ring. */
@@ -516,15 +519,32 @@ body {
    on top of it — which is what stops nine panels of white boxes from looking
    like one panel of white boxes. */
 .gi-tile {
-  background: linear-gradient(180deg, var(--well-0, rgba(0, 31, 90, 0.02)), var(--well-1, rgba(0, 31, 90, 0.05)));
+  position: relative;
+  background:
+    linear-gradient(158deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.3) 46%, rgba(255, 255, 255, 0.6)),
+    linear-gradient(180deg, var(--well-0, rgba(0, 31, 90, 0.02)), var(--well-1, rgba(0, 31, 90, 0.05)));
   border: 1px solid var(--well-line, rgba(0, 31, 90, 0.06));
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 0 rgba(0, 31, 90, 0.035),
+    0 1px 2px rgba(0, 31, 90, 0.04);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
 }
 
 /* A well that carries a visualisation rather than figures — flatter, so the
    drawing inside it is the only thing with structure. */
 .gi-plot {
-  background: linear-gradient(180deg, var(--well-0, rgba(0, 31, 90, 0.016)), var(--well-1, rgba(0, 31, 90, 0.038)));
+  position: relative;
+  background:
+    linear-gradient(162deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.22) 52%, rgba(255, 255, 255, 0.52)),
+    linear-gradient(180deg, var(--well-0, rgba(0, 31, 90, 0.016)), var(--well-1, rgba(0, 31, 90, 0.038)));
   border: 1px solid var(--well-line, rgba(0, 31, 90, 0.05));
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(0, 31, 90, 0.035);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
 }
 
 /* ── The ring ─────────────────────────────────────────────────────────────
@@ -724,4 +744,320 @@ body {
     transition-duration: 1ms;
     transition-delay: 0ms;
   }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   FLOATING
+
+   A panel with a shadow *on* it looks like a card. A panel with a shadow cast
+   on the floor *underneath* it looks like an object in a room. The two are
+   drawn separately here for that reason: `.gi-glass` carries the panel's own
+   depth, and `.gi-cast` is a separate ellipse of shadow lying on the ground
+   below it, foreshortened and blurred like a real one.
+
+   It is not part of the panel, so it does not rotate with it on the ring — a
+   cast shadow that turned edge-on would be the one thing in the composition
+   that gave away that the room is made of CSS.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.gi-cast {
+  position: absolute;
+  left: 50%;
+  bottom: -7%;
+  width: 84%;
+  height: 15%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse 50% 50% at 50% 50%,
+    rgba(0, 31, 90, 0.42),
+    rgba(0, 31, 90, 0.16) 46%,
+    transparent 74%
+  );
+  filter: blur(22px);
+}
+
+/* A second, tighter contact shadow. Real objects touch the ground somewhere,
+   and without this the panel reads as hovering a metre up rather than a hand's
+   width. */
+.gi-cast-contact {
+  position: absolute;
+  left: 50%;
+  bottom: -2.5%;
+  width: 58%;
+  height: 6%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(0, 31, 90, 0.34), transparent 70%);
+  filter: blur(10px);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   THE ACCOUNT GRID
+
+   Three channels on one cell: area is footprint, fill is health on the
+   red-to-green ramp, and a pulsing rim is "an opportunity has been spotted
+   here". The pulse is the only looping animation in the product that is not
+   the background — it is allowed because it is carrying a fact, and it stops
+   dead under reduced motion, where the ✦ glyph and the tooltip carry it
+   instead.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.gi-cell {
+  border: 1px solid transparent;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(0, 31, 90, 0.05);
+  backdrop-filter: blur(6px) saturate(130%);
+  -webkit-backdrop-filter: blur(6px) saturate(130%);
+  transition:
+    transform 180ms cubic-bezier(0.2, 0.9, 0.3, 1),
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+.gi-cell:hover,
+.gi-cell:focus-visible {
+  z-index: 5;
+  transform: translateY(-2px);
+  filter: saturate(1.2);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+    0 12px 24px -10px rgba(0, 31, 90, 0.34);
+}
+
+.gi-cell-opp::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 1.5px var(--opp, var(--brand-bright)),
+    0 0 16px -2px var(--opp, var(--brand-bright));
+  animation: gi-opp 3.4s ease-in-out infinite;
+}
+
+@keyframes gi-opp {
+  0%,
+  100% {
+    opacity: 0.16;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.gi-legend-pulse {
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1.5px var(--opp, var(--brand-bright)),
+    0 0 10px -1px var(--opp, var(--brand-bright));
+  animation: gi-opp 3.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gi-cell-opp::after,
+  .gi-legend-pulse {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   THE BAR
+
+   Rounded, glassy, and quiet. The nine module icons live in one pill so that
+   the row reads as a single control rather than nine competing ones, and the
+   active module is marked by a filled disc in its own colour — the same hue
+   that panel wears on the ring.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.gi-bar {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86));
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 1px 0 0 rgba(0, 31, 90, 0.07), 0 6px 18px -14px rgba(0, 31, 90, 0.4);
+}
+
+.gi-pill {
+  background: linear-gradient(180deg, rgba(0, 31, 90, 0.045), rgba(0, 31, 90, 0.075));
+  border: 1px solid rgba(0, 31, 90, 0.07);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+/* One icon in the pill. The hover fill arrives from underneath rather than
+   appearing, which is what keeps a row of nine from flickering as the cursor
+   crosses it. */
+.gi-navicon {
+  position: relative;
+  transition:
+    color 180ms ease,
+    transform 180ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.gi-navicon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--nav-accent, var(--brand));
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 200ms ease,
+    transform 200ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.gi-navicon:hover::before,
+.gi-navicon:focus-visible::before {
+  opacity: 0.12;
+  transform: scale(1);
+}
+
+.gi-navicon[data-active]::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.gi-navicon > * {
+  position: relative;
+}
+
+/* The label that appears under an icon on hover. A nine-icon rail is only
+   usable if each icon can say its own name. */
+.gi-navicon-label {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-3px);
+  padding: 3px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  background: var(--surface-inv);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.gi-navicon:hover .gi-navicon-label,
+.gi-navicon:focus-visible .gi-navicon-label {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Story rows ───────────────────────────────────────────────────────────
+   A clickable line of real fund data inside a panel. It has to look pressable
+   without becoming a button — nine panels of buttons would be a form. */
+
+.gi-story {
+  position: relative;
+  border-radius: 10px;
+  transition:
+    background 180ms ease,
+    transform 180ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.gi-story:hover,
+.gi-story:focus-visible {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.55));
+  transform: translateX(2px);
+}
+
+.gi-story .gi-story-go {
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
+  transform: translateX(-3px);
+}
+
+.gi-story:hover .gi-story-go,
+.gi-story:focus-visible .gi-story-go {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Pointer pass-through ─────────────────────────────────────────────────
+   The front screen is one big link to its module, with a live dashboard drawn
+   on top of it. Nested anchors are not a thing HTML has, so the dashboard is
+   wrapped in this instead: the wrapper ignores the pointer, every gap between
+   the figures falls through to the link underneath, and the links and buttons
+   inside it take their own clicks.
+
+   The `:where()` keeps the specificity at zero, so a child can still opt out
+   with a single class of its own. */
+.gi-passthrough {
+  pointer-events: none;
+}
+
+.gi-passthrough :where(a, button, [role="button"], input, select, textarea) {
+  pointer-events: auto;
+}
+
+/* The raised liquid-glass figure tile. Lifted off the panel rather than
+   recessed into it, so a headline figure and a supporting one are told apart
+   by depth before either is read. */
+.gi-glassstat {
+  background: linear-gradient(
+    168deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(255, 255, 255, 0.72) 55%,
+    rgba(255, 255, 255, 0.88)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 14px 28px -14px rgba(0, 31, 90, 0.3),
+    0 2px 4px -2px rgba(0, 31, 90, 0.08),
+    inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+}
+
+/* ── The field ────────────────────────────────────────────────────────────
+   Ghost Fibers fills the frame, then this takes the middle back out of it.
+
+   The shader's own vignette fades the filaments toward the edges, which is the
+   wrong way round for a gallery: the room wants structure at the edges and calm
+   behind the exhibit. The mask supplies the opposite curve — fully transparent
+   in an ellipse where the front screen stands, fully opaque out at the frame —
+   so the screen is standing in its own pool of light, and the fibers run out to
+   the corners behind everything else.
+
+   It is a mask rather than a white overlay because the canvas is opaque: an
+   overlay would have to be painted above it and would flatten the grain along
+   with the fibers. */
+.gi-field {
+  -webkit-mask-image: radial-gradient(
+    ellipse 52% 46% at 50% 48%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 56%,
+    #000 88%
+  );
+  mask-image: radial-gradient(
+    ellipse 52% 46% at 50% 48%,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 56%,
+    #000 88%
+  );
+}
+
+/* Shared Broadridge surfaces for expanded workspaces. */
+.gi-module-page { background: #edf2f8; }
+.gi-float[data-active] { animation: none; transform: translateY(var(--fy, 0px)); }
+.gi-record { position: relative; overflow: hidden; padding: 24px; border: 1px solid rgba(255,255,255,.95); border-radius: 24px; background: rgba(255,255,255,.78); backdrop-filter: blur(18px); box-shadow: 0 20px 35px -28px rgba(0,31,90,.42), inset 0 1px 0 #fff; }
+.gi-eyebrow { font-size: 10px; line-height: 1.6; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--text-3); }
+.gi-module-dashboard { --well-0: #001f5a08; --well-1: #001f5a10; --well-line: #001f5a20; }
+.gi-navicon { --nav-accent: #001f5a !important; }
+@media (max-width: 767px) {
+ .gi-room > header { grid-template-columns: 1fr; padding-top: 12px; }
+ .gi-room > header > p, .gi-room > header > div:last-child { display: none; }
+ .gi-room > header h1 { font-size: 25px; }
+ .gi-record { padding: 18px; }
 }
