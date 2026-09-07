@@ -11,8 +11,9 @@
   --today-glass-border: rgba(255, 255, 255, 0.85);
   --today-shadow: 0 16px 40px -26px rgba(10, 37, 64, 0.3);
   position: relative;
-  min-height: 100%;
-  overflow: auto;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   background: #f4f7fb;
   color: var(--today-ink);
 }
