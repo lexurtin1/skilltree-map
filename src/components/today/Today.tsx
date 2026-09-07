@@ -1,924 +1,606 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRightIcon, PrepareIcon, CheckIcon } from "../ui/Icons";
-import { AskPanel } from "./AskPanel";
+import { useEffect, useId, useRef, useState } from "react";
+import { BrandLogo } from "../BrandLogo";
+import { AccountsMap } from "./AccountsMap";
+import { answerQuery } from "./askQuery";
 import {
   ACCOUNTS,
-  BOOK_STATES,
-  CHANGES,
+  ASK_SUGGESTIONS,
+  COVERAGE_CELL_STYLE,
+  COVERAGE_ROLES,
+  COVERAGE_ROWS,
   DAILY_BRIEFING,
-  DEMO_SIGNAL,
-  PEOPLE,
-  PRIORITY,
-  personById,
-  type BookState,
-  type ChangeItem,
-  type Focus,
+  ENGAGEMENT_TRENDS,
+  RENEWAL_BARS,
+  RENEWAL_MONTHS,
+  STATE_LEGEND,
+  haloFor,
   type TodayAccount,
 } from "./data";
 import "./today.css";
 
-type Panel = {
-  kind: "account" | "evidence" | "prepare";
+function PreparePanel({
+  account,
+  prepared,
+  checked,
+  notes,
+  onCheck,
+  onNotes,
+  onComplete,
+  onClose,
+}: {
   account: TodayAccount;
-};
-const FOCUSES: Focus[] = [
-  "All priorities",
-  "Growth",
-  "Deals",
-  "Renewal risk",
-  "Relationship coverage",
-];
+  prepared: boolean;
+  checked: string[];
+  notes: string;
+  onCheck: (id: string) => void;
+  onNotes: (v: string) => void;
+  onComplete: () => void;
+  onClose: () => void;
+}) {
+  const titleId = useId();
+  const ref = useRef<HTMLDivElement>(null);
+  const checks = [
+    { id: "read", label: "Read the overnight change and product relevance" },
+    { id: "people", label: "Confirm who to involve from the people list" },
+    { id: "questions", label: "Choose one discovery question to open with" },
+  ];
+  const allDone = checks.every((c) => checked.includes(c.id));
 
-function StateMark({ state }: { state: BookState }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    ref.current?.querySelector<HTMLElement>("button, [href]")?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
-    <span className={`today-mark ${state}`} aria-hidden="true">
-      {BOOK_STATES[state].mark}
-    </span>
-  );
-}
+    <div className="today-prepare-overlay" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <button type="button" className="today-prepare-scrim" aria-label="Close" onClick={onClose} />
+      <div className="today-prepare-sheet" ref={ref}>
+        <header>
+          <p className="today-kicker">Prepare me</p>
+          <h2 id={titleId}>{account.action.title}</h2>
+          <p>{account.action.when}</p>
+        </header>
 
-function cloneAccounts(): TodayAccount[] {
-  return ACCOUNTS.map((a) => ({
-    ...a,
-    sources: [...a.sources],
-    focus: [...a.focus],
-    deal: a.deal ? { ...a.deal, steps: [...a.deal.steps] as [string, string, string] } : undefined,
-  }));
+        <section>
+          <h3>Suggested meeting goal</h3>
+          <p>{account.talk[0]}</p>
+        </section>
+
+        <section>
+          <h3>Discovery questions</h3>
+          <ol>
+            {account.prepareQuestions.map((q) => (
+              <li key={q}>{q}</li>
+            ))}
+          </ol>
+        </section>
+
+        <section>
+          <h3>Broadridge products in play</h3>
+          <div className="today-prepare-products">
+            {account.services.map((s) => (
+              <span key={s}>{s}</span>
+            ))}
+          </div>
+        </section>
+
+        <details>
+          <summary>Review evidence · {account.evidence.length} illustrative sources</summary>
+          <ul>
+            {account.evidence.map((e) => (
+              <li key={e}>{e}</li>
+            ))}
+          </ul>
+          <p className="today-prepare-caveat">
+            Facts come from sources · product fit is the system’s inference · illustrative data
+          </p>
+        </details>
+
+        <section>
+          <h3>People at this account</h3>
+          <ul className="today-prepare-people">
+            {account.people.map(([name, role]) => (
+              <li key={name}>
+                <strong>{name}</strong>
+                <span>{role}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <fieldset>
+          <legend>Preparation checks</legend>
+          {checks.map((c) => (
+            <label key={c.id}>
+              <input
+                type="checkbox"
+                checked={checked.includes(c.id)}
+                onChange={() => onCheck(c.id)}
+              />
+              {c.label}
+            </label>
+          ))}
+        </fieldset>
+
+        <label className="today-prepare-notes">
+          <span>Your meeting notes</span>
+          <textarea
+            value={notes}
+            onChange={(e) => onNotes(e.target.value)}
+            rows={3}
+            placeholder="Optional notes for this session"
+          />
+        </label>
+
+        <footer>
+          <button type="button" className="today-btn-ghost" onClick={onClose}>
+            Close
+          </button>
+          {account.recordId && (
+            <Link href={`/accounts/${account.recordId}`} className="today-btn-ghost">
+              Open account record
+            </Link>
+          )}
+          <button
+            type="button"
+            className="today-btn-primary"
+            disabled={!allDone && !prepared}
+            onClick={onComplete}
+          >
+            {prepared ? "Preparation saved" : "Mark preparation complete"}
+          </button>
+        </footer>
+      </div>
+    </div>
+  );
 }
 
 export function Today() {
-  const [selectedId, setSelectedId] = useState<string | null>("fidelity");
-  const [scope, setScope] = useState("My accounts");
-  const [period, setPeriod] = useState("This week");
-  const [tier, setTier] = useState("All accounts");
-  const [focus, setFocus] = useState<Focus>("All priorities");
-  const [panel, setPanel] = useState<Panel | null>(null);
-  const [prepared, setPrepared] = useState(false);
+  const [selectedId, setSelectedId] = useState(ACCOUNTS[0].id);
+  const [askDraft, setAskDraft] = useState("");
+  const [asked, setAsked] = useState<string | null>(null);
+  const [prepareOpen, setPrepareOpen] = useState(false);
+  const [preparedIds, setPreparedIds] = useState<string[]>([]);
   const [checked, setChecked] = useState<string[]>([]);
   const [notes, setNotes] = useState("");
-  const [askCollapsed, setAskCollapsed] = useState(false);
-  const [accounts, setAccounts] = useState<TodayAccount[]>(cloneAccounts);
-  const [changes, setChanges] = useState<ChangeItem[]>(() => [...CHANGES]);
-  const [signalFlashId, setSignalFlashId] = useState<string | null>(null);
-  const [demoUsed, setDemoUsed] = useState(false);
 
-  const visible = accounts.filter(
-    (a) =>
-      (scope === "Team accounts" || !a.teamOnly) &&
-      (tier === "All accounts" || a.strategic) &&
-      (focus === "All priorities" || a.focus.includes(focus)),
-  );
-  const selected = selectedId
-    ? (visible.find((a) => a.id === selectedId) ??
-      accounts.find((a) => a.id === selectedId) ??
-      null)
-    : null;
-  const fidelity =
-    accounts.find((a) => a.id === PRIORITY.accountId) ?? accounts[0];
-  const deals = visible.filter(
-    (a) => a.deal && (period === "This month" || !a.deal.older),
-  );
-  const visibleChanges = changes.filter((c) =>
-    visible.some((a) => a.id === c.accountId),
-  );
-  const askData = useMemo(
-    () => ({ accounts, people: PEOPLE, changes }),
-    [accounts, changes],
-  );
+  const selected = ACCOUNTS.find((a) => a.id === selectedId) ?? ACCOUNTS[0];
+  const prepared = preparedIds.includes(selected.id);
+  const queue = ACCOUNTS.filter((a) => a.id !== selected.id).slice(0, 4);
+  const answer = answerQuery(asked ?? "", selected.id, { accounts: ACCOUNTS });
+  const headWords = selected.head.split(" ");
+  const confBars = [0, 1, 2].map((i) => (i < selected.conf ? selected.state : "rgba(10,37,64,0.12)"));
 
-  const open = (kind: Panel["kind"], account: TodayAccount) =>
-    setPanel({ kind, account });
-
-  const selectAccount = (id: string) => {
-    setSelectedId((prev) => (prev === id ? null : id));
+  const pick = (id: string) => {
+    setSelectedId(id);
+    setAsked(null);
+    setAskDraft("");
   };
 
-  const simulateSignal = () => {
-    if (demoUsed) return;
-    const { accountPatch, source, ...change } = DEMO_SIGNAL;
-    setAccounts((prev) =>
-      prev.map((a) =>
-        a.id === change.accountId
-          ? {
-              ...a,
-              ...accountPatch,
-              focus: accountPatch.focus ?? a.focus,
-              sources: [source, ...a.sources],
-            }
-          : a,
-      ),
+  const runAsk = (q: string) => {
+    const text = q.trim();
+    if (!text) return;
+    setAsked(text);
+    setAskDraft("");
+  };
+
+  const toggleCheck = (id: string) => {
+    setChecked((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
-    setChanges((prev) => [change, ...prev]);
-    setSignalFlashId(change.id);
-    setDemoUsed(true);
-    window.setTimeout(() => setSignalFlashId(null), 1200);
+  };
+
+  const completePrepare = () => {
+    setPreparedIds((prev) => (prev.includes(selected.id) ? prev : [...prev, selected.id]));
+    setPrepareOpen(false);
+  };
+
+  const openPrepare = () => {
+    setPrepareOpen(true);
   };
 
   return (
-    <div className="today-page">
-      <div className="today-workspace">
-        <div className="today-feed">
-          <div className="today-content">
-            <header className="today-heading">
-              <div>
-                <p className="today-eyebrow">
-                  MONDAY, 7 SEPTEMBER 2026 <span> / </span> JAMES HOWARD
-                </p>
-                <h1>
-                  Today<span>.</span>
-                </h1>
-                <p>A clear view of your book. A considered next move.</p>
+    <div className="today-redesign">
+      <div className="today-atmosphere" aria-hidden>
+        <span className="today-blob today-blob-a" />
+        <span className="today-blob today-blob-b" />
+        <span className="today-blob today-blob-c" />
+      </div>
+
+      <div className="today-inner">
+        <header className="today-brand-strip">
+          <div className="today-brand-lockup">
+            <BrandLogo variant="lockup" height={48} className="today-brand-logo" priority />
+            <span className="today-brand-rule" aria-hidden />
+            <span className="today-brand-product">Growth Intelligence</span>
+          </div>
+          <p className="today-brand-tag">
+            Broadridge fund distribution, communications and market intelligence —
+            illustrative book for James Howard
+          </p>
+        </header>
+
+        <section className="today-editorial">
+          <p className="today-kicker">{DAILY_BRIEFING.dateLabel}</p>
+          <h1>{DAILY_BRIEFING.lead}</h1>
+        </section>
+
+        <div className="today-hero-row">
+          <article className="today-priority">
+            <div className="today-priority-inner">
+              <div className="today-priority-meta">
+                <span className="today-priority-pill">
+                  <span className="today-priority-dot" aria-hidden>
+                    <i />
+                    <i />
+                  </span>
+                  Priority action
+                </span>
+                <span>
+                  Found 08:12 today · {ACCOUNTS.findIndex((a) => a.id === selected.id) + 1} of{" "}
+                  {ACCOUNTS.length}
+                </span>
               </div>
-              <div className="today-identity">
-                <span className="today-avatar">JH</span>
-                <div>
-                  <strong>James Howard</strong>
-                  <small>Strategic Account Director</small>
-                </div>
+
+              <h2 className="today-priority-head" aria-live="polite">
+                {headWords.map((w, i) => (
+                  <span
+                    key={`${selected.id}-${i}-${w}`}
+                    style={{ animationDelay: `${0.1 + i * 0.045}s` }}
+                  >
+                    {w}&nbsp;
+                  </span>
+                ))}
+              </h2>
+
+              <div className="today-chain">
+                {selected.chain.map((st) => (
+                  <div key={st.k} className="today-chain-step">
+                    <div className="today-chain-line">
+                      <span
+                        style={{
+                          background: st.dot,
+                          boxShadow: `0 0 0 4px ${haloFor(st.dot)}`,
+                        }}
+                      />
+                      <i />
+                    </div>
+                    <p className="today-kicker">{st.k}</p>
+                    <p className="today-chain-title">{st.t}</p>
+                    <p className="today-chain-meta">{st.m}</p>
+                  </div>
+                ))}
               </div>
-            </header>
-            <div className="today-briefing">
-              <span className="today-live" aria-hidden="true" />
-              <p>
-                <strong>{DAILY_BRIEFING.lead}</strong> {DAILY_BRIEFING.body}
-              </p>
-              <span className="today-sample">{DAILY_BRIEFING.stamp}</span>
-            </div>
-            <div className="today-filters" aria-label="Book and pipeline filters">
-              <label>
-                <span className="sr-only">Account ownership</span>
-                <select
-                  aria-label="Account ownership"
-                  value={scope}
-                  onChange={(e) => setScope(e.target.value)}
-                >
-                  <option>My accounts</option>
-                  <option>Team accounts</option>
-                </select>
-              </label>
-              <label>
-                <span className="sr-only">Account tier</span>
-                <select
-                  aria-label="Account tier"
-                  value={tier}
-                  onChange={(e) => setTier(e.target.value)}
-                >
-                  <option>All accounts</option>
-                  <option>Strategic accounts</option>
-                </select>
-              </label>
-              <details className="today-focus">
-                <summary>Focus: {focus}</summary>
-                <div>
-                  {FOCUSES.map((f) => (
-                    <button
-                      key={f}
-                      aria-pressed={focus === f}
-                      onClick={() => setFocus(f)}
-                    >
-                      {f}
-                    </button>
+
+              <div className="today-stats">
+                {selected.stats.map(([label, value]) => (
+                  <div key={label}>
+                    <span>{label}</span>
+                    <strong>{value}</strong>
+                  </div>
+                ))}
+              </div>
+
+              <div className="today-products">
+                <p className="today-kicker">Broadridge products</p>
+                <div className="today-product-chips">
+                  {selected.services.map((s) => (
+                    <span key={s}>{s}</span>
                   ))}
                 </div>
-              </details>
-              <span className="today-filter-note">
-                Book & pipeline view · ask panel stays open beside the feed
-              </span>
-            </div>
+              </div>
 
-            <div className="today-layout">
-              <section className="today-book" aria-labelledby="book-title">
-                <SectionHeading
-                  number="01"
-                  title="Your book"
-                  id="book-title"
-                  aside={`${visible.length} named accounts`}
-                />
-                <p className="today-section-intro">
-                  {focus === "All priorities"
-                    ? "Growth is opening up. Executive access and one renewal need attention."
-                    : `Showing ${focus.toLowerCase()} across ${visible.length} accounts. Select a name to focus Ask.`}
-                </p>
-                <div
-                  className="today-book-map"
-                  aria-label="Accounts grouped by commercial condition"
-                >
-                  {(["growth", "attention", "risk", "stable"] as BookState[]).map(
-                    (state) => {
-                      const bandAccounts = visible.filter((a) => a.state === state);
-                      return (
-                        <div className={`today-book-band ${state}`} key={state}>
-                          <div className="today-band-label">
-                            <StateMark state={state} />
-                            <span>{BOOK_STATES[state].label}</span>
-                          </div>
-                          <div className="today-account-names">
-                            {bandAccounts.length ? (
-                              bandAccounts.map((a) => (
-                                <div
-                                  key={a.id}
-                                  className={`today-account-object ${selected?.id === a.id ? "selected" : ""}`}
-                                >
-                                  <button
-                                    className="today-account-select"
-                                    aria-pressed={selected?.id === a.id}
-                                    aria-label={`Select ${a.name}: ${a.condition}`}
-                                    onClick={() => selectAccount(a.id)}
-                                  >
-                                    <strong>{a.name}</strong>
-                                    <small>{a.condition}</small>
-                                  </button>
-                                  <button
-                                    className="today-account-open"
-                                    aria-label={`Open account: ${a.name}`}
-                                    onClick={() => open("account", a)}
-                                  >
-                                    Open account <span aria-hidden="true">↗</span>
-                                  </button>
-                                </div>
-                              ))
-                            ) : (
-                              <p className="today-muted">
-                                No accounts in this view
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    },
-                  )}
+              <div className="today-dual">
+                <div>
+                  <p className="today-kicker">What to say in the meeting</p>
+                  <ol className="today-talk">
+                    {selected.talk.map((t, i) => (
+                      <li key={t}>
+                        <span>{i + 1}</span>
+                        <p>{t}</p>
+                      </li>
+                    ))}
+                  </ol>
                 </div>
-                {selected ? (
-                  <div className="today-selected-story" aria-live="polite">
-                    <div className="today-selected-title">
-                      <span className="today-eyebrow">SELECTED ACCOUNT</span>
-                      <strong>{selected.name}</strong>
-                      <button type="button" onClick={() => setSelectedId(null)}>
-                        Clear
-                      </button>
-                      <button onClick={() => open("evidence", selected)}>
-                        View evidence ({selected.sources.length})
-                      </button>
-                    </div>
-                    <ol className="today-causal-trace">
-                      <li>
-                        <span>What changed</span>
-                        <p>{selected.change}</p>
+                <div>
+                  <p className="today-kicker">People at this account</p>
+                  <ul className="today-people">
+                    {selected.people.map(([name, role]) => (
+                      <li key={name}>
+                        <strong>{name}</strong>
+                        <span>{role}</span>
                       </li>
-                      <li>
-                        <span>Who matters</span>
-                        <p>{selected.relationship}</p>
-                      </li>
-                      <li>
-                        <span>Suggested next step</span>
-                        <p>{selected.next}</p>
-                      </li>
-                    </ol>
-                    <p className="today-trace-assessment">
-                      <strong>
-                        Assessment · {selected.confidence} confidence.
-                      </strong>{" "}
-                      {selected.relevance}
-                    </p>
+                    ))}
+                  </ul>
+                  <div className="today-evidence">
+                    {selected.evidence.map((e) => (
+                      <span key={e}>{e}</span>
+                    ))}
                   </div>
-                ) : (
-                  <div className="today-selected-story is-empty" aria-live="polite">
-                    <p className="today-muted">
-                      No account selected. Ask is scoped to your whole book —
-                      or select a name above to focus questions.
-                    </p>
-                  </div>
-                )}
-                <details className="today-concentration">
-                  <summary>
-                    Relationship dependence & revenue concentration
-                  </summary>
-                  <p>
-                    Fidelity’s route to Marcus currently depends on Sarah.
-                    Schroders lacks an engaged economic owner. These are
-                    coverage dependencies, not revenue weights.
-                  </p>
-                  <p>
-                    Revenue concentration cannot be assessed: account revenue
-                    and total book revenue are not included in this scenario.
-                  </p>
-                  <button onClick={() => open("evidence", fidelity)}>
-                    View Fidelity coverage evidence
-                  </button>
-                  <button
-                    onClick={() =>
-                      open(
-                        "evidence",
-                        accounts.find((a) => a.id === "schroders")!,
-                      )
-                    }
-                  >
-                    View Schroders coverage evidence
-                  </button>
-                </details>
-              </section>
+                </div>
+              </div>
 
-              <aside className="today-priority" aria-labelledby="priority-title">
-                <div className="today-priority-kicker">
-                  <span>PRIORITY ACTION</span>
-                  <span>{PRIORITY.meetingLabel}</span>
-                </div>
-                <h2 id="priority-title">
-                  Prepare for <br />
-                  Fidelity meeting
-                </h2>
-                <p className="today-meeting-time">
-                  {PRIORITY.meetingTime.replace(" BST", "")}{" "}
-                  <span>BST</span>
-                </p>
-                <button
-                  className="today-prepare-button"
-                  onClick={() => {
-                    setSelectedId(PRIORITY.accountId);
-                    open("prepare", fidelity);
-                  }}
-                >
-                  <PrepareIcon size={17} />
-                  {prepared ? "Review meeting preparation" : "Prepare meeting"}
-                  <ArrowRightIcon size={17} />
+              <div className="today-priority-footer">
+                <button type="button" className="today-cta" onClick={openPrepare}>
+                  <span className="today-cta-shine" aria-hidden />
+                  <span>{prepared ? "Review meeting preparation" : selected.action.cta}</span>
+                  <span aria-hidden>→</span>
                 </button>
-                {prepared && (
-                  <p className="today-prepared" role="status">
-                    ✓ Preparation completed in this session
-                  </p>
-                )}
-                <div className="today-priority-links">
-                  <button
-                    onClick={() => {
-                      setSelectedId(PRIORITY.accountId);
-                      open("account", fidelity);
-                    }}
-                  >
-                    Open Fidelity account ↗
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedId(PRIORITY.accountId);
-                      open("evidence", fidelity);
-                    }}
-                  >
-                    View evidence ↗
-                  </button>
+                <div>
+                  <p className="today-cta-title">{selected.action.title}</p>
+                  <p className="today-cta-when">{selected.action.when}</p>
                 </div>
-                <div className="today-priority-rule" />
-                <div className="today-priority-block">
-                  <span className="today-proof-label">
-                    01 <b>{PRIORITY.fact.label}</b>
-                    <small>
-                      {PRIORITY.fact.sourceKind} · {PRIORITY.fact.sourceTime}
-                    </small>
-                  </span>
-                  <p>{PRIORITY.fact.detail}</p>
+                <div className="today-conf">
+                  <div className="today-conf-bars" aria-hidden>
+                    {confBars.map((c, i) => (
+                      <span key={i} style={{ background: c }} />
+                    ))}
+                  </div>
+                  <span>{selected.confLabel}</span>
+                  <p>Facts come from sources · the conclusion is the system’s · illustrative data</p>
                 </div>
-                <div className="today-priority-block">
-                  <span className="today-proof-label">
-                    02 <b>{PRIORITY.assessment.label}</b>
-                    <small>{PRIORITY.assessment.confidence} confidence</small>
-                  </span>
-                  <p>{PRIORITY.assessment.detail}</p>
-                  <small>{PRIORITY.assessment.caveat}</small>
-                  <p className="today-confidence-reason">
-                    <strong>Confidence · {PRIORITY.assessment.confidence}.</strong>{" "}
-                    {PRIORITY.assessment.confidenceReason}
-                  </p>
-                </div>
-                <div className="today-people-route">
-                  <span className="today-eyebrow">WHO TO INVOLVE</span>
-                  {PRIORITY.whoToInvolve.map((row, index) => {
-                    const person = personById(row.personId);
-                    if (!person) return null;
-                    return (
-                      <div key={person.id}>
-                        {row.introduction && index > 0 && (
-                          <div className="today-introduction">
-                            {row.introduction}
-                          </div>
-                        )}
-                        <div className="today-person">
-                          <span
-                            className={`today-person-initial${person.covered ? "" : " gap"}`}
-                          >
-                            {person.initials}
-                          </span>
-                          <div>
-                            <strong>{person.name}</strong>
-                            <small>{person.role}</small>
-                            <em
-                              className={
-                                person.covered ? undefined : "today-coverage-gap"
-                              }
-                            >
-                              {person.covered
-                                ? person.note
-                                : `△ ${person.note}`}
-                            </em>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="today-meeting-goal">
-                  <span className="today-proof-label">
-                    03 <b>Suggested next step</b>
-                  </span>
-                  <p>{PRIORITY.suggestedNextStep}</p>
-                </div>
-                <p className="today-priority-foot">
-                  {fidelity.sources.length} illustrative sources · latest today,
-                  08:12
-                  <br />
-                  People, meeting and commercial context are illustrative.
-                </p>
-              </aside>
-
-              <section className="today-pipeline" aria-labelledby="pipeline-title">
-                <SectionHeading
-                  number="02"
-                  title="Pipeline activity"
-                  id="pipeline-title"
-                  aside={
-                    <label>
-                      <span className="sr-only">Pipeline activity period</span>
-                      <select
-                        aria-label="Pipeline activity period"
-                        value={period}
-                        onChange={(e) => setPeriod(e.target.value)}
-                      >
-                        <option>This week</option>
-                        <option>This month</option>
-                      </select>
-                    </label>
-                  }
-                />
-                <p className="today-section-intro">
-                  Movement matters. So does what stands in the way.
-                </p>
-                <p className="today-pipeline-legend">
-                  ● Reached / agreed <span>○ Not yet reached</span>{" "}
-                  <span>┄ Unresolved dependency</span>
-                </p>
-                {deals.length ? (
-                  deals.map((a) => (
-                    <article
-                      className={`today-deal ${a.state} ${selected?.id === a.id ? "is-selected" : ""}`}
-                      key={a.id}
-                    >
-                      <div className="today-deal-title">
-                        <button
-                          onClick={() => {
-                            setSelectedId(a.id);
-                            open("account", a);
-                          }}
-                          aria-label={`Open account: ${a.name}, ${a.deal!.name}`}
-                        >
-                          <StateMark state={a.state} />
-                          <strong>{a.name}</strong>
-                          <span>↗</span>
-                        </button>
-                        <small>{a.deal!.name}</small>
-                      </div>
-                      <div className="today-deal-body">
-                        <ol
-                          className="today-deal-path"
-                          aria-label={`${a.name} deal path`}
-                        >
-                          {a.deal!.steps.map((step, i) => (
-                            <li
-                              key={step}
-                              className={i <= a.deal!.reached ? "reached" : ""}
-                            >
-                              <span aria-hidden="true" />
-                              {step}
-                              <span className="sr-only">
-                                {i <= a.deal!.reached
-                                  ? ", reached or agreed"
-                                  : ", not yet reached"}
-                              </span>
-                            </li>
-                          ))}
-                        </ol>
-                        <div className="today-deal-reason">
-                          <span>{a.deal!.movement}</span>
-                          {a.deal!.blocker && (
-                            <p>
-                              <b>↳</b> {a.deal!.blocker}
-                            </p>
-                          )}
-                          <button
-                            aria-label={`View evidence: ${a.name} pipeline assessment`}
-                            onClick={() => {
-                              setSelectedId(a.id);
-                              open("evidence", a);
-                            }}
-                          >
-                            View evidence
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  ))
-                ) : (
-                  <p className="today-empty">
-                    No pipeline activity matches these filters. Choose All
-                    priorities or This month.
-                  </p>
-                )}
-                <p className="today-data-note">
-                  {deals.some((a) => a.id === "invesco")
-                    ? "Invesco advanced to an agreed scope workshop."
-                    : "No formal deal advancement recorded in this view."}{" "}
-                  {deals.some((a) => a.id === "fidelity") &&
-                    "Fidelity has an agreed discovery step."}{" "}
-                  {period === "This week" &&
-                    "Older inactive paths appear under This month."}
-                </p>
-              </section>
-
-              <section className="today-changes" aria-labelledby="changes-title">
-                <SectionHeading
-                  number="03"
-                  title="What changed"
-                  id="changes-title"
-                  aside="Material updates · source linked"
-                />
-                <div className="today-change-sequence">
-                  {visibleChanges.length ? (
-                    visibleChanges.map((c) => {
-                      const a = accounts.find((x) => x.id === c.accountId)!;
-                      return (
-                        <article
-                          key={c.id}
-                          className={`today-change ${a.state}${signalFlashId === c.id ? " is-flash" : ""}${c.injected ? " is-injected" : ""}`}
-                        >
-                          <p className="today-change-time">
-                            <StateMark state={a.state} />
-                            {c.time}
-                            {c.injected && (
-                              <span className="today-change-new">New</span>
-                            )}
-                          </p>
-                          <button
-                            className="today-change-account"
-                            onClick={() => {
-                              setSelectedId(a.id);
-                              open("account", a);
-                            }}
-                            aria-label={`Open account: ${a.name}`}
-                          >
-                            {a.name} ↗
-                          </button>
-                          <p>{c.summary ?? a.change}</p>
-                          <div className="today-change-consequence">
-                            <span aria-hidden="true">↳</span>
-                            {c.consequence}
-                          </div>
-                          <button
-                            className="today-change-source"
-                            onClick={() => {
-                              setSelectedId(a.id);
-                              open("evidence", a);
-                            }}
-                            aria-label={`View evidence: ${a.name}, ${a.sources[0].kind}`}
-                          >
-                            {a.sources[0].kind} <span>View evidence ↗</span>
-                          </button>
-                        </article>
-                      );
-                    })
-                  ) : (
-                    <p className="today-empty">
-                      No material updates match these account filters.
-                    </p>
-                  )}
-                </div>
-              </section>
+              </div>
             </div>
-            <p className="today-bottom-note">
-              Illustrative scenario, fixed at 7 September 2026 · Source excerpts
-              are examples, not verified client records. Assessments require
-              seller validation.
-            </p>
-          </div>
+          </article>
+
+          <aside className="today-side">
+            <div className="today-glass today-queue">
+              <p className="today-kicker">The other three changes</p>
+              <ul>
+                {queue.map((q) => (
+                  <li key={q.id}>
+                    <button type="button" onClick={() => pick(q.id)}>
+                      <i style={{ background: q.state }} />
+                      <span>
+                        <strong>{q.full}</strong>
+                        <em>{q.note}</em>
+                      </span>
+                      <b>{q.kind}</b>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="today-glass today-ask-card">
+              <div className="today-ask-title">
+                <span className="today-ask-orb" aria-hidden />
+                <p>Ask a question about {selected.short}</p>
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  runAsk(askDraft);
+                }}
+              >
+                <label className="sr-only" htmlFor="today-ask-field">
+                  Type a question about this account
+                </label>
+                <input
+                  id="today-ask-field"
+                  value={askDraft}
+                  onChange={(e) => setAskDraft(e.target.value)}
+                  placeholder="Type a question about this account"
+                  autoComplete="off"
+                />
+              </form>
+              <div className="today-ask-suggestions" role="group" aria-label="Suggested questions">
+                {ASK_SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className={asked === s ? "is-active" : undefined}
+                    onClick={() => runAsk(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <div className="today-ask-answer" aria-live="polite">
+                <p>{answer.text}</p>
+                {answer.bullets && answer.bullets.length > 0 && (
+                  <ul>
+                    {answer.bullets.map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
+                  </ul>
+                )}
+                <span>
+                  {answer.sources[0]?.detail ??
+                    "From the illustrative briefing for this account."}
+                </span>
+              </div>
+            </div>
+          </aside>
         </div>
 
-        <AskPanel
-          selectedId={selectedId}
-          selectedName={selected?.name ?? null}
-          data={askData}
-          collapsed={askCollapsed}
-          onToggleCollapse={() => setAskCollapsed((v) => !v)}
-          onClearContext={() => setSelectedId(null)}
-        />
+        <section className="today-glass today-map-section">
+          <div className="today-map-heading">
+            <div>
+              <p className="today-kicker">Accounts on a map</p>
+              <h2>Account locations and fund distribution</h2>
+            </div>
+            <div className="today-legend">
+              {STATE_LEGEND.map((l) => (
+                <span key={l.t}>
+                  <i style={{ background: l.c }} />
+                  {l.t}
+                </span>
+              ))}
+            </div>
+          </div>
+          <AccountsMap selectedId={selected.id} onSelect={pick} />
+        </section>
+
+        <section className="today-charts">
+          <div className="today-glass">
+            <p className="today-kicker">Revenue at risk</p>
+            <h2>Contract renewals in the next 12 months</h2>
+            <div className="today-renewal-bars" aria-hidden>
+              {RENEWAL_BARS.map((r, i) => (
+                <span
+                  key={i}
+                  style={{
+                    height: `${r.h}%`,
+                    background: r.hot
+                      ? CRIM_BAR
+                      : r.warm
+                        ? AMBER_BAR
+                        : "rgba(140,163,188,0.32)",
+                  }}
+                >
+                  {r.label && (
+                    <b style={{ color: r.hot ? "#96453E" : "#8A5E12" }}>{r.label}</b>
+                  )}
+                </span>
+              ))}
+            </div>
+            <div className="today-renewal-months" aria-hidden>
+              {RENEWAL_MONTHS.map((m, i) => (
+                <span key={`${m}-${i}`} style={{ color: i === 1 ? "#96453E" : undefined }}>
+                  {m}
+                </span>
+              ))}
+            </div>
+            <p className="today-chart-note">
+              M&G renews in 22 days with three Fund Communication Solutions support tickets
+              still open. It is the largest amount of revenue you could lose.
+            </p>
+          </div>
+
+          <div className="today-glass">
+            <p className="today-kicker">Relationship gap</p>
+            <h2>Contacts you have at each account</h2>
+            <div
+              className="today-coverage"
+              style={{
+                gridTemplateColumns: `82px repeat(${COVERAGE_ROLES.length}, minmax(0, 1fr))`,
+              }}
+            >
+              <span />
+              {COVERAGE_ROLES.map((r) => (
+                <span key={r} className="today-coverage-role">
+                  {r}
+                </span>
+              ))}
+              {COVERAGE_ROWS.map((row) => (
+                <CoverageRow
+                  key={row.accountId}
+                  name={row.name}
+                  cells={row.cells}
+                  active={row.accountId === selected.id}
+                  onSelect={() => pick(row.accountId)}
+                />
+              ))}
+            </div>
+            <div className="today-coverage-legend">
+              {(["a", "t", "n", "g"] as const).map((k) => (
+                <span key={k}>
+                  <i
+                    style={{
+                      background: COVERAGE_CELL_STYLE[k].bg,
+                      border: COVERAGE_CELL_STYLE[k].bd,
+                    }}
+                  />
+                  {COVERAGE_CELL_STYLE[k].label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="today-glass">
+            <p className="today-kicker">What changed</p>
+            <h2>Meetings and contact over the last 6 months</h2>
+            <div className="today-trends">
+              {ENGAGEMENT_TRENDS.map((t) => (
+                <button
+                  key={t.accountId}
+                  type="button"
+                  className={t.accountId === selected.id ? "is-active" : undefined}
+                  onClick={() => pick(t.accountId)}
+                >
+                  <span>{t.name}</span>
+                  <svg viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden>
+                    <polyline
+                      points={t.pts}
+                      fill="none"
+                      stroke={t.c}
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
+                  <strong style={{ color: t.tc }}>{t.delta}</strong>
+                </button>
+              ))}
+            </div>
+            <p className="today-chart-note">
+              Three accounts are contacting you more, two have stopped. Less contact plus a
+              Fund Communication Solutions renewal date soon is the case to act on.
+            </p>
+          </div>
+        </section>
+
+        <footer className="today-footer">
+          <span>{DAILY_BRIEFING.stamp}</span>
+          <span>Fund sources checked 7 Sep 2026</span>
+        </footer>
       </div>
 
-      <div className="today-demo-bar" aria-label="Demo controls">
-        <span>Demo</span>
-        <button
-          type="button"
-          onClick={simulateSignal}
-          disabled={demoUsed}
-          title="Injects a new Amundi market signal into What changed"
-        >
-          {demoUsed ? "Signal simulated" : "Simulate new signal"}
-        </button>
-      </div>
-
-      {panel && (
-        <TodayDialog
-          panel={panel}
-          onClose={() => setPanel(null)}
-          onEvidence={() =>
-            setPanel({ kind: "evidence", account: panel.account })
-          }
-          checked={checked}
-          setChecked={setChecked}
-          notes={notes}
-          setNotes={setNotes}
+      {prepareOpen && (
+        <PreparePanel
+          account={selected}
           prepared={prepared}
-          onComplete={() => {
-            setPrepared(true);
-            setPanel(null);
-          }}
+          checked={checked}
+          notes={notes}
+          onCheck={toggleCheck}
+          onNotes={setNotes}
+          onComplete={completePrepare}
+          onClose={() => setPrepareOpen(false)}
         />
       )}
     </div>
   );
 }
 
-function SectionHeading({
-  number,
-  title,
-  id,
-  aside,
-}: {
-  number: string;
-  title: string;
-  id: string;
-  aside: React.ReactNode;
-}) {
-  return (
-    <div className="today-section-heading">
-      <h2 id={id}>
-        <span>{number}</span>
-        {title}
-      </h2>
-      <div>{aside}</div>
-    </div>
-  );
-}
+const CRIM_BAR = "#C4675F";
+const AMBER_BAR = "#D99A3E";
 
-function TodayDialog({
-  panel,
-  onClose,
-  onEvidence,
-  checked,
-  setChecked,
-  notes,
-  setNotes,
-  prepared,
-  onComplete,
+function CoverageRow({
+  name,
+  cells,
+  active,
+  onSelect,
 }: {
-  panel: Panel;
-  onClose: () => void;
-  onEvidence: () => void;
-  checked: string[];
-  setChecked: (v: string[]) => void;
-  notes: string;
-  setNotes: (v: string) => void;
-  prepared: boolean;
-  onComplete: () => void;
+  name: string;
+  cells: (keyof typeof COVERAGE_CELL_STYLE)[];
+  active: boolean;
+  onSelect: () => void;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const dialog = ref.current;
-    const trigger = document.activeElement as HTMLElement | null;
-    dialog?.showModal();
-    return () => {
-      dialog?.close();
-      trigger?.focus();
-    };
-  }, []);
-  const a = panel.account;
-  const checklist = [
-    "Review the evidence and its limits",
-    "Confirm Sarah’s route to Marcus",
-    "Agree a question to test the client need",
-  ];
   return (
-    <dialog
-      ref={ref}
-      className="today-dialog"
-      aria-labelledby="today-dialog-title"
-      onCancel={onClose}
-      onKeyDown={(event) => {
-        if (event.key !== "Tab") return;
-        const controls = Array.from(
-          event.currentTarget.querySelectorAll<HTMLElement>(
-            'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), summary, [tabindex="0"]',
-          ),
-        ).filter((element) => element.getClientRects().length > 0);
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last?.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first?.focus();
-        }
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="today-dialog-inner">
-        <div className="today-dialog-top">
-          <span className="today-eyebrow">
-            {panel.kind === "evidence"
-              ? "EVIDENCE"
-              : panel.kind === "prepare"
-                ? "MEETING PREPARATION"
-                : "ACCOUNT STORY"}
-          </span>
-          <button autoFocus onClick={onClose} aria-label="Close panel">
-            Close ×
-          </button>
-        </div>
-        <h2 id="today-dialog-title">{a.name}</h2>
-        <p className="today-dialog-disclaimer">
-          Illustrative briefing · 7 September 2026. People, sources and
-          commercial conditions below are fictional scenario data.
-        </p>
-        {panel.kind === "evidence" ? (
-          <>
-            <p>
-              <strong>{a.confidence} confidence in the assessment.</strong> This
-              reflects the scenario’s evidence coverage, not a statistical
-              probability. Client need remains unconfirmed.
-            </p>
-            <div className="today-evidence-chain">
-              <span>Source</span> → <span>Recorded fact</span> →{" "}
-              <span>Assessment</span> → <span>Suggested action</span>
-            </div>
-            {a.sources.map((s) => (
-              <article className="today-source" key={s.id}>
-                <div>
-                  <span>{s.kind}</span>
-                  <time>{s.time}</time>
-                </div>
-                <h3>Illustrative source · {s.id}</h3>
-                <blockquote>{s.excerpt}</blockquote>
-                <p>
-                  <strong>Supports:</strong> {s.supports}
-                </p>
-                <small>
-                  Example excerpt only. Original document unavailable; this is
-                  not verified evidence.
-                </small>
-              </article>
-            ))}
-            <h3>Assessment</h3>
-            <p>{a.relevance}</p>
-            <h3>Suggested next step</h3>
-            <p>{a.next}</p>
-            <p className="today-data-note">
-              Freshness is relative to this fixed briefing. In live use, recheck
-              source timestamps before acting.
-            </p>
-          </>
-        ) : panel.kind === "account" ? (
-          <>
-            <span className={`today-state-text ${a.state}`}>
-              <StateMark state={a.state} />
-              {BOOK_STATES[a.state].label} · {a.condition}
-            </span>
-            <h3>Fact in this scenario</h3>
-            <p>{a.change}</p>
-            <h3>Why this matters · assessment</h3>
-            <p>{a.relevance}</p>
-            <h3>Who matters</h3>
-            <p>{a.relationship}</p>
-            {a.deal && (
-              <>
-                <h3>Pipeline activity</h3>
-                <p>
-                  {a.deal.name} — {a.deal.movement}
-                </p>
-                <p>{a.deal.blocker}</p>
-              </>
-            )}
-            <h3>Suggested next step</h3>
-            <p>{a.next}</p>
-            <button className="today-primary" onClick={onEvidence}>
-              View evidence · {a.sources.length} sources
-            </button>
-            {a.recordId && (
-              <>
-                <Link
-                  className="today-record-link"
-                  href={`/accounts/${a.recordId}`}
-                >
-                  Open underlying account record ↗
-                </Link>
-                <small>
-                  The broader prototype record uses a separate illustrative
-                  scenario; its commercial state may differ.
-                </small>
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            <p className="today-prep-time">
-              {PRIORITY.meetingTime} · Sarah Coleman & Marcus Lee
-            </p>
-            <h3>Suggested meeting goal</h3>
-            <p>{PRIORITY.suggestedNextStep}</p>
-            <h3>People & route</h3>
-            <p>
-              Sarah Coleman — Head of Distribution, strong existing
-              relationship. Ask Sarah to include Marcus Lee — COO,
-              International, limited direct coverage.
-            </p>
-            <h3>Questions to take into the room</h3>
-            <ol className="today-questions">
-              {PRIORITY.prepareQuestions.map((q) => (
-                <li key={q}>{q}</li>
-              ))}
-            </ol>
-            <details className="today-prep-evidence">
-              <summary>
-                Review evidence · {a.sources.length} illustrative sources
-              </summary>
-              {a.sources.map((s) => (
-                <div key={s.id}>
-                  <strong>
-                    {s.kind} · {s.time}
-                  </strong>
-                  <p>{s.excerpt}</p>
-                  <small>{s.supports}</small>
-                </div>
-              ))}
-            </details>
-            <fieldset className="today-checklist">
-              <legend>Preparation checklist</legend>
-              {checklist.map((item) => (
-                <label key={item}>
-                  <input
-                    type="checkbox"
-                    checked={checked.includes(item)}
-                    onChange={(e) =>
-                      setChecked(
-                        e.target.checked
-                          ? [...checked, item]
-                          : checked.filter((c) => c !== item),
-                      )
-                    }
-                  />
-                  {item}
-                </label>
-              ))}
-            </fieldset>
-            <label className="today-notes">
-              Your meeting notes
-              <textarea
-                rows={4}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Capture the question you most need answered…"
-              />
-            </label>
-            <p className="today-data-note">
-              Notes and checklist stay in memory for this page session. Nothing
-              is sent or saved to CRM.
-            </p>
-            <button
-              className="today-primary"
-              disabled={checked.length !== checklist.length}
-              onClick={onComplete}
-            >
-              <CheckIcon size={16} />
-              {prepared
-                ? "Update completed preparation"
-                : "Mark preparation complete"}
-            </button>
-            {checked.length !== checklist.length && (
-              <small>
-                Review all three checklist items to complete preparation.
-              </small>
-            )}
-          </>
-        )}
-      </div>
-    </dialog>
+    <>
+      <button
+        type="button"
+        className={`today-coverage-name${active ? " is-active" : ""}`}
+        onClick={onSelect}
+      >
+        {name}
+      </button>
+      {cells.map((c, i) => (
+        <span
+          key={`${name}-${i}`}
+          className="today-coverage-cell"
+          style={{
+            background: COVERAGE_CELL_STYLE[c].bg,
+            border: COVERAGE_CELL_STYLE[c].bd,
+          }}
+        />
+      ))}
+    </>
   );
 }

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background: #F4F7FB; }
+  * { box-sizing: border-box; }
+  a { color: #1F7A8C; text-decoration: none; }
+  a:hover { color: #2F9B8E; }
+  ::selection { background: #CFE2F7; color: #0A2540; }
+  @keyframes gi-drift-a { 0% { transform: translate3d(-6%, -4%, 0) scale(1); } 50% { transform: translate3d(8%, 6%, 0) scale(1.15); } 100% { transform: translate3d(-6%, -4%, 0) scale(1); } }
+  @keyframes gi-drift-b { 0% { transform: translate3d(6%, 4%, 0) scale(1.1); } 50% { transform: translate3d(-8%, -6%, 0) scale(0.95); } 100% { transform: translate3d(6%, 4%, 0) scale(1.1); } }
+  @keyframes gi-rise { from { opacity: 0; filter: blur(10px); transform: translateY(14px); } to { opacity: 1; filter: blur(0); transform: none; } }
+  @keyframes gi-fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes gi-shine { 0% { background-position: -180% 0; } 60%, 100% { background-position: 180% 0; } }
+  @keyframes gi-pulse { 0%, 100% { opacity: 0.35; transform: scale(1); } 50% { opacity: 0.9; transform: scale(1.9); } }
+  @keyframes gi-dash { to { stroke-dashoffset: -220; } }
+  @keyframes gi-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  @keyframes gi-flow { to { stroke-dashoffset: -110; } }
+</style>
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
+</helmet>
+
+<div style="position:relative;min-height:100vh;background:#F4F7FB;font-family:'Open Sans',system-ui,sans-serif;color:#0A2540;-webkit-font-smoothing:antialiased;overflow:hidden">
+
+  <div style="position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden">
+    <div style="position:absolute;top:-22%;left:-10%;width:70vw;height:70vw;border-radius:50%;background:radial-gradient(circle,rgba(129,183,240,0.42) 0%,rgba(129,183,240,0) 68%);filter:blur(24px);animation:gi-drift-a 26s ease-in-out infinite"></div>
+    <div style="position:absolute;top:6%;right:-16%;width:62vw;height:62vw;border-radius:50%;background:radial-gradient(circle,rgba(120,206,196,0.34) 0%,rgba(120,206,196,0) 68%);filter:blur(26px);animation:gi-drift-b 32s ease-in-out infinite"></div>
+    <div style="position:absolute;bottom:-28%;left:22%;width:66vw;height:66vw;border-radius:50%;background:radial-gradient(circle,rgba(196,178,240,0.28) 0%,rgba(196,178,240,0) 66%);filter:blur(30px);animation:gi-drift-a 40s ease-in-out infinite reverse"></div>
+  </div>
+
+  <div style="position:relative;z-index:1">
+
+    <div style="position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:18px;padding:14px 30px;background:rgba(255,255,255,0.62);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border-bottom:1px solid rgba(10,37,64,0.07)">
+      <div style="display:flex;align-items:baseline;gap:12px;min-width:0">
+        <span style="font-size:19px;font-weight:700;letter-spacing:-0.015em;color:#0A2540">Broadridge</span>
+        <span style="width:1px;height:15px;background:rgba(10,37,64,0.16);display:inline-block"></span>
+        <span style="font-size:13px;font-weight:500;color:#5A7391;letter-spacing:0.01em">Growth Intelligence</span>
+      </div>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:9px;background:rgba(255,255,255,0.7);border:1px solid rgba(10,37,64,0.09);border-radius:999px;padding:8px 16px;width:260px;max-width:30vw;box-shadow:0 1px 2px rgba(10,37,64,0.04)">
+        <span style="width:10px;height:10px;border:1.5px solid #5A7391;border-radius:50%;display:inline-block"></span>
+        <span style="font-size:13px;color:#5A7391">Ask or search</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.7);border:1px solid rgba(10,37,64,0.09);border-radius:999px;padding:5px 14px 5px 5px">
+        <span style="width:27px;height:27px;border-radius:50%;background:linear-gradient(135deg,#4F8FD0,#2F9B8E);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center">JH</span>
+        <span style="font-size:13px;color:#33506F">James</span>
+      </div>
+    </div>
+
+    <div style="max-width:none;padding:30px 36px 40px;display:flex;flex-direction:column;gap:22px">
+
+      <div style="animation:gi-rise 0.7s ease-out both">
+        <div style="font-size:12.5px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#5A7391;margin-bottom:10px">Monday, 7 September</div>
+        <div style="font-size:34px;font-weight:300;letter-spacing:-0.02em;line-height:1.2;color:#0A2540;max-width:26ch">Four things changed in your accounts since yesterday.</div>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:stretch">
+
+        <div style="position:relative;flex:1 1 560px;min-width:0;border-radius:24px;padding:1px;background:linear-gradient(140deg,rgba(255,255,255,0.95),rgba(120,206,196,0.5) 45%,rgba(129,183,240,0.55));box-shadow:0 24px 60px -28px rgba(10,37,64,0.35);animation:gi-rise 0.8s ease-out 0.05s both">
+          <div style="border-radius:23px;background:rgba(255,255,255,0.66);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);padding:30px 32px 28px;height:100%;display:flex;flex-direction:column">
+
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px">
+              <span style="position:relative;display:flex;align-items:center;gap:9px;font-size:11.5px;font-weight:700;letter-spacing:0.11em;text-transform:uppercase;color:#22796F;background:rgba(47,155,142,0.12);border-radius:999px;padding:6px 13px 6px 11px;white-space:nowrap">
+                <span style="position:relative;width:7px;height:7px;display:inline-block">
+                  <span style="position:absolute;inset:0;border-radius:50%;background:#2F9B8E"></span>
+                  <span style="position:absolute;inset:0;border-radius:50%;background:#2F9B8E;animation:gi-pulse 2.6s ease-in-out infinite"></span>
+                </span>
+                Priority action
+              </span>
+              <span style="font-size:12.5px;color:#5A7391;white-space:nowrap">Found 08:12 today · 1 of 4</span>
+            </div>
+
+            <div style="font-size:33px;font-weight:400;line-height:1.28;letter-spacing:-0.018em;color:#0A2540;max-width:38ch;text-wrap:pretty">
+              <sc-for list="{{ headWords }}" as="w" hint-placeholder-count="12"><span style="display:inline-block;animation:gi-rise 0.75s ease-out {{ w.d }} both">{{ w.t }}&nbsp;</span></sc-for>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:22px;margin-top:30px">
+              <sc-for list="{{ sel.chain }}" as="st" hint-placeholder-count="4">
+                <div style="position:relative;padding:0 16px 0 0;animation:gi-fade 0.6s ease-out {{ st.d }} both">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+                    <span style="width:9px;height:9px;border-radius:50%;background:{{ st.dot }};box-shadow:0 0 0 4px {{ st.halo }}"></span>
+                    <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(10,37,64,0.16),rgba(10,37,64,0.03))"></span>
+                  </div>
+                  <div style="font-size:11px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:#5A7391;margin-bottom:7px">{{ st.k }}</div>
+                  <div style="font-size:14.5px;font-weight:600;line-height:1.45;color:#123457;text-wrap:pretty">{{ st.t }}</div>
+                  <div style="font-size:12.5px;line-height:1.5;color:#5A7391;margin-top:6px">{{ st.m }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:26px">
+              <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+                <div style="padding:12px 14px;border-radius:14px;background:rgba(255,255,255,0.62);border:1px solid rgba(255,255,255,0.9)">
+                  <div style="font-size:11.5px;color:#5A7391">{{ s.label }}</div>
+                  <div style="font-size:18px;font-weight:600;color:#123457;margin-top:4px">{{ s.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:26px;margin-top:26px">
+              <div>
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5A7391;margin-bottom:12px">What to say in the meeting</div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <sc-for list="{{ talk }}" as="t" hint-placeholder-count="3">
+                    <div style="display:flex;gap:11px;align-items:flex-start">
+                      <span style="flex:none;width:20px;height:20px;border-radius:50%;background:rgba(10,37,64,0.07);color:#123457;font-size:11.5px;font-weight:700;display:flex;align-items:center;justify-content:center">{{ t.n }}</span>
+                      <span style="font-size:13.5px;line-height:1.55;color:#123457">{{ t.t }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5A7391;margin-bottom:12px">People at this account</div>
+                <div style="display:flex;flex-direction:column;gap:9px">
+                  <sc-for list="{{ people }}" as="p" hint-placeholder-count="3">
+                    <div>
+                      <div style="font-size:13.5px;font-weight:600;line-height:1.4;color:#123457">{{ p.name }}</div>
+                      <div style="font-size:12px;line-height:1.45;color:#5A7391">{{ p.role }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:14px">
+                  <sc-for list="{{ evidence }}" as="e" hint-placeholder-count="3">
+                    <span style="font-size:11.5px;color:#33506F;background:rgba(255,255,255,0.7);border:1px solid rgba(10,37,64,0.08);border-radius:999px;padding:5px 11px">{{ e }}</span>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:auto;padding-top:26px;border-top:1px solid rgba(10,37,64,0.08)">
+              <div onClick="{{ onPrepare }}" style="display:flex;align-items:center;gap:12px;background:linear-gradient(120deg,#0A2540,#123E68);color:#fff;border-radius:999px;padding:14px 24px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 12px 26px -12px rgba(10,37,64,0.6);position:relative;overflow:hidden" style-hover="transform:translateY(-1px)">
+                <span style="position:absolute;inset:0;background:linear-gradient(100deg,transparent 35%,rgba(255,255,255,0.28) 50%,transparent 65%);background-size:220% 100%;animation:gi-shine 4.5s ease-in-out infinite"></span>
+                <span style="position:relative">{{ sel.action.cta }}</span>
+                <span style="position:relative">&#8594;</span>
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:600;color:#123457">{{ sel.action.title }}</div>
+                <div style="font-size:12.5px;color:#5A7391;margin-top:3px">{{ sel.action.when }}</div>
+              </div>
+              <div style="flex:1"></div>
+              <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-start">
+                <div style="display:flex;align-items:center;gap:9px">
+                  <span style="display:flex;gap:3px">
+                    <sc-for list="{{ sel.confBars }}" as="b" hint-placeholder-count="3"><span style="width:20px;height:5px;border-radius:3px;background:{{ b.c }}"></span></sc-for>
+                  </span>
+                  <span style="font-size:12px;font-weight:600;color:#5A7391">{{ sel.confLabel }}</span>
+                </div>
+                <div style="font-size:12px;color:#5A7391">Facts come from sources · the conclusion is the system’s · illustrative data</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;flex:1 1 320px;max-width:420px;min-width:0;animation:gi-rise 0.8s ease-out 0.12s both">
+          <div style="border-radius:20px;background:rgba(255,255,255,0.58);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,0.85);box-shadow:0 16px 40px -26px rgba(10,37,64,0.3);padding:20px 20px 14px">
+            <div style="font-size:11.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5A7391;margin-bottom:14px">The other three changes</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <sc-for list="{{ queue }}" as="q" hint-placeholder-count="4">
+                <div onClick="{{ q.onClick }}" style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;background:{{ q.bg }};cursor:pointer;animation:gi-fade 0.5s ease-out {{ q.d }} both" style-hover="background:rgba(255,255,255,0.95)">
+                  <span style="width:8px;height:8px;border-radius:50%;background:{{ q.c }};flex:none"></span>
+                  <span style="flex:1;min-width:0">
+                    <span style="display:block;font-size:13.5px;font-weight:600;color:#123457">{{ q.name }}</span>
+                    <span style="display:block;font-size:12px;color:#5A7391;margin-top:2px">{{ q.note }}</span>
+                  </span>
+                  <span style="font-size:12px;color:#5A7391">{{ q.kind }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="border-radius:20px;background:rgba(255,255,255,0.58);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,0.85);box-shadow:0 16px 40px -26px rgba(10,37,64,0.3);padding:20px">
+            <div style="display:flex;align-items:center;gap:9px;margin-bottom:12px">
+              <span style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#78CEC4,#81B7F0);display:inline-block;animation:gi-float 4s ease-in-out infinite"></span>
+              <span style="font-size:13.5px;font-weight:600;color:#123457">Ask a question about {{ sel.short }}</span>
+            </div>
+            <input value="{{ q }}" onChange="{{ onQ }}" onKeyDown="{{ onQKey }}" placeholder="Type a question about this account" style="width:100%;background:rgba(255,255,255,0.85);border:1px solid rgba(10,37,64,0.1);border-radius:12px;color:#0A2540;font-family:'Open Sans',sans-serif;font-size:13.5px;padding:12px 14px;outline:none" />
+            <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px">
+              <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3">
+                <span onClick="{{ s.onClick }}" style="font-size:12.5px;color:#33506F;background:{{ s.bg }};border:1px solid rgba(10,37,64,0.08);border-radius:999px;padding:7px 13px;cursor:pointer" style-hover="background:#fff">{{ s.label }}</span>
+              </sc-for>
+            </div>
+            <div style="margin-top:15px;padding-top:15px;border-top:1px solid rgba(10,37,64,0.08)">
+              <div style="font-size:13.5px;line-height:1.65;color:#123457;text-wrap:pretty">{{ answer.body }}</div>
+              <div style="font-size:12px;color:#5A7391;margin-top:9px">{{ answer.src }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border-radius:24px;background:rgba(255,255,255,0.5);backdrop-filter:blur(24px) saturate(170%);-webkit-backdrop-filter:blur(24px) saturate(170%);border:1px solid rgba(255,255,255,0.85);box-shadow:0 20px 50px -30px rgba(10,37,64,0.3);padding:24px 26px 18px;animation:gi-rise 0.8s ease-out 0.18s both">
+        <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap">
+          <div style="min-width:250px">
+            <div style="font-size:11.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5A7391;margin-bottom:8px">Accounts on a map</div>
+            <div style="font-size:23px;font-weight:300;letter-spacing:-0.015em;color:#0A2540">Account locations and fund distribution</div>
+          </div>
+          <div style="flex:1"></div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;padding-bottom:4px">
+            <sc-for list="{{ legend }}" as="l" hint-placeholder-count="4">
+              <span style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:#5A7391"><span style="width:9px;height:9px;border-radius:50%;background:{{ l.c }}"></span>{{ l.t }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="margin-top:16px">
+          <x-import component-from-global-scope="gi-map" from="./gi-map.js" selected="{{ sel.id }}" hint-size="100%,440px"></x-import>
+        </div>
+        <div style="font-size:12px;color:#5A7391;padding:10px 0 6px">Click an account to see its sub-funds, the country each fund is domiciled in, and the cities it is sold into.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px;animation:gi-rise 0.8s ease-out 0.24s both">
+
+        <div style="border-radius:20px;background:rgba(255,255,255,0.6);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,0.85);box-shadow:0 16px 40px -28px rgba(10,37,64,0.3);padding:22px 22px 18px">
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5A7391">Revenue at risk</div>
+          <div style="font-size:19px;font-weight:400;color:#0A2540;margin:7px 0 20px">Contract renewals in the next 12 months</div>
+          <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:120px">
+            <sc-for list="{{ renewals }}" as="r" hint-placeholder-count="12">
+              <span style="position:relative;height:{{ r.h }};border-radius:6px 6px 3px 3px;background:{{ r.c }}">
+                <span style="position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:600;color:{{ r.lc }};white-space:nowrap">{{ r.label }}</span>
+              </span>
+            </sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-top:9px;font-size:11px;color:#5A7391;text-align:center">
+            <sc-for list="{{ months }}" as="m" hint-placeholder-count="12"><span style="color:{{ m.c }}">{{ m.t }}</span></sc-for>
+          </div>
+          <div style="font-size:13px;line-height:1.6;color:#5A7391;margin-top:16px;padding-top:14px;border-top:1px solid rgba(10,37,64,0.08)">M&amp;G renews in 22 days with three support tickets still open. It is the largest amount of revenue you could lose.</div>
+        </div>
+
+        <div style="border-radius:20px;background:rgba(255,255,255,0.6);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,0.85);box-shadow:0 16px 40px -28px rgba(10,37,64,0.3);padding:22px">
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5A7391">Relationship gap</div>
+          <div style="font-size:19px;font-weight:400;color:#0A2540;margin:7px 0 20px">Contacts you have at each account</div>
+          <div style="display:grid;grid-template-columns:82px repeat(5,minmax(0,1fr));gap:6px;align-items:center">
+            <span></span>
+            <sc-for list="{{ roles }}" as="r" hint-placeholder-count="5"><span style="font-size:11px;font-weight:600;color:#5A7391;text-align:center">{{ r }}</span></sc-for>
+            <sc-for list="{{ coverage }}" as="row" hint-placeholder-count="5">
+              <span style="font-size:12.5px;color:#123457">{{ row.name }}</span>
+              <sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="5">
+                <span style="height:22px;border-radius:7px;background:{{ c.bg }};border:{{ c.bd }}"></span>
+              </sc-for>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:13px;flex-wrap:wrap;margin-top:15px">
+            <sc-for list="{{ covLegend }}" as="l" hint-placeholder-count="4">
+              <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#5A7391"><span style="width:12px;height:12px;border-radius:4px;background:{{ l.bg }};border:{{ l.bd }}"></span>{{ l.t }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border-radius:20px;background:rgba(255,255,255,0.6);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);border:1px solid rgba(255,255,255,0.85);box-shadow:0 16px 40px -28px rgba(10,37,64,0.3);padding:22px">
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5A7391">What changed</div>
+          <div style="font-size:19px;font-weight:400;color:#0A2540;margin:7px 0 20px">Meetings and contact over the last 6 months</div>
+          <div style="display:flex;flex-direction:column;gap:13px">
+            <sc-for list="{{ trends }}" as="t" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:78px minmax(0,1fr) 54px;gap:12px;align-items:center">
+                <span style="font-size:12.5px;color:#123457">{{ t.name }}</span>
+                <svg viewBox="0 0 100 26" preserveAspectRatio="none" style="width:100%;height:26px">
+                  <polyline points="{{ t.pts }}" fill="none" stroke="{{ t.c }}" stroke-width="1.8" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+                </svg>
+                <span style="font-size:12px;font-weight:600;color:{{ t.tc }};text-align:right">{{ t.delta }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="font-size:13px;line-height:1.6;color:#5A7391;margin-top:16px;padding-top:14px;border-top:1px solid rgba(10,37,64,0.08)">Three accounts are contacting you more, two have stopped. Less contact plus a renewal date soon is the case to act on.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:12px;color:#5A7391;padding:4px 2px 0">
+        <span>Fund data comes from issuers · revenue, contacts and account health shown here are example data</span>
+        <div style="flex:1"></div>
+        <span>Fund sources checked 7 Sep 2026</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1200}}">
+const TEAL = '#2F9B8E', AMBER = '#D99A3E', CRIM = '#C4675F', SLATE = '#5A7391';
+const HALO = { [TEAL]: 'rgba(47,155,142,0.16)', [AMBER]: 'rgba(217,154,62,0.18)', [CRIM]: 'rgba(196,103,95,0.18)', [SLATE]: 'rgba(140,163,188,0.2)' };
+
+const ACCOUNTS = [
+  { id: 'fid', name: 'Fidelity', full: 'Fidelity International', short: 'Fidelity', x: 22, y: 32, rev: 8.4, state: TEAL, note: 'Meeting 09:45', kind: 'New opportunity',
+    head: 'A filing this morning changed what your 09:45 with Fidelity is about.',
+    chain: [
+      { k: 'What changed', t: 'European distribution expansion indicated', m: 'Issuer filing · 08:12 today', dot: TEAL },
+      { k: 'Account', t: 'Fidelity International', m: '£8.4m book · three live services', dot: TEAL },
+      { k: 'Relationship', t: 'No executive sponsor since May', m: 'COO seat uncovered · two warm contacts', dot: AMBER },
+      { k: "What's at stake", t: 'More markets means more reporting load', m: 'A hypothesis to test, not a stated need', dot: TEAL }
+    ],
+    action: { title: 'Fidelity International · quarterly review', when: 'Today, 09:45–10:30 · with Ravi Patel', cta: 'Prepare me for this' },
+    conf: 2, confLabel: 'Moderate confidence',
+    answers: {
+      default: { body: 'Fidelity is your strongest relationship by revenue and the only one with a live signal today. The gap is seniority: your two advocates both sit in operations.', src: 'From the issuer filing, your last six meetings and CRM contact history.' },
+      'Why does this matter today?': { body: 'The filing lands three weeks before their launch window, and the meeting is already on the calendar. You get one natural chance to frame the operating cost before they plan around it.', src: 'Issuer filing 7 Sep · meeting agenda · fund registrations, 12 months.' },
+      'Who else should I talk to?': { body: 'Elena Marsh, their COO, is the uncovered seat. Ravi Patel in operations already sponsors your reporting work and is the warmest route to her.', src: 'Contact history · org coverage · two shared meetings with Ravi.' },
+      'How confident are you?': { body: 'Moderate. The filing is fact. The reporting-load consequence is our inference — no one at Fidelity has asked for anything yet.', src: 'One primary source, one inference. Flagged as unconfirmed.' }
+    } },
+  { id: 'nor', name: 'Nordea', full: 'Nordea Asset Management', short: 'Nordea', x: 54, y: 13, rev: 5.2, state: TEAL, note: 'New partners', kind: 'New opportunity',
+    head: 'Nordea quietly changed distribution partners in two markets.',
+    chain: [
+      { k: 'What changed', t: 'Two distribution partners replaced', m: 'Registry update · Friday', dot: TEAL },
+      { k: 'Account', t: 'Nordea Asset Management', m: '£5.2m book · Stockholm and Copenhagen', dot: TEAL },
+      { k: 'Relationship', t: 'Broad and healthy coverage', m: 'COO, CIO and Ops all active', dot: TEAL },
+      { k: "What's at stake", t: 'New partners mean new fund communications', m: 'Worth one exploratory call', dot: TEAL }
+    ],
+    action: { title: 'Nordea · call Annika before month end', when: 'Suggested this week · 20 minutes', cta: 'Draft the call' },
+    conf: 2, confLabel: 'Moderate confidence',
+    answers: { default: { body: 'Nordea is healthy and growing quietly. Nothing is at risk here — this is the one account where a new conversation is genuinely warranted.', src: 'Registry update, engagement trend and coverage map.' } } },
+  { id: 'mg', name: 'M&G', full: 'M&G Investments', short: 'M&G', x: 72, y: 72, rev: 7.1, state: CRIM, note: 'Renews 29 Sep', kind: 'Revenue at risk',
+    head: 'M&G renews in 22 days with three delivery tickets still open.',
+    chain: [
+      { k: 'What changed', t: 'Third delivery ticket opened Friday', m: 'Reporting latency · unresolved', dot: CRIM },
+      { k: 'Account', t: 'M&G Investments', m: '£7.1m book · renewal 29 September', dot: CRIM },
+      { k: 'Relationship', t: 'Engagement down 52% in six months', m: 'Procurement contact unknown', dot: CRIM },
+      { k: "What's at stake", t: 'The largest single exposure in your book', m: 'Recovery review, not a renewal chase', dot: CRIM }
+    ],
+    action: { title: 'M&G · recovery review with delivery', when: 'Book before Thursday · 45 minutes', cta: 'Set up the review' },
+    conf: 3, confLabel: 'High confidence',
+    answers: { default: { body: 'This is the one to lose sleep over. Declining engagement, open tickets and a renewal date inside a month all point the same way.', src: 'Delivery tickets, meeting history and contract dates.' } } },
+  { id: 'sch', name: 'Schroders', full: 'Schroders', short: 'Schroders', x: 40, y: 74, rev: 4.6, state: AMBER, note: 'Deal blocked', kind: 'Relationship gap',
+    head: 'The Schroders deal has not moved because nobody senior has seen it.',
+    chain: [
+      { k: 'What changed', t: 'Third week without buyer contact', m: 'Deal stage unchanged since 18 Aug', dot: AMBER },
+      { k: 'Account', t: 'Schroders', m: '£4.6m book · one open deal', dot: AMBER },
+      { k: 'Relationship', t: 'Only operations-level access', m: 'No CEO, COO or procurement contact', dot: AMBER },
+      { k: "What's at stake", t: 'A live deal quietly going stale', m: 'Access problem, not a pricing problem', dot: AMBER }
+    ],
+    action: { title: 'Schroders · request an executive introduction', when: 'Suggested today · one email', cta: 'Draft the introduction' },
+    conf: 2, confLabel: 'Moderate confidence',
+    answers: { default: { body: 'Nothing has gone wrong at Schroders. The deal simply has no senior sponsor, and every week without one lowers the odds.', src: 'Deal history and contact coverage.' } } },
+  { id: 'jan', name: 'Janus Henderson', full: 'Janus Henderson Investors', short: 'Janus Henderson', x: 82, y: 34, rev: 3.4, state: AMBER, note: 'Going quiet', kind: 'Relationship gap',
+    head: 'Janus Henderson has gone quiet since their CIO changed in June.',
+    chain: [
+      { k: 'What changed', t: 'Engagement down 41% since June', m: 'No meetings booked in seven weeks', dot: AMBER },
+      { k: 'Account', t: 'Janus Henderson Investors', m: '£3.4m book · two live services', dot: AMBER },
+      { k: 'Relationship', t: 'New CIO never met you', m: 'Predecessor was your only sponsor', dot: AMBER },
+      { k: "What's at stake", t: 'A relationship reverting to vendor status', m: 'Reintroduction, not a pitch', dot: AMBER }
+    ],
+    action: { title: 'Janus Henderson · reintroduce yourself to the new CIO', when: 'Suggested this week', cta: 'Draft the note' },
+    conf: 2, confLabel: 'Moderate confidence',
+    answers: { default: { body: 'The quiet started the month their CIO changed. That is usually a coverage problem rather than a satisfaction problem.', src: 'Meeting history and public leadership change.' } } },
+  { id: 'way', name: 'Waystone', full: 'Waystone', short: 'Waystone', x: 14, y: 58, rev: 2.8, state: SLATE, note: 'Steady', kind: 'Steady',
+    head: 'Waystone is steady, and nothing today needs you.',
+    chain: [
+      { k: 'What changed', t: 'A regulatory fit worth watching', m: 'Not yet qualified', dot: SLATE },
+      { k: 'Account', t: 'Waystone', m: '£2.8m book · stable delivery', dot: SLATE },
+      { k: 'Relationship', t: 'CIO and Ops both active', m: 'Coverage is fine', dot: TEAL },
+      { k: "What's at stake", t: 'Nothing urgent', m: 'Revisit after the quarter', dot: SLATE }
+    ],
+    action: { title: 'Waystone · no action needed today', when: 'Next check-in 24 September', cta: 'See the account' },
+    conf: 1, confLabel: 'Low confidence',
+    answers: { default: { body: 'Waystone is quietly fine. We are only watching one regulatory thread, and it is not qualified enough to act on.', src: 'Delivery health and regulatory monitoring.' } } }
+];
+
+const DETAIL = {
+  fid: {
+    stats: [['Revenue with us', '£8.4m'], ['Services live', '3 of 7'], ['Last meeting', '11 days ago'], ['Renewal', 'March 2027']],
+    talk: [
+      'Ask which markets the filing covers and when registrations go in.',
+      'Offer to map the reporting each new market adds, before they plan around it.',
+      'Ask Ravi Patel to bring Elena Marsh (COO) into the next session.'
+    ],
+    people: [['Ravi Patel', 'Head of Operations · your sponsor'], ['Elena Marsh', 'COO · never met you'], ['Tom Bell', 'Fund reporting · day to day']]
+  },
+  nor: {
+    stats: [['Revenue with us', '£5.2m'], ['Services live', '4 of 7'], ['Last meeting', '6 days ago'], ['Renewal', 'July 2027']],
+    talk: [
+      'Ask who now distributes in Stockholm and Copenhagen.',
+      'Check whether fund communications need re-papering for the new partners.',
+      'Keep it exploratory — nothing is at risk here.'
+    ],
+    people: [['Annika Berg', 'Head of Distribution · your sponsor'], ['Lars Holm', 'COO · met twice'], ['Mia Kallio', 'Operations · day to day']]
+  },
+  mg: {
+    stats: [['Revenue at risk', '£7.1m'], ['Open tickets', '3'], ['Renews in', '22 days'], ['Last meeting', '48 days ago']],
+    talk: [
+      'Lead with the three open tickets and a date each will be closed by.',
+      'Bring delivery into the room — do not present this alone.',
+      'Find out who signs the renewal; procurement contact is unknown.'
+    ],
+    people: [['Sara Whitfield', 'Head of Fund Ops · frustrated'], ['Unknown', 'Procurement · no contact'], ['Dan Foley', 'COO · met once in 2025']]
+  },
+  sch: {
+    stats: [['Revenue with us', '£4.6m'], ['Open deal', '£0.7m'], ['Deal age', '21 days no movement'], ['Last meeting', '19 days ago']],
+    talk: [
+      'Ask your operations contact for a warm introduction upwards.',
+      'Do not re-pitch; the price was never the problem.',
+      'Agree a decision date with whoever owns the budget.'
+    ],
+    people: [['Priya Shah', 'Fund Operations · supportive'], ['Unknown', 'Procurement · no contact'], ['Unknown', 'COO · no contact']]
+  },
+  jan: {
+    stats: [['Revenue with us', '£3.4m'], ['Services live', '2 of 7'], ['Last meeting', '51 days ago'], ['Renewal', 'Nov 2026']],
+    talk: [
+      'Reintroduce yourself to the new CIO — short, no pitch.',
+      'Recap what you deliver today so nothing looks like a surprise at renewal.',
+      'Ask who replaced your old sponsor for day-to-day decisions.'
+    ],
+    people: [['New CIO', 'Appointed June · never met you'], ['Ex-sponsor', 'Left the firm in June'], ['Kate Lyons', 'Operations · still responsive']]
+  },
+  way: {
+    stats: [['Revenue with us', '£2.8m'], ['Services live', '2 of 7'], ['Last meeting', '9 days ago'], ['Renewal', 'Sept 2027']],
+    talk: [
+      'Nothing needs saying today.',
+      'Keep the September check-in as planned.',
+      'Watch the regulatory thread; act only if it firms up.'
+    ],
+    people: [['Ciara Nolan', 'CIO · active'], ['Sean Doyle', 'Operations · active'], ['—', 'No gaps to close']]
+  }
+};
+
+const LINKS = [
+  ['fid', 'nor', TEAL, 1.6, ''], ['fid', 'jan', SLATE, 1, '3 4'], ['nor', 'jan', SLATE, 1, '3 4'],
+  ['fid', 'sch', SLATE, 1, '3 4'], ['sch', 'mg', AMBER, 1.4, ''], ['jan', 'mg', SLATE, 1, '3 4'],
+  ['way', 'sch', SLATE, 1, '3 4'], ['way', 'fid', SLATE, 1, '3 4'], ['mg', 'nor', SLATE, 1, '3 4']
+];
+
+const SUGGESTIONS = ['Why does this matter today?', 'Who else should I talk to?', 'How confident are you?'];
+
+class Component extends DCLogic {
+  state = { selId: 'fid', q: '', asked: null };
+
+  sel() { return ACCOUNTS.find(a => a.id === this.state.selId) || ACCOUNTS[0]; }
+
+  componentDidMount() {
+    this._onMapPick = e => { if (e.detail && e.detail.id) this.pick(e.detail.id); };
+    document.addEventListener('gi-account-select', this._onMapPick);
+  }
+
+  componentWillUnmount() { document.removeEventListener('gi-account-select', this._onMapPick); }
+
+  pick(id) { this.setState({ selId: id, asked: null, q: '' }); }
+
+  renderVals() {
+    const sel = this.sel();
+    const confColors = [0, 1, 2].map(i => ({ c: i < sel.conf ? sel.state : 'rgba(10,37,64,0.12)' }));
+    const asked = this.state.asked;
+    const answer = (asked && sel.answers[asked]) || sel.answers.default;
+
+    const pos = {};
+    ACCOUNTS.forEach(a => { pos[a.id] = a; });
+    const links = LINKS.map(([a, b, c, w, dash]) => {
+      const A = pos[a], B = pos[b];
+      const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2 - 6;
+      const active = a === sel.id || b === sel.id;
+      return {
+        d: 'M ' + A.x + ' ' + A.y + ' Q ' + mx + ' ' + my + ' ' + B.x + ' ' + B.y,
+        c: active ? c : 'rgba(10,37,64,0.13)',
+        w: active ? w + 0.4 : 1,
+        dash: active ? (dash || 'none') : '3 5',
+        style: active && !dash ? 'stroke-dasharray:8 6;animation:gi-dash 6s linear infinite' : ''
+      };
+    });
+
+    const nodes = ACCOUNTS.map((a, i) => {
+      const on = a.id === sel.id;
+      return {
+        ...a, onClick: () => this.pick(a.id), d: (0.25 + i * 0.06) + 's',
+        s: Math.round(28 + a.rev * 5.2),
+        bg: on ? a.state : 'rgba(255,255,255,0.75)',
+        ring: on ? '0 0 0 8px ' + HALO[a.state] + ', 0 14px 30px -12px rgba(10,37,64,0.4)' : 'inset 0 0 0 2px ' + a.state + '55, 0 8px 20px -14px rgba(10,37,64,0.4)',
+        fs: on ? 14.5 : 13, fw: on ? 700 : 600, fc: on ? '#0A2540' : '#33506F'
+      };
+    });
+
+    const rH = { S: 22, S2: 88, O: 14, N: 31, D: 54, J: 19, F: 26, M: 44, A: 12, M2: 34, J2: 20, J3: 41 };
+    const renewalSpec = [
+      [22, null], [88, '£2.1m'], [14, null], [31, null], [54, '£0.9m'], [19, null],
+      [26, null], [44, '£0.6m'], [12, null], [34, null], [20, null], [41, null]
+    ];
+    const renewals = renewalSpec.map(([h, label], i) => {
+      const c = i === 1 ? CRIM : (i === 4 || i === 7 ? AMBER : 'rgba(140,163,188,0.32)');
+      return { h: h + '%', c, label: label || '', lc: i === 1 ? '#96453E' : '#8A5E12' };
+    });
+    const months = ['S', 'S', 'O', 'N', 'D', 'J', 'F', 'M', 'A', 'M', 'J', 'J'].map((t, i) => ({ t, c: i === 1 ? '#96453E' : '#5A7391' }));
+
+    const CELL = {
+      a: { bg: 'rgba(47,155,142,0.85)', bd: '1px solid rgba(47,155,142,0.2)' },
+      t: { bg: 'rgba(140,163,188,0.35)', bd: '1px solid rgba(140,163,188,0.2)' },
+      n: { bg: 'rgba(10,37,64,0.05)', bd: '1px solid rgba(10,37,64,0.05)' },
+      g: { bg: 'rgba(217,154,62,0.16)', bd: '1px dashed ' + AMBER },
+      r: { bg: 'rgba(196,103,95,0.14)', bd: '1px dashed ' + CRIM }
+    };
+    const covRows = [
+      ['Fidelity', 't', 'g', 'a', 'a', 't'],
+      ['M&G', 'n', 't', 't', 'a', 'r'],
+      ['Schroders', 'n', 'n', 't', 'a', 'r'],
+      ['Nordea', 't', 'a', 'a', 'a', 't'],
+      ['Janus H.', 'n', 'n', 'g', 't', 'n'],
+      ['Waystone', 't', 't', 'a', 'a', 't']
+    ];
+
+    const detail = DETAIL[sel.id] || DETAIL.fid;
+
+    return {
+      sel: { ...sel, confBars: confColors, short: sel.short },
+      stats: detail.stats.map(([label, value]) => ({ label, value })),
+      talk: detail.talk.map((t, i) => ({ t, n: String(i + 1) })),
+      people: detail.people.map(([name, role]) => ({ name, role })),
+      evidence: sel.evidence || ['Issuer filing · 7 Sep', 'Meeting history', 'Contact records'],
+      headWords: sel.head.split(' ').map((t, i) => ({ t, d: (0.1 + i * 0.045).toFixed(2) + 's' })),
+      onPrepare: () => this.setState({ asked: 'Why does this matter today?' }),
+      q: this.state.q,
+      onQ: e => this.setState({ q: e.target.value }),
+      onQKey: e => { if (e.key === 'Enter') this.setState({ asked: this.state.q, q: '' }); },
+      suggestions: SUGGESTIONS.map(label => ({
+        label, bg: asked === label ? '#FFFFFF' : 'rgba(255,255,255,0.6)',
+        onClick: () => this.setState({ asked: label })
+      })),
+      answer,
+      queue: ACCOUNTS.filter(a => a.id !== sel.id).slice(0, 4).map((a, i) => ({
+        name: a.full, note: a.note, kind: a.kind, c: a.state,
+        bg: 'rgba(255,255,255,0.55)', d: (0.2 + i * 0.07) + 's',
+        onClick: () => this.pick(a.id)
+      })),
+      legend: [
+        { c: TEAL, t: 'New opportunity' }, { c: AMBER, t: 'Relationship gap' },
+        { c: CRIM, t: 'Revenue at risk' }, { c: SLATE, t: 'Steady' }
+      ],
+      links, nodes, renewals, months,
+      roles: ['CEO', 'COO', 'CIO', 'Ops', 'Proc'],
+      coverage: covRows.map(r => ({ name: r[0], cells: r.slice(1).map(k => CELL[k]) })),
+      covLegend: [
+        { ...CELL.a, t: 'Active' }, { ...CELL.t, t: 'Thin' }, { ...CELL.n, t: 'None' }, { ...CELL.g, t: 'Decision-maker uncovered' }
+      ],
+      trends: [
+        { name: 'Fidelity', pts: '0,20 20,17 40,18 60,12 80,9 100,4', c: TEAL, tc: '#1F6D63', delta: '+34%' },
+        { name: 'Nordea', pts: '0,18 20,15 40,16 60,11 80,13 100,8', c: TEAL, tc: '#1F6D63', delta: '+18%' },
+        { name: 'Waystone', pts: '0,14 20,13 40,15 60,14 80,12 100,13', c: SLATE, tc: '#5A7391', delta: 'flat' },
+        { name: 'Janus H.', pts: '0,8 20,10 40,13 60,17 80,20 100,23', c: AMBER, tc: '#8A5E12', delta: '−41%' },
+        { name: 'M&G', pts: '0,6 20,9 40,11 60,16 80,21 100,24', c: CRIM, tc: '#96453E', delta: '−52%' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -28,6 +28,7 @@ type AskPanelProps = {
 let msgSeq = 0;
 const nextId = () => `ask-${++msgSeq}-${Date.now()}`;
 
+/** Optional book-wide ask panel — Today uses the inline card by default. */
 export function AskPanel({
   selectedId,
   selectedName,
@@ -70,12 +71,7 @@ export function AskPanel({
   if (collapsed) {
     return (
       <aside className="today-ask today-ask-collapsed" aria-label="Ask panel">
-        <button
-          type="button"
-          className="today-ask-expand"
-          onClick={onToggleCollapse}
-          aria-expanded={false}
-        >
+        <button type="button" onClick={onToggleCollapse} aria-expanded={false}>
           Ask
         </button>
       </aside>
@@ -84,71 +80,48 @@ export function AskPanel({
 
   return (
     <aside className="today-ask" aria-label="Ask anything panel">
-      <header className="today-ask-header">
+      <header>
         <div>
-          <span className="today-ask-kicker">ASK ANYTHING</span>
+          <span>ASK ANYTHING</span>
           <h2>{contextLabel}</h2>
         </div>
-        <div className="today-ask-header-actions">
+        <div>
           {selectedId && (
             <button type="button" onClick={onClearContext}>
               Clear context
             </button>
           )}
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            aria-expanded={true}
-            aria-label="Collapse ask panel"
-          >
+          <button type="button" onClick={onToggleCollapse} aria-expanded>
             Collapse
           </button>
         </div>
       </header>
-
-      <div className="today-ask-chips" role="group" aria-label="Suggested questions">
+      <div role="group" aria-label="Suggested questions">
         {chips.map((chip) => (
           <button key={chip} type="button" onClick={() => ask(chip)}>
             {chip}
           </button>
         ))}
       </div>
-
-      <div className="today-ask-thread" ref={threadRef} aria-live="polite">
+      <div ref={threadRef} aria-live="polite">
         {messages.length === 0 ? (
-          <p className="today-ask-empty">
-            Answers come from the same briefing data as the feed. Select an
-            account to focus questions, or ask across your book.
-          </p>
+          <p>Answers come from the same briefing data as Today.</p>
         ) : (
           messages.map((m) => (
-            <div
-              key={m.id}
-              className={`today-ask-msg ${m.role}${m.answer?.gap ? " is-gap" : ""}`}
-            >
+            <div key={m.id}>
               <p>{m.text}</p>
-              {m.answer?.bullets && m.answer.bullets.length > 0 && (
+              {m.answer?.bullets?.length ? (
                 <ul>
                   {m.answer.bullets.map((b) => (
                     <li key={b}>{b}</li>
                   ))}
                 </ul>
-              )}
-              {m.answer?.sources && m.answer.sources.length > 0 && (
-                <div className="today-ask-cites">
-                  {m.answer.sources.map((s) => (
-                    <span key={s.label + s.detail.slice(0, 24)} title={s.detail}>
-                      {s.label}
-                    </span>
-                  ))}
-                </div>
-              )}
+              ) : null}
             </div>
           ))
         )}
       </div>
-
-      <form className="today-ask-compose" onSubmit={onSubmit}>
+      <form onSubmit={onSubmit}>
         <label className="sr-only" htmlFor="today-ask-input">
           Ask a question
         </label>
@@ -156,7 +129,7 @@ export function AskPanel({
           id="today-ask-input"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ask about coverage, confidence, deals…"
+          placeholder="Ask about coverage, confidence, products…"
           autoComplete="off"
         />
         <button type="submit" disabled={!draft.trim()}>

@@ -15,13 +15,12 @@ type BrandLogoProps = {
 };
 
 /** Official Broadridge primary lockup aspect (viewBox content ~336×72). */
-const PRIMARY_ASPECT = 597 / 128;
-const MARK_LIGHT_ASPECT = 1083 / 1200;
-const DARK_LOCKUP_ASPECT = 1024 / 206;
+const PRIMARY_ASPECT = 336 / 72;
+const MARK_LIGHT_ASPECT = 64.9 / 72;
 
 /**
  * Broadridge logos for light UI use the official primary assets (#001F5A).
- * The black/navy split PNGs are dark-surface assets and must not be used on pale pages.
+ * Assets live as SVGs under /public/brand.
  */
 export function BrandLogo({
   variant = "mark",
@@ -29,29 +28,15 @@ export function BrandLogo({
   height = 28,
   priority = false,
 }: BrandLogoProps) {
-  if (variant === "lockupOnDark") {
-    const w = Math.round(height * DARK_LOCKUP_ASPECT);
-    return (
-      <Image
-        src="/brand/broadridge-lockup.png"
-        alt="Broadridge"
-        width={w}
-        height={height}
-        className={`object-contain object-left ${className}`}
-        priority={priority}
-      />
-    );
-  }
-
-  if (variant === "lockup") {
+  if (variant === "lockup" || variant === "lockupOnDark") {
     const w = Math.round(height * PRIMARY_ASPECT);
     return (
       <Image
-        src="/brand/broadridge-primary.png"
+        src="/brand/broadridge-primary.svg"
         alt="Broadridge"
         width={w}
         height={height}
-        className={`object-contain object-left ${className}`}
+        className={`object-contain object-left ${className}${variant === "lockupOnDark" ? " brightness-0 invert" : ""}`}
         priority={priority}
       />
     );
@@ -60,7 +45,7 @@ export function BrandLogo({
   const w = Math.round(height * MARK_LIGHT_ASPECT);
   return (
     <Image
-      src="/brand/broadridge-mark-light.png"
+      src="/brand/broadridge-mark-light.svg"
       alt="Broadridge"
       width={w}
       height={height}

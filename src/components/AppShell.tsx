@@ -113,9 +113,18 @@ function TopBar({
         aria-label="Broadridge Growth Intelligence — home"
         aria-current={isHome ? "page" : undefined}
       >
-        <BrandLogo variant="lockup" height={44} className="w-[155px] sm:w-[205px]" priority />
+        <BrandLogo
+          variant="lockup"
+          height={isHome ? 52 : 44}
+          className={isHome ? "w-[180px] sm:w-[240px]" : "w-[155px] sm:w-[205px]"}
+          priority
+        />
         <span className="hidden h-7 w-px bg-[var(--line)] lg:block" aria-hidden />
-        <span className="hidden text-[9.5px] font-bold uppercase leading-[1.35] tracking-[0.16em] text-[var(--text-3)] lg:block">
+        <span
+          className={`hidden font-bold uppercase leading-[1.35] tracking-[0.16em] text-[var(--brand)] lg:block ${
+            isHome ? "text-[11px]" : "text-[9.5px] text-[var(--text-3)]"
+          }`}
+        >
           Growth
           <br />
           Intelligence
