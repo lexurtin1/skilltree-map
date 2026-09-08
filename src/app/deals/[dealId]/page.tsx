@@ -14,7 +14,7 @@ export default async function DealDetailPage({
 
   const deal = getOpportunity(dealId);
   if (!deal) notFound();
-  if (deal.accountId === "acc-amundi") redirect("/client");
+  if (deal.accountId === "acc-amundi") redirect("/accounts?id=acc-amundi");
   if (deal.accountId === "acc-nordea") redirect("/board");
 
   const account = getAccount(deal.accountId);

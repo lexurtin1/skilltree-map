@@ -1,5 +1,5 @@
-import { ClientAmundiPage } from "@/components/wire/ClientAmundiPage";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <ClientAmundiPage />;
+  redirect("/accounts?id=acc-amundi");
 }

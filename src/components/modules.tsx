@@ -14,6 +14,7 @@ import {
   GrowthIcon,
   MarketsIcon,
   PeopleIcon,
+  PrepareIcon,
   TasksIcon,
 } from "./ui/Icons";
 import type { ModuleId } from "@/lib/gi/metrics";
@@ -21,9 +22,10 @@ import type { ModuleId } from "@/lib/gi/metrics";
 export type DestinationId =
   | "today"
   | "wire"
-  | "client"
+  | "accounts"
   | "board"
-  | "executive";
+  | "executive"
+  | "studio";
 
 export interface ModuleDef {
   id: DestinationId;
@@ -58,13 +60,12 @@ export const MODULES: ModuleDef[] = [
     accent: "#c41e3a",
   },
   {
-    id: "client",
-    label: "Clients",
-    href: "/client",
+    id: "accounts",
+    label: "Accounts",
+    href: "/accounts",
     description:
-      "What the client holds, what peers hold that they don't, and who still needs a path.",
-    question:
-      "Which Broadridge products are live, where is the peer gap, and who opens the next door?",
+      "Account dossiers: contacts, share price, ops concerns, news and sourced facts.",
+    question: "What do we know about this account, and where did each fact come from?",
     Icon: AccountsIcon,
     accent: "#0065A7",
   },
@@ -85,6 +86,16 @@ export const MODULES: ModuleDef[] = [
     question: "What needs me today — and what did we miss earlier?",
     Icon: GlobeIcon,
     accent: "#893F84",
+  },
+  {
+    id: "studio",
+    label: "Studio",
+    href: "/studio",
+    description:
+      "Broadridge-branded decks, discovery packs and leave-behinds for fund sales.",
+    question: "What asset do I need to create for this commercial moment?",
+    Icon: PrepareIcon,
+    accent: "#00A2CF",
   },
 ];
 
@@ -127,8 +138,8 @@ export const LEGACY_GALLERY: Record<
   },
   accounts: {
     label: "Accounts",
-    href: "/client",
-    description: "Redirects to Clients.",
+    href: "/accounts",
+    description: "Redirects to Accounts.",
     Icon: AccountsIcon,
   },
   deals: {
@@ -145,8 +156,8 @@ export const LEGACY_GALLERY: Record<
   },
   people: {
     label: "People",
-    href: "/client",
-    description: "Redirects to Clients.",
+    href: "/accounts",
+    description: "Redirects to Accounts.",
     Icon: PeopleIcon,
   },
   delivery: {

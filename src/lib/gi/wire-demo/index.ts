@@ -111,8 +111,8 @@ export const WIRE_FEED: WireCard[] = [
       "Cross-border registration filings still open in IT/ES; attach rate for FCS on peer expansions is 71%.",
     ],
     actions: [
-      { label: "Draft intro request to Sean Doyle", href: "/client", primary: true },
-      { label: "Open Amundi", href: "/client" },
+      { label: "Draft intro request to Sean Doyle", href: "/accounts?id=acc-amundi", primary: true },
+      { label: "Open Amundi", href: "/accounts?id=acc-amundi" },
     ],
     sources: [
       "CSSF register",
@@ -163,7 +163,7 @@ export const WIRE_FEED: WireCard[] = [
       "Peer attach rate for Fund Communication Solutions on fifth-market expansions is 71%.",
       "Reconciliation & Matching not held — peer density 8/9 on that row.",
     ],
-    actions: [{ label: "Open peer matrix pattern", href: "/client", primary: true }],
+    actions: [{ label: "Open peer matrix pattern", href: "/accounts?id=acc-unioninvestment", primary: true }],
     sources: ["Fund registries", "Acolin platform"],
   },
 ];
@@ -492,8 +492,8 @@ export const CASE_THESIS = {
       text: "Four signals ranked: ManCo filing at Amundi, T+1 hiring at Robeco, Nordea evidence stall, Union Investment expansion.",
     },
     {
-      label: "Clients",
-      href: "/client",
+      label: "Accounts",
+      href: "/accounts",
       text: "Hold vs peer matrix mixes GPTM and Asset Servicing with Cross-border, Registration and FCS — same account, both product families.",
     },
     {

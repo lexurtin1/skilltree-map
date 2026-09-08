@@ -23,22 +23,21 @@ import type { ObjectRef } from "@/lib/gi/types";
 function hrefFor(ref: ObjectRef): string {
   switch (ref.kind) {
     case "account":
-      if (ref.id === "acc-amundi") return "/client";
       if (ref.id === "acc-nordea") return "/board";
-      return `/accounts/${ref.id}`;
+      return `/accounts?id=${encodeURIComponent(ref.id)}`;
     case "opportunity":
       if (ref.id === "opp-nordea-xborder" || ref.label.toLowerCase().includes("nordea")) {
         return "/board";
       }
       return `/deals/${ref.id}`;
     case "person":
-      return "/client";
+      return "/accounts";
     case "fund":
-      return "/client";
+      return "/accounts";
     case "market":
       return "/";
     case "service":
-      return "/today";
+      return "/studio";
     default:
       return "/";
   }
