@@ -20,7 +20,7 @@ const assert = require("node:assert/strict");
 
     await page
       .getByRole("heading", {
-        name: "Four things changed in your accounts since yesterday.",
+        name: "Your book overnight — what needs attention before the day starts.",
         exact: true,
       })
       .waitFor();
@@ -32,6 +32,7 @@ const assert = require("node:assert/strict");
       /Growth/i,
     );
     assert.equal(await page.locator(".today-ask-portal").count(), 1);
+    assert.match(await page.locator(".today-book").innerText(), /Book health/);
     assert.match(
       await page.locator(".today-priority").innerText(),
       /Fund Communication Solutions/,

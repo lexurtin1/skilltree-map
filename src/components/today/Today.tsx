@@ -16,6 +16,7 @@ import {
   RENEWAL_MONTHS,
   STATE_LEGEND,
   TEXT_FOR_STATE,
+  bookHealthSummary,
   haloFor,
   type TodayAccount,
 } from "./data";
@@ -172,7 +173,8 @@ export function Today() {
 
   const selected = ACCOUNTS.find((a) => a.id === selectedId) ?? ACCOUNTS[0];
   const prepared = preparedIds.includes(selected.id);
-  const queue = ACCOUNTS.filter((a) => a.id !== selected.id).slice(0, 4);
+  const book = bookHealthSummary(ACCOUNTS);
+  const attentionQueue = ACCOUNTS.filter((a) => a.id !== selected.id && a.kind !== "Steady");
   const answer = answerQuery(asked ?? "", selected.id, { accounts: ACCOUNTS });
   const headWords = selected.head.split(" ");
   const confBars = [0, 1, 2].map((i) => (i < selected.conf ? selected.state : "rgba(10,37,64,0.12)"));
@@ -220,177 +222,241 @@ export function Today() {
           <h1>{DAILY_BRIEFING.lead}</h1>
         </section>
 
+        <section className="today-glass today-book" aria-label="Book health">
+          <div className="today-book-head">
+            <div>
+              <p className="today-kicker">Book health</p>
+              <h2>James Howard · illustrative UK &amp; Europe funds book</h2>
+            </div>
+            <p className="today-book-stamp">Checked overnight · illustrative data</p>
+          </div>
+
+          <div className="today-book-metrics">
+            <div>
+              <span>Book with us</span>
+              <strong>£{book.bookRev}m</strong>
+              <em>{book.accountCount} accounts</em>
+            </div>
+            <div>
+              <span>Needs attention</span>
+              <strong>{book.attentionCount}</strong>
+              <em>
+                {book.opportunities} opportunities · {book.atRisk} at risk · {book.gaps} gaps
+              </em>
+            </div>
+            <div>
+              <span>Revenue at risk</span>
+              <strong>£{book.atRiskRev}m</strong>
+              <em>Nearest renewal in the attention set</em>
+            </div>
+            <div>
+              <span>Overnight changes</span>
+              <strong>{book.overnight.length}</strong>
+              <em>New signals since yesterday close</em>
+            </div>
+          </div>
+
+          <div className="today-book-mix" aria-hidden>
+            <span style={{ flex: book.opportunities, background: "#2F9B8E" }} title="New opportunity" />
+            <span style={{ flex: Math.max(book.atRisk, 0.35), background: "#C4675F" }} title="Revenue at risk" />
+            <span style={{ flex: book.gaps, background: "#D99A3E" }} title="Relationship gap" />
+            <span style={{ flex: Math.max(book.steady, 0.35), background: "#5A7391" }} title="Steady" />
+          </div>
+
+          <div className="today-book-overnight">
+            <p className="today-kicker">Changed overnight</p>
+            <ul>
+              {book.overnight.map((item) => (
+                <li key={item.id}>
+                  <button type="button" onClick={() => pick(item.id)}>
+                    <i style={{ background: item.state }} aria-hidden />
+                    <span>
+                      <strong>{item.full}</strong>
+                      <em>{item.overnight}</em>
+                    </span>
+                    <b>{item.kind}</b>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         <div className="today-hero-row">
-          <AskOrb
-            accountShort={selected.short}
-            open={askOpen}
-            onOpenChange={setAskOpen}
-            draft={askDraft}
-            onDraftChange={setAskDraft}
-            asked={asked}
-            onAsk={runAsk}
-            answer={answer}
-          />
+          <div className="today-hero-compose">
+            <AskOrb
+              accountShort={selected.short}
+              open={askOpen}
+              onOpenChange={setAskOpen}
+              draft={askDraft}
+              onDraftChange={setAskDraft}
+              asked={asked}
+              onAsk={runAsk}
+              answer={answer}
+            />
 
-          <article className="today-priority">
-            <div className="today-priority-inner">
-              <div className="today-priority-meta">
-                <span className="today-priority-pill">
-                  <span className="today-priority-dot" aria-hidden>
-                    <i />
-                    <i />
+            <article className="today-priority">
+              <div className="today-priority-inner">
+                <div className="today-priority-meta">
+                  <span className="today-priority-pill">
+                    <span className="today-priority-dot" aria-hidden>
+                      <i />
+                      <i />
+                    </span>
+                    Priority action
                   </span>
-                  Priority action
-                </span>
-                <span>
-                  Found 08:12 today · {ACCOUNTS.findIndex((a) => a.id === selected.id) + 1} of{" "}
-                  {ACCOUNTS.length}
-                </span>
-              </div>
-
-              <div className="today-priority-client">
-                <p className="today-kicker">Client</p>
-                <div className="today-priority-client-row">
-                  <h2 className="today-priority-client-name">{selected.full}</h2>
-                  <span
-                    className="today-priority-client-kind"
-                    style={{
-                      color: TEXT_FOR_STATE[selected.state],
-                      background: haloFor(selected.state),
-                    }}
-                  >
-                    <i style={{ background: selected.state }} aria-hidden />
-                    {selected.kind}
+                  <span>
+                    Found 08:12 today · {ACCOUNTS.findIndex((a) => a.id === selected.id) + 1} of{" "}
+                    {ACCOUNTS.length}
                   </span>
                 </div>
-                <p className="today-priority-client-meta">
-                  £{selected.rev}m with us · HQ {selected.hq}
-                  {selected.recordId ? (
-                    <>
-                      {" · "}
-                      <Link
-                        href={`/accounts/${selected.recordId}`}
-                        className="today-priority-client-link"
-                      >
-                        Open account record
-                      </Link>
-                    </>
-                  ) : null}
-                </p>
-              </div>
 
-              <h3 className="today-priority-head" aria-live="polite">
-                {headWords.map((w, i) => (
-                  <span
-                    key={`${selected.id}-${i}-${w}`}
-                    style={{ animationDelay: `${0.1 + i * 0.045}s` }}
-                  >
-                    {w}&nbsp;
-                  </span>
-                ))}
-              </h3>
+                <div className="today-priority-client">
+                  <p className="today-kicker">Client</p>
+                  <div className="today-priority-client-row">
+                    <h2 className="today-priority-client-name">{selected.full}</h2>
+                    <span
+                      className="today-priority-client-kind"
+                      style={{
+                        color: TEXT_FOR_STATE[selected.state],
+                        background: haloFor(selected.state),
+                      }}
+                    >
+                      <i style={{ background: selected.state }} aria-hidden />
+                      {selected.kind}
+                    </span>
+                  </div>
+                  <p className="today-priority-client-meta">
+                    £{selected.rev}m with us · HQ {selected.hq}
+                    {selected.recordId ? (
+                      <>
+                        {" · "}
+                        <Link
+                          href={`/accounts/${selected.recordId}`}
+                          className="today-priority-client-link"
+                        >
+                          Open account record
+                        </Link>
+                      </>
+                    ) : null}
+                  </p>
+                </div>
 
-              <div className="today-chain">
-                {selected.chain.map((st) => (
-                  <div key={st.k} className="today-chain-step">
-                    <div className="today-chain-line">
-                      <span
-                        style={{
-                          background: st.dot,
-                          boxShadow: `0 0 0 4px ${haloFor(st.dot)}`,
-                        }}
-                      />
-                      <i />
+                <h3 className="today-priority-head" aria-live="polite">
+                  {headWords.map((w, i) => (
+                    <span
+                      key={`${selected.id}-${i}-${w}`}
+                      style={{ animationDelay: `${0.1 + i * 0.045}s` }}
+                    >
+                      {w}&nbsp;
+                    </span>
+                  ))}
+                </h3>
+
+                <div className="today-chain">
+                  {selected.chain.map((st) => (
+                    <div key={st.k} className="today-chain-step">
+                      <div className="today-chain-line">
+                        <span
+                          style={{
+                            background: st.dot,
+                            boxShadow: `0 0 0 4px ${haloFor(st.dot)}`,
+                          }}
+                        />
+                        <i />
+                      </div>
+                      <p className="today-kicker">{st.k}</p>
+                      <p className="today-chain-title">{st.t}</p>
+                      <p className="today-chain-meta">{st.m}</p>
                     </div>
-                    <p className="today-kicker">{st.k}</p>
-                    <p className="today-chain-title">{st.t}</p>
-                    <p className="today-chain-meta">{st.m}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="today-stats">
-                {selected.stats.map(([label, value]) => (
-                  <div key={label}>
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                  </div>
-                ))}
-              </div>
-
-              <div className="today-products">
-                <p className="today-kicker">Broadridge products</p>
-                <div className="today-product-chips">
-                  {selected.services.map((s) => (
-                    <span key={s}>{s}</span>
                   ))}
                 </div>
-              </div>
 
-              <div className="today-dual">
-                <div>
-                  <p className="today-kicker">What to say in the meeting</p>
-                  <ol className="today-talk">
-                    {selected.talk.map((t, i) => (
-                      <li key={t}>
-                        <span>{i + 1}</span>
-                        <p>{t}</p>
-                      </li>
-                    ))}
-                  </ol>
+                <div className="today-stats">
+                  {selected.stats.map(([label, value]) => (
+                    <div key={label}>
+                      <span>{label}</span>
+                      <strong>{value}</strong>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <p className="today-kicker">People at this account</p>
-                  <ul className="today-people">
-                    {selected.people.map(([name, role]) => (
-                      <li key={name}>
-                        <strong>{name}</strong>
-                        <span>{role}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="today-evidence">
-                    {selected.evidence.map((e) => (
-                      <span key={e}>{e}</span>
+
+                <div className="today-products">
+                  <p className="today-kicker">Broadridge products</p>
+                  <div className="today-product-chips">
+                    {selected.services.map((s) => (
+                      <span key={s}>{s}</span>
                     ))}
                   </div>
                 </div>
-              </div>
 
-              <div className="today-priority-footer">
-                <button type="button" className="today-cta" onClick={openPrepare}>
-                  <span className="today-cta-shine" aria-hidden />
-                  <span>{prepared ? "Review meeting preparation" : selected.action.cta}</span>
-                  <span aria-hidden>→</span>
-                </button>
-                <div>
-                  <p className="today-cta-title">{selected.action.title}</p>
-                  <p className="today-cta-when">{selected.action.when}</p>
-                </div>
-                <div className="today-conf">
-                  <div className="today-conf-bars" aria-hidden>
-                    {confBars.map((c, i) => (
-                      <span key={i} style={{ background: c }} />
-                    ))}
+                <div className="today-dual">
+                  <div>
+                    <p className="today-kicker">What to say in the meeting</p>
+                    <ol className="today-talk">
+                      {selected.talk.map((t, i) => (
+                        <li key={t}>
+                          <span>{i + 1}</span>
+                          <p>{t}</p>
+                        </li>
+                      ))}
+                    </ol>
                   </div>
-                  <span>{selected.confLabel}</span>
-                  <p>Facts come from sources · the conclusion is the system’s · illustrative data</p>
+                  <div>
+                    <p className="today-kicker">People at this account</p>
+                    <ul className="today-people">
+                      {selected.people.map(([name, role]) => (
+                        <li key={name}>
+                          <strong>{name}</strong>
+                          <span>{role}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="today-evidence">
+                      {selected.evidence.map((e) => (
+                        <span key={e}>{e}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="today-priority-footer">
+                  <button type="button" className="today-cta" onClick={openPrepare}>
+                    <span className="today-cta-shine" aria-hidden />
+                    <span>{prepared ? "Review meeting preparation" : selected.action.cta}</span>
+                    <span aria-hidden>→</span>
+                  </button>
+                  <div>
+                    <p className="today-cta-title">{selected.action.title}</p>
+                    <p className="today-cta-when">{selected.action.when}</p>
+                  </div>
+                  <div className="today-conf">
+                    <div className="today-conf-bars" aria-hidden>
+                      {confBars.map((c, i) => (
+                        <span key={i} style={{ background: c }} />
+                      ))}
+                    </div>
+                    <span>{selected.confLabel}</span>
+                    <p>
+                      Facts come from sources · the conclusion is the system’s · illustrative data
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
+            </article>
+          </div>
 
           <aside className="today-side">
             <div className="today-glass today-queue">
-              <p className="today-kicker">The other three changes</p>
+              <p className="today-kicker">Needs your attention</p>
               <ul>
-                {queue.map((q) => (
+                {attentionQueue.map((q) => (
                   <li key={q.id}>
                     <button type="button" onClick={() => pick(q.id)}>
                       <i style={{ background: q.state }} />
                       <span>
                         <strong>{q.full}</strong>
-                        <em>{q.note}</em>
+                        <em>{q.overnight || q.note}</em>
                       </span>
                       <b>{q.kind}</b>
                     </button>

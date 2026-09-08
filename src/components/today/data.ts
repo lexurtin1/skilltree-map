@@ -644,9 +644,42 @@ export const ACCOUNTS: TodayAccount[] = [
 
 export const DAILY_BRIEFING = {
   dateLabel: "Monday, 7 September",
-  lead: "Four things changed in your accounts since yesterday.",
+  lead: "Your book overnight — what needs attention before the day starts.",
   stamp: "Illustrative briefing · Broadridge products and revenue are example data",
 };
+
+/** Roll-up for the account-manager book health board on Today. */
+export function bookHealthSummary(accounts: TodayAccount[] = ACCOUNTS) {
+  const bookRev = Math.round(accounts.reduce((s, a) => s + a.rev, 0) * 10) / 10;
+  const opportunities = accounts.filter((a) => a.kind === "New opportunity");
+  const atRisk = accounts.filter((a) => a.kind === "Revenue at risk");
+  const gaps = accounts.filter((a) => a.kind === "Relationship gap");
+  const steady = accounts.filter((a) => a.kind === "Steady");
+  const attention = accounts.filter((a) => a.kind !== "Steady");
+  const overnight = accounts
+    .filter((a) => a.overnight.trim().length > 0)
+    .map((a) => ({
+      id: a.id,
+      full: a.full,
+      short: a.short,
+      kind: a.kind,
+      state: a.state,
+      overnight: a.overnight,
+      note: a.note,
+    }));
+
+  return {
+    accountCount: accounts.length,
+    bookRev,
+    opportunities: opportunities.length,
+    atRisk: atRisk.length,
+    gaps: gaps.length,
+    steady: steady.length,
+    attentionCount: attention.length,
+    atRiskRev: Math.round(atRisk.reduce((s, a) => s + a.rev, 0) * 10) / 10,
+    overnight,
+  };
+}
 
 export const STATE_LEGEND = [
   { c: TEAL, t: "New opportunity" },
