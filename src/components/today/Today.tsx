@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { BrandLogo } from "../BrandLogo";
 import { AccountsMap } from "./AccountsMap";
+import { AskOrb } from "./AskOrb";
 import { answerQuery } from "./askQuery";
 import {
   ACCOUNTS,
-  ASK_SUGGESTIONS,
   COVERAGE_CELL_STYLE,
   COVERAGE_ROLES,
   COVERAGE_ROWS,
@@ -165,6 +164,7 @@ export function Today() {
   const [selectedId, setSelectedId] = useState(ACCOUNTS[0].id);
   const [askDraft, setAskDraft] = useState("");
   const [asked, setAsked] = useState<string | null>(null);
+  const [askOpen, setAskOpen] = useState(false);
   const [prepareOpen, setPrepareOpen] = useState(false);
   const [preparedIds, setPreparedIds] = useState<string[]>([]);
   const [checked, setChecked] = useState<string[]>([]);
@@ -188,6 +188,7 @@ export function Today() {
     if (!text) return;
     setAsked(text);
     setAskDraft("");
+    setAskOpen(true);
   };
 
   const toggleCheck = (id: string) => {
@@ -214,24 +215,23 @@ export function Today() {
       </div>
 
       <div className="today-inner">
-        <header className="today-brand-strip">
-          <div className="today-brand-lockup">
-            <BrandLogo variant="lockup" height={48} className="today-brand-logo" priority />
-            <span className="today-brand-rule" aria-hidden />
-            <span className="today-brand-product">Growth Intelligence</span>
-          </div>
-          <p className="today-brand-tag">
-            Broadridge fund distribution, communications and market intelligence —
-            illustrative book for James Howard
-          </p>
-        </header>
-
         <section className="today-editorial">
           <p className="today-kicker">{DAILY_BRIEFING.dateLabel}</p>
           <h1>{DAILY_BRIEFING.lead}</h1>
         </section>
 
         <div className="today-hero-row">
+          <AskOrb
+            accountShort={selected.short}
+            open={askOpen}
+            onOpenChange={setAskOpen}
+            draft={askDraft}
+            onDraftChange={setAskDraft}
+            asked={asked}
+            onAsk={runAsk}
+            answer={answer}
+          />
+
           <article className="today-priority">
             <div className="today-priority-inner">
               <div className="today-priority-meta">
@@ -397,56 +397,6 @@ export function Today() {
                   </li>
                 ))}
               </ul>
-            </div>
-
-            <div className="today-glass today-ask-card">
-              <div className="today-ask-title">
-                <span className="today-ask-orb" aria-hidden />
-                <p>Ask a question about {selected.short}</p>
-              </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  runAsk(askDraft);
-                }}
-              >
-                <label className="sr-only" htmlFor="today-ask-field">
-                  Type a question about this account
-                </label>
-                <input
-                  id="today-ask-field"
-                  value={askDraft}
-                  onChange={(e) => setAskDraft(e.target.value)}
-                  placeholder="Type a question about this account"
-                  autoComplete="off"
-                />
-              </form>
-              <div className="today-ask-suggestions" role="group" aria-label="Suggested questions">
-                {ASK_SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    className={asked === s ? "is-active" : undefined}
-                    onClick={() => runAsk(s)}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <div className="today-ask-answer" aria-live="polite">
-                <p>{answer.text}</p>
-                {answer.bullets && answer.bullets.length > 0 && (
-                  <ul>
-                    {answer.bullets.map((b) => (
-                      <li key={b}>{b}</li>
-                    ))}
-                  </ul>
-                )}
-                <span>
-                  {answer.sources[0]?.detail ??
-                    "From the illustrative briefing for this account."}
-                </span>
-              </div>
             </div>
           </aside>
         </div>
