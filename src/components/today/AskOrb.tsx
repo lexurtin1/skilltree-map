@@ -1,8 +1,16 @@
 "use client";
 
-import { useEffect, useId, useRef, type CSSProperties } from "react";
+import dynamic from "next/dynamic";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
+import type { PortalVisualState } from "./AskPortalCanvas";
 import { ASK_SUGGESTIONS } from "./data";
 import type { AskAnswer } from "./askQuery";
+
+const AskPortalCanvas = dynamic(
+  () => import("./AskPortalCanvas").then((m) => m.AskPortalCanvas),
+  { ssr: false },
+);
 
 type AskOrbProps = {
   accountShort: string;
@@ -14,14 +22,6 @@ type AskOrbProps = {
   onAsk: (question: string) => void;
   answer: AskAnswer;
 };
-
-const ORBIT_RINGS = [
-  { className: "today-dyson-ring today-dyson-ring-a", dots: 10 },
-  { className: "today-dyson-ring today-dyson-ring-b", dots: 8 },
-  { className: "today-dyson-ring today-dyson-ring-c", dots: 12 },
-  { className: "today-dyson-ring today-dyson-ring-d", dots: 7 },
-  { className: "today-dyson-ring today-dyson-ring-e", dots: 9 },
-] as const;
 
 export function AskOrb({
   accountShort,
@@ -35,133 +35,213 @@ export function AskOrb({
 }: AskOrbProps) {
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const reduceMotion = useReducedMotion();
+  const [hovered, setHovered] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [pointer, setPointer] = useState({ x: 0.5, y: 0.5 });
+
+  const visualState: PortalVisualState = (() => {
+    if (opening) return "opening";
+    if (open && asked) return "answering";
+    if (open) return "open";
+    if (hovered) return "hover";
+    return "idle";
+  })();
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setOpening(false);
+      return;
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onOpenChange(false);
     };
     document.addEventListener("keydown", onKey);
-    const t = window.setTimeout(() => inputRef.current?.focus(), 220);
+    const t = window.setTimeout(() => inputRef.current?.focus(), reduceMotion ? 40 : 720);
     return () => {
       document.removeEventListener("keydown", onKey);
       window.clearTimeout(t);
     };
-  }, [open, onOpenChange]);
+  }, [open, onOpenChange, reduceMotion]);
+
+  const beginOpen = () => {
+    if (open || opening) return;
+    if (reduceMotion) {
+      onOpenChange(true);
+      return;
+    }
+    setOpening(true);
+    window.setTimeout(() => {
+      setOpening(false);
+      onOpenChange(true);
+    }, 780);
+  };
+
+  const close = () => {
+    setOpening(false);
+    onOpenChange(false);
+  };
+
+  const onPointerMove = (e: PointerEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPointer({
+      x: (e.clientX - rect.left) / Math.max(rect.width, 1),
+      y: 1 - (e.clientY - rect.top) / Math.max(rect.height, 1),
+    });
+  };
+
+  const showOverlay = open || opening;
 
   return (
-    <div className={`today-ask-sphere${open ? " is-open" : ""}`}>
+    <div
+      className={`today-ask-portal${showOverlay ? " is-expanded" : ""}${opening ? " is-opening" : ""}`}
+    >
       <button
         type="button"
-        className="today-ask-sphere-hit"
+        className="today-ask-portal-hit"
         aria-expanded={open}
         aria-controls={open ? titleId : undefined}
-        onClick={() => onOpenChange(!open)}
+        aria-label={open ? "Close Ask" : `Open Intelligence — ask about ${accountShort}`}
+        onClick={() => (open ? close() : beginOpen())}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        onPointerMove={onPointerMove}
       >
-        <span className="sr-only">
-          {open ? "Close Ask" : `Ask about ${accountShort}`}
-        </span>
-
-        <span className="today-ask-sphere-aura" aria-hidden />
-        <span className="today-ask-sphere-pulse" aria-hidden />
-
-        <span className="today-dyson" aria-hidden>
-          {ORBIT_RINGS.map((ring) => (
-            <span key={ring.className} className={ring.className}>
-              {Array.from({ length: ring.dots }, (_, i) => (
-                <i
-                  key={i}
-                  className="today-dyson-dot"
-                  style={
-                    {
-                      "--dot-i": i,
-                      "--dot-n": ring.dots,
-                    } as CSSProperties
-                  }
-                />
-              ))}
-            </span>
-          ))}
-        </span>
-
-        <span className="today-ask-sphere-core" aria-hidden>
-          <span className="today-ask-sphere-shell" />
-          <span className="today-ask-sphere-grid" />
-          <span className="today-ask-sphere-iris" />
-          <span className="today-ask-sphere-mark">
-            <strong>ASK</strong>
-            <em>GI · AI</em>
-          </span>
+        <AskPortalCanvas
+          visualState={open ? "idle" : visualState}
+          pointer={pointer}
+          reducedMotion={!!reduceMotion}
+        />
+        <span className="today-ask-portal-label" aria-hidden={!hovered || open}>
+          Open Intelligence
         </span>
       </button>
 
-      <div
-        id={titleId}
-        className="today-ask-sphere-panel"
-        role="region"
-        aria-label={`Ask about ${accountShort}`}
-        aria-hidden={!open}
-        inert={!open}
-      >
-        <header className="today-ask-sphere-panel-head">
-          <p className="today-kicker">Intelligence channel</p>
-          <h2>Ask about {accountShort}</h2>
-          <button
-            type="button"
-            className="today-ask-sphere-close"
-            onClick={() => onOpenChange(false)}
+      <AnimatePresence>
+        {showOverlay && (
+          <motion.div
+            className="today-ask-portal-overlay"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0.12 : 0.35 }}
           >
-            Close
-          </button>
-        </header>
-
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onAsk(draft);
-          }}
-        >
-          <label className="sr-only" htmlFor="today-ask-field">
-            Type a question about this account
-          </label>
-          <input
-            ref={inputRef}
-            id="today-ask-field"
-            value={draft}
-            onChange={(e) => onDraftChange(e.target.value)}
-            placeholder="Type a question about this account"
-            autoComplete="off"
-          />
-        </form>
-
-        <div className="today-ask-suggestions" role="group" aria-label="Suggested questions">
-          {ASK_SUGGESTIONS.map((s) => (
             <button
-              key={s}
               type="button"
-              className={asked === s ? "is-active" : undefined}
-              onClick={() => onAsk(s)}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+              className="today-ask-portal-scrim"
+              aria-label="Close Ask"
+              onClick={close}
+            />
 
-        <div className="today-ask-answer" aria-live="polite">
-          <p>{answer.text}</p>
-          {answer.bullets && answer.bullets.length > 0 && (
-            <ul>
-              {answer.bullets.map((b) => (
-                <li key={b}>{b}</li>
-              ))}
-            </ul>
-          )}
-          <span>
-            {answer.sources[0]?.detail ??
-              "From the illustrative briefing for this account."}
-          </span>
-        </div>
-      </div>
+            <motion.div
+              className="today-ask-portal-burst"
+              aria-hidden
+              initial={reduceMotion ? false : { scale: 0.35, opacity: 0.85 }}
+              animate={{
+                scale: opening ? [0.2, 0.08, 2.4] : 0.2,
+                opacity: opening ? [0.9, 1, 0.15] : 0,
+              }}
+              transition={{
+                duration: reduceMotion ? 0 : 0.78,
+                times: [0, 0.28, 1],
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              <AskPortalCanvas
+                visualState="opening"
+                pointer={{ x: 0.5, y: 0.5 }}
+                reducedMotion={!!reduceMotion}
+              />
+            </motion.div>
+
+            <motion.div
+              id={titleId}
+              className="today-ask-portal-shell"
+              role="region"
+              aria-label={`Ask about ${accountShort}`}
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.92, y: 16 }}
+              animate={{
+                opacity: open ? 1 : 0,
+                scale: open ? 1 : 0.96,
+                y: open ? 0 : 12,
+              }}
+              exit={{ opacity: 0, scale: 0.96, y: 10 }}
+              transition={{
+                duration: reduceMotion ? 0.15 : 0.42,
+                delay: open && !reduceMotion ? 0.08 : 0,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+            >
+              <header className="today-ask-portal-shell-head">
+                <div className="today-ask-portal-core" aria-hidden>
+                  <AskPortalCanvas
+                    visualState={asked ? "answering" : "open"}
+                    pointer={{ x: 0.5, y: 0.55 }}
+                    compact
+                    reducedMotion={!!reduceMotion}
+                  />
+                </div>
+                <div className="today-ask-portal-shell-copy">
+                  <p className="today-kicker">
+                    {asked ? "Preparing briefing" : "Intelligence channel"}
+                  </p>
+                  <h2>Ask about {accountShort}</h2>
+                </div>
+                <button type="button" className="today-ask-sphere-close" onClick={close}>
+                  Close
+                </button>
+              </header>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  onAsk(draft);
+                }}
+              >
+                <label className="sr-only" htmlFor="today-ask-field">
+                  Type a question about this account
+                </label>
+                <input
+                  ref={inputRef}
+                  id="today-ask-field"
+                  value={draft}
+                  onChange={(e) => onDraftChange(e.target.value)}
+                  placeholder="Type a question about this account"
+                  autoComplete="off"
+                />
+              </form>
+
+              <div className="today-ask-suggestions" role="group" aria-label="Suggested questions">
+                {ASK_SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className={asked === s ? "is-active" : undefined}
+                    onClick={() => onAsk(s)}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              <div className="today-ask-answer" aria-live="polite">
+                <p>{answer.text}</p>
+                {answer.bullets && answer.bullets.length > 0 && (
+                  <ul>
+                    {answer.bullets.map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
+                  </ul>
+                )}
+                <span>
+                  {answer.sources[0]?.detail ??
+                    "From the illustrative briefing for this account."}
+                </span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
