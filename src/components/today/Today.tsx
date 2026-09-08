@@ -226,7 +226,7 @@ export function Today() {
           <div className="today-book-head">
             <div>
               <p className="today-kicker">Book health</p>
-              <h2>James Howard · illustrative UK &amp; Europe funds book</h2>
+              <h2>Alex Curtin · illustrative UK &amp; Europe funds book</h2>
             </div>
             <p className="today-book-stamp">Checked overnight · illustrative data</p>
           </div>

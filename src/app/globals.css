@@ -3,7 +3,7 @@
 /* Persistent, labelled destinations: available without hover or opening a menu. */
 .gi-destination-rail { display: flex; align-items: stretch; gap: 9px; flex-shrink: 0; overflow-x: auto; padding: 0 28px; background: #fafcfd; border-bottom: 1px solid #d5dce8; }
 .gi-destination-rail a { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 43px; padding: 0 12px; white-space: nowrap; font-size: 11px; color: var(--text-3); border-bottom: 2px solid transparent; }
-.gi-destination-rail a[aria-current="page"] { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; background: #e9eff860; }
+.gi-destination-rail a[aria-current="page"] { color: var(--nav-accent, var(--brand)); border-bottom-color: var(--nav-accent, var(--brand)); font-weight: 600; background: #e9eff860; }
 .gi-destination-rail a:hover { background: #e9eff8; }
 @media (max-width: 1023px) {
   .gi-bar { height: auto !important; min-height: var(--topbar-h); flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }

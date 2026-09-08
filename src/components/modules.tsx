@@ -23,8 +23,7 @@ export type DestinationId =
   | "wire"
   | "client"
   | "board"
-  | "executive"
-  | "where-it-runs";
+  | "executive";
 
 export interface ModuleDef {
   id: DestinationId;
@@ -51,31 +50,30 @@ export const MODULES: ModuleDef[] = [
   },
   {
     id: "wire",
-    label: "The Wire",
+    label: "Priorities",
     href: "/",
-    description: "Overnight changes ranked by commercial consequence.",
+    description: "What to act on first — ranked by commercial consequence.",
     question: "What moved overnight that I should act on first?",
     Icon: EvidenceIcon,
     accent: "#c41e3a",
   },
   {
     id: "client",
-    label: "Client · Amundi",
+    label: "Clients",
     href: "/client",
     description:
-      "What Amundi holds, what peers hold that they don't, and who still needs a path.",
+      "What the client holds, what peers hold that they don't, and who still needs a path.",
     question:
-      "For Amundi, which Broadridge products are live, where is the peer gap, and who opens the next door?",
+      "Which Broadridge products are live, where is the peer gap, and who opens the next door?",
     Icon: AccountsIcon,
     accent: "#0065A7",
   },
   {
     id: "board",
-    label: "The Board · Nordea",
+    label: "Board",
     href: "/board",
     description: "Evidence coverage across decision criteria and stakeholders.",
-    question:
-      "Which cells on the Nordea deal are empty, and what closes them?",
+    question: "Which evidence cells are empty, and what closes them?",
     Icon: DealsIcon,
     accent: "#5E50A8",
   },
@@ -84,18 +82,9 @@ export const MODULES: ModuleDef[] = [
     label: "Executive",
     href: "/executive",
     description: "Items only an executive can unblock, ranked by evidence gap.",
-    question: "What needs me today — and what did we miss earlier on Nordea?",
+    question: "What needs me today — and what did we miss earlier?",
     Icon: GlobeIcon,
     accent: "#893F84",
-  },
-  {
-    id: "where-it-runs",
-    label: "Where it runs",
-    href: "/where-it-runs",
-    description: "Source systems and provenance behind every Wire footer tag.",
-    question: "Which systems feed The Wire, and can I open the source?",
-    Icon: GraphIcon,
-    accent: "#00A2CF",
   },
 ];
 
@@ -133,31 +122,31 @@ export const LEGACY_GALLERY: Record<
   growth: {
     label: "Growth",
     href: "/",
-    description: "Redirects to The Wire.",
+    description: "Redirects to Priorities.",
     Icon: GrowthIcon,
   },
   accounts: {
     label: "Accounts",
     href: "/client",
-    description: "Redirects to Client · Amundi.",
+    description: "Redirects to Clients.",
     Icon: AccountsIcon,
   },
   deals: {
     label: "Deals",
     href: "/board",
-    description: "Redirects to The Board · Nordea.",
+    description: "Redirects to Board.",
     Icon: DealsIcon,
   },
   markets: {
     label: "Markets",
     href: "/",
-    description: "Redirects to The Wire.",
+    description: "Redirects to Priorities.",
     Icon: MarketsIcon,
   },
   people: {
     label: "People",
     href: "/client",
-    description: "Redirects to Client · Amundi.",
+    description: "Redirects to Clients.",
     Icon: PeopleIcon,
   },
   delivery: {
@@ -168,8 +157,8 @@ export const LEGACY_GALLERY: Record<
   },
   "knowledge-graph": {
     label: "Knowledge Graph",
-    href: "/where-it-runs",
-    description: "Redirects to Where it runs.",
+    href: "/",
+    description: "Redirects to Priorities.",
     Icon: GraphIcon,
   },
   global: {
@@ -180,8 +169,8 @@ export const LEGACY_GALLERY: Record<
   },
   evidence: {
     label: "Evidence",
-    href: "/where-it-runs",
-    description: "Redirects to Where it runs.",
+    href: "/",
+    description: "Redirects to Priorities.",
     Icon: EvidenceIcon,
   },
 };

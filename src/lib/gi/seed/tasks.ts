@@ -284,7 +284,7 @@ export const TASKS: Task[] = [
     "2026-09-02",
     "2 September",
     "completed",
-    { completedBy: "Nadia Haddad", approvedBy: "James Howard" },
+    { completedBy: "Nadia Haddad", approvedBy: "Alex Curtin" },
   ),
   t(
     "tsk-nordea-notes",

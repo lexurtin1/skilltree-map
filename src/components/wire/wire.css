@@ -156,6 +156,29 @@
   gap: 12px;
 }
 
+.wire-title__stamp {
+  font-weight: 500;
+  font-size: 0.72em;
+  color: var(--text-3);
+}
+
+.wire-primary-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .wire-primary-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wire-layout--secondary {
+  margin-top: 14px;
+}
+
 .wire-card {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr);
@@ -164,6 +187,26 @@
   background: var(--surface-1);
   border: 1px solid var(--line);
   border-radius: 10px;
+  border-left-width: 4px;
+}
+
+.wire-card--risk {
+  border-left-color: #c41e3a;
+  background: linear-gradient(90deg, #fdf2f5 0, var(--surface-1) 48px);
+}
+
+.wire-card--opportunity {
+  border-left-color: #1a4f8a;
+  background: linear-gradient(90deg, #eef4fb 0, var(--surface-1) 48px);
+}
+
+.wire-card--expansion {
+  border-left-color: #1c7a52;
+  background: linear-gradient(90deg, #eef8f2 0, var(--surface-1) 48px);
+}
+
+.wire-card--neutral {
+  border-left-color: var(--brand);
 }
 
 .wire-card__rank {
@@ -300,35 +343,87 @@
 }
 
 .wire-kpis {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: nowrap;
   gap: 8px;
-  margin-bottom: 16px;
-}
-
-@media (max-width: 900px) {
-  .wire-kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  margin-bottom: 14px;
+  overflow-x: auto;
+  padding-bottom: 2px;
 }
 
 .wire-kpi {
+  flex: 1 1 0;
+  min-width: 118px;
   padding: 10px 12px;
   background: var(--surface-1);
   border: 1px solid var(--line);
   border-radius: 8px;
+  border-top-width: 3px;
+  border-top-color: var(--line);
+}
+
+.wire-kpi--risk {
+  border-top-color: #c41e3a;
+}
+
+.wire-kpi--risk .wire-kpi__value {
+  color: #c41e3a;
+}
+
+.wire-kpi--attention {
+  border-top-color: #b86a00;
+}
+
+.wire-kpi--attention .wire-kpi__value {
+  color: #b86a00;
+}
+
+.wire-kpi--brand {
+  border-top-color: var(--brand);
+}
+
+.wire-kpi--brand .wire-kpi__value {
+  color: var(--brand);
+}
+
+.wire-kpi--neutral {
+  border-top-color: #5b6b7c;
 }
 
 .wire-kpi__value {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  line-height: 1.15;
 }
 
 .wire-kpi__label {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-3);
-  margin-top: 2px;
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
+.wire-primary-panel {
+  margin-bottom: 14px;
+}
+
+.wire-secondary-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+  .wire-secondary-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wire-history-note {
+  margin-top: 4px;
+  margin-bottom: 8px;
 }
 
 .wire-client-grid {

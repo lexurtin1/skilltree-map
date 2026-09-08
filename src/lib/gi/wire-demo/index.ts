@@ -93,8 +93,8 @@ export interface AtRiskDeal {
 /* ── The Wire ─────────────────────────────────────────────────────────────── */
 
 export const WIRE_META = {
-  title: "The Wire",
-  stamp: "Tuesday 08:12, ranked by consequence",
+  title: "Priorities",
+  stamp: "Tuesday 08:12 — ranked by consequence",
 };
 
 export const WIRE_FEED: WireCard[] = [
@@ -192,11 +192,11 @@ export const AMUNDI = {
   initials: "AM",
   summary: "4 legal entities resolved · 11 source-system identities merged · ontology:client/amundi-grp",
   kpis: [
-    { label: "Recurring revenue", value: "€4.31M" },
-    { label: "Products held", value: "6 of 19" },
-    { label: "Peer product density", value: "11 of 19" },
-    { label: "Next renewal", value: "214 days" },
-    { label: "Open commitments", value: "3" },
+    { label: "Next renewal", value: "214 days", tone: "risk" as const },
+    { label: "Recurring revenue", value: "€4.31M", tone: "brand" as const },
+    { label: "Open commitments", value: "3", tone: "attention" as const },
+    { label: "Products held", value: "6 of 19", tone: "neutral" as const },
+    { label: "Peer product density", value: "11 of 19", tone: "neutral" as const },
   ],
   matrixTitle: "What they hold, and what their peers hold that they don't",
   entities: ["Paris", "Lux", "Dublin", "CPR AM"] as const,
@@ -487,17 +487,17 @@ export const CASE_THESIS = {
   lede: "Growth Intelligence ranks what moved overnight by commercial consequence across Broadridge post-trade and fund servicing — then shows the path to act.",
   steps: [
     {
-      label: "The Wire",
+      label: "Priorities",
       href: "/",
       text: "Four signals ranked: ManCo filing at Amundi, T+1 hiring at Robeco, Nordea evidence stall, Union Investment expansion.",
     },
     {
-      label: "Client · Amundi",
+      label: "Clients",
       href: "/client",
       text: "Hold vs peer matrix mixes GPTM and Asset Servicing with Cross-border, Registration and FCS — same account, both product families.",
     },
     {
-      label: "The Board · Nordea",
+      label: "Board",
       href: "/board",
       text: "Sixty-three cells. The deal is the empty ones — ISO 20022, T+1, DORA, price certainty.",
     },
@@ -519,7 +519,7 @@ export const WHERE_IT_RUNS = {
     { id: "commercial", label: "Commercial systems", examples: "Salesforce, Contract system, Exchange" },
     { id: "signals", label: "External signals", examples: "Careers feed, Acolin, public filings" },
     { id: "ontology", label: "Ontology", examples: "client/amundi-grp · peer set v4 · personnel graph" },
-    { id: "wire", label: "The Wire", examples: "Ranked consequence feed" },
+    { id: "wire", label: "Priorities", examples: "Ranked consequence feed" },
   ],
   systems: [
     { name: "CSSF register", feeds: "ManCo scope, entity resolution", usedBy: "Wire #1, Client" },

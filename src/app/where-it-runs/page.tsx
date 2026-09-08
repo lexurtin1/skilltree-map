@@ -1,5 +1,5 @@
-import { WhereItRunsPage } from "@/components/wire/WhereItRunsPage";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <WhereItRunsPage />;
+  redirect("/");
 }

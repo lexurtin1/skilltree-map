@@ -14,45 +14,66 @@ function silenceTone(months: number): "hot" | "warm" | "ok" {
   return "ok";
 }
 
+function PriorityCard({
+  card,
+}: {
+  card: (typeof WIRE_FEED)[number];
+}) {
+  return (
+    <article className={`wire-card wire-card--${card.tagTone}`}>
+      <div className="wire-card__rank">{card.rank}</div>
+      <div>
+        <p className="wire-card__account">{card.account}</p>
+        <div className="wire-card__head">
+          <h2 className="wire-card__headline">{card.headline}</h2>
+          <StatusPill label={card.tag} tone={card.tagTone} />
+        </div>
+        <ul className="wire-card__bullets">
+          {card.bullets.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+        <div className="wire-card__actions">
+          {card.actions.map((a) => (
+            <ActionButton
+              key={a.label}
+              href={a.href}
+              label={a.label}
+              primary={a.primary}
+            />
+          ))}
+        </div>
+        <SourceTags sources={card.sources} />
+      </div>
+    </article>
+  );
+}
+
 export function WirePage() {
+  const primary = WIRE_FEED.filter((c) => c.rank <= 2);
+  const secondary = WIRE_FEED.filter((c) => c.rank > 2);
+
   return (
     <div className="wire-page">
       <div className="wire-shell wire-shell--wide">
         <header>
           <h1 className="wire-title">
-            {WIRE_META.title} — {WIRE_META.stamp}
+            {WIRE_META.title}
+            <span className="wire-title__stamp"> — {WIRE_META.stamp}</span>
           </h1>
+          <p className="wire-sub">Act left to right. Lower-ranked items sit below.</p>
         </header>
 
-        <div className="wire-layout">
+        <div className="wire-primary-row">
+          {primary.map((card) => (
+            <PriorityCard key={card.rank} card={card} />
+          ))}
+        </div>
+
+        <div className="wire-layout wire-layout--secondary">
           <div className="wire-feed">
-            {WIRE_FEED.map((card) => (
-              <article key={card.rank} className="wire-card">
-                <div className="wire-card__rank">{card.rank}</div>
-                <div>
-                  <p className="wire-card__account">{card.account}</p>
-                  <div className="wire-card__head">
-                    <h2 className="wire-card__headline">{card.headline}</h2>
-                    <StatusPill label={card.tag} tone={card.tagTone} />
-                  </div>
-                  <ul className="wire-card__bullets">
-                    {card.bullets.map((b) => (
-                      <li key={b}>{b}</li>
-                    ))}
-                  </ul>
-                  <div className="wire-card__actions">
-                    {card.actions.map((a) => (
-                      <ActionButton
-                        key={a.label}
-                        href={a.href}
-                        label={a.label}
-                        primary={a.primary}
-                      />
-                    ))}
-                  </div>
-                  <SourceTags sources={card.sources} />
-                </div>
-              </article>
+            {secondary.map((card) => (
+              <PriorityCard key={card.rank} card={card} />
             ))}
           </div>
 

@@ -34,7 +34,7 @@ function hrefFor(ref: ObjectRef): string {
     case "person":
       return "/client";
     case "fund":
-      return "/where-it-runs";
+      return "/client";
     case "market":
       return "/";
     case "service":
@@ -190,7 +190,8 @@ function ModuleRail({ pathname }: { pathname: string }) {
             style={
               {
                 "--nav-accent": mod.accent,
-                color: active ? "var(--brand)" : "var(--text-3)",
+                color: active ? mod.accent : "var(--text-3)",
+                borderBottomColor: active ? mod.accent : undefined,
               } as React.CSSProperties
             }
           >
@@ -323,10 +324,10 @@ function NavPanel({
           style={{ "--i": MODULES.length + 1 } as React.CSSProperties}
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-bold text-white">
-            JH
+            AC
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[12.5px] font-semibold text-[var(--text-1)]">James Howard</span>
+            <span className="block truncate text-[12.5px] font-semibold text-[var(--text-1)]">Alex Curtin</span>
             <span className="block truncate text-[11px] text-[var(--text-4)]">Strategic Account Director</span>
           </span>
         </div>

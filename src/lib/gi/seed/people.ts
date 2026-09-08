@@ -44,7 +44,7 @@ const internal = (
 
 export const INTERNAL_PEOPLE: Person[] = [
   internal("bp-sarah-patel", "Sarah Patel", "Client Director, Luxembourg", 4, "acc-schroders"),
-  internal("bp-james-howard", "James Howard", "Strategic Account Director, UK", 5, "acc-schroders"),
+  internal("bp-james-howard", "Alex Curtin", "Strategic Account Director, UK", 5, "acc-schroders"),
   internal("bp-marta-oliveira", "Marta Oliveira", "Specialist Seller, Cross-border Distribution", 4),
   internal("bp-tom-eriksen", "Tom Eriksen", "Account Director, Nordics", 5, "acc-nordea"),
   internal("bp-claire-dubois", "Claire Dubois", "Client Services Lead, Fund Communications", 3, "acc-janushenderson"),
