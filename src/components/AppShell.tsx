@@ -38,7 +38,7 @@ function hrefFor(ref: ObjectRef): string {
     case "market":
       return "/";
     case "service":
-      return "/case";
+      return "/today";
     default:
       return "/";
   }

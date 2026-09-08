@@ -1,5 +1,5 @@
-import { CasePage } from "@/components/wire/CasePage";
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <CasePage />;
+  redirect("/today");
 }

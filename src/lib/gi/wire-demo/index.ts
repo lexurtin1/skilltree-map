@@ -134,7 +134,7 @@ export const WIRE_FEED: WireCard[] = [
       "ESMA T+1 calendar (11 Oct 2027) puts the renewal window for neighbouring accounts inside the same readiness band.",
       "FundFile shows rising preference for post-trade outsourcing language in RFPs from NL peer set.",
     ],
-    actions: [{ label: "Build T+1 readiness brief", href: "/case", primary: true }],
+    actions: [{ label: "Build T+1 readiness brief", href: "/today", primary: true }],
     sources: ["Careers feed", "ESMA calendar", "Ontology — peer set v4"],
   },
   {

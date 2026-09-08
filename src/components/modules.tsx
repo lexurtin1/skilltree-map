@@ -19,7 +19,7 @@ import {
 import type { ModuleId } from "@/lib/gi/metrics";
 
 export type DestinationId =
-  | "case"
+  | "today"
   | "wire"
   | "client"
   | "board"
@@ -41,13 +41,11 @@ export interface ModuleDef {
 
 export const MODULES: ModuleDef[] = [
   {
-    id: "case",
-    label: "The case",
-    href: "/case",
-    description:
-      "How a ranked signal becomes an action across post-trade and fund servicing.",
-    question:
-      "What is Growth Intelligence for, and how does one consequence move from The Wire to a closed cell?",
+    id: "today",
+    label: "Today",
+    href: "/today",
+    description: "Daily briefing: priority account, book health and Ask.",
+    question: "What should I prepare for today, and what is the state of the book?",
     Icon: GrowthIcon,
     accent: "#007644",
   },
