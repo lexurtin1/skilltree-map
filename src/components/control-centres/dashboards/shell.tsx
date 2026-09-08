@@ -19,6 +19,7 @@ import { Sparkline } from "../viz/plots";
 import { ArrowRightIcon } from "../../ui/Icons";
 import type { ModulePalette } from "@/lib/gi/palette";
 import type { Point } from "@/lib/gi/series";
+import { SERVICE_BY_ID } from "@/lib/gi/taxonomy";
 
 export type Trend = "up" | "down" | "flat";
 
@@ -360,5 +361,43 @@ export function Head({
 export function Note({ children }: { children: React.ReactNode }) {
   return (
     <p className="shrink-0 truncate text-[11px] leading-none text-[var(--text-3)]">{children}</p>
+  );
+}
+
+/** Named Broadridge products present in this view — MVP product-range strip. */
+export function ProductStrip({
+  serviceIds,
+  label = "Products in this view",
+}: {
+  serviceIds: string[];
+  label?: string;
+}) {
+  const seen = new Set<string>();
+  const products = serviceIds
+    .map((id) => SERVICE_BY_ID[id])
+    .filter((s): s is NonNullable<typeof s> => {
+      if (!s || seen.has(s.id)) return false;
+      seen.add(s.id);
+      return true;
+    });
+
+  if (!products.length) return null;
+
+  return (
+    <div className="gi-product-strip flex shrink-0 flex-wrap items-center gap-2">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-4)]">
+        {label}
+      </span>
+      {products.map((s) => (
+        <Link
+          key={s.id}
+          href={`/growth?service=${s.id}`}
+          className="rounded-full border border-[rgba(0,31,90,0.12)] bg-white/75 px-2.5 py-[3px] text-[11px] font-semibold text-[var(--brand)] transition-colors hover:border-[var(--brand-soft)] hover:bg-white"
+          title={s.name}
+        >
+          {s.short}
+        </Link>
+      ))}
+    </div>
   );
 }

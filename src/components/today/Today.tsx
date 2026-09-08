@@ -16,6 +16,7 @@ import {
   RENEWAL_BARS,
   RENEWAL_MONTHS,
   STATE_LEGEND,
+  TEXT_FOR_STATE,
   haloFor,
   type TodayAccount,
 } from "./data";
@@ -247,7 +248,38 @@ export function Today() {
                 </span>
               </div>
 
-              <h2 className="today-priority-head" aria-live="polite">
+              <div className="today-priority-client">
+                <p className="today-kicker">Client</p>
+                <div className="today-priority-client-row">
+                  <h2 className="today-priority-client-name">{selected.full}</h2>
+                  <span
+                    className="today-priority-client-kind"
+                    style={{
+                      color: TEXT_FOR_STATE[selected.state],
+                      background: haloFor(selected.state),
+                    }}
+                  >
+                    <i style={{ background: selected.state }} aria-hidden />
+                    {selected.kind}
+                  </span>
+                </div>
+                <p className="today-priority-client-meta">
+                  £{selected.rev}m with us · HQ {selected.hq}
+                  {selected.recordId ? (
+                    <>
+                      {" · "}
+                      <Link
+                        href={`/accounts/${selected.recordId}`}
+                        className="today-priority-client-link"
+                      >
+                        Open account record
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+              </div>
+
+              <h3 className="today-priority-head" aria-live="polite">
                 {headWords.map((w, i) => (
                   <span
                     key={`${selected.id}-${i}-${w}`}
@@ -256,7 +288,7 @@ export function Today() {
                     {w}&nbsp;
                   </span>
                 ))}
-              </h2>
+              </h3>
 
               <div className="today-chain">
                 {selected.chain.map((st) => (

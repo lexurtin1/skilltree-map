@@ -179,6 +179,65 @@
   color: var(--today-mute);
 }
 
+.today-priority-client {
+  margin-bottom: 14px;
+}
+
+.today-priority-client .today-kicker {
+  margin-bottom: 6px;
+}
+
+.today-priority-client-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 14px;
+}
+
+.today-priority-client-name {
+  margin: 0;
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--today-navy);
+}
+
+.today-priority-client-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 5px 11px 5px 9px;
+}
+
+.today-priority-client-kind i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.today-priority-client-link,
+.today-priority-client-meta {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+  color: var(--today-mute);
+}
+
+.today-priority-client-link {
+  display: inline;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--today-ink-3);
+}
+
+.today-priority-client-link:hover {
+  color: var(--today-navy);
+}
+
 .today-priority-pill {
   position: relative;
   display: inline-flex;
@@ -214,7 +273,7 @@
 
 .today-priority-head {
   margin: 0;
-  font-size: clamp(24px, 2.8vw, 33px);
+  font-size: clamp(22px, 2.5vw, 28px);
   font-weight: 400;
   line-height: 1.28;
   letter-spacing: -0.018em;

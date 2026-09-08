@@ -77,6 +77,37 @@ export const HERO_SERVICE_RELATIONSHIPS: ServiceRelationship[] = [
     marketId: "se",
     since: "2024-01-15",
   }),
+  rel("srv-schroders-xborder", "acc-schroders", "svc-xborder", "expansion", "bp-sarah-patel", "stable", 280_000, {
+    marketId: "lu",
+    since: "2024-09-01",
+    note: "Cross-border fund distribution support adjacent to the live FCS relationship.",
+  }),
+  rel("srv-schroders-registration", "acc-schroders", "svc-registration", "live", "bp-sarah-patel", "stable", 210_000, {
+    marketId: "lu",
+    since: "2024-09-01",
+    note: "Host-market registration and legal representation for DE, IT and ES filings.",
+  }),
+  rel("srv-allfunds-saleswatch", "acc-allfunds", "svc-saleswatch", "live", "bp-elena-costa", "strong", 450_000, {
+    marketId: "se",
+    since: "2023-11-01",
+    note: "SalesWatch benchmarking across Iberian and Italian platform channels.",
+  }),
+  rel("srv-allfunds-fundfile", "acc-allfunds", "svc-fundfile", "live", "bp-elena-costa", "stable", 380_000, {
+    marketId: "se",
+    since: "2024-02-01",
+    note: "FundFile product-preference intelligence for distributor selection.",
+  }),
+  rel("srv-nordea-regworkflow", "acc-nordea", "svc-regworkflow", "live", "bp-tom-eriksen", "stable", 290_000, {
+    marketId: "lu",
+    since: "2023-08-01",
+    renewalInDays: 156,
+    note: "PRIIPs / UCITS / SFDR workflow support for the Nordic SICAV range.",
+  }),
+  rel("srv-waystone-regworkflow", "acc-waystone", "svc-regworkflow", "change", "bp-ravi-nair", "attention", 340_000, {
+    marketId: "ie",
+    since: "2022-04-01",
+    note: "Regulatory workflow under review after ManCo consolidation signals.",
+  }),
 ];
 
 const SITUATION_SERVICE: Record<Situation, { serviceId: string; lifecycle: ServiceRelationship["lifecycle"]; arr: number }> = {
@@ -772,5 +803,34 @@ export const OPPORTUNITIES: Opportunity[] = [
     evidenceIds: ["evd-mandg"],
     buyingGroupPersonIds: ["bp-james-howard"],
     marker: "attention",
+  },
+  {
+    id: "opp-allfunds-saleswatch",
+    name: "SalesWatch and FundFile expansion, Iberia and Italy",
+    accountId: "acc-allfunds",
+    serviceIds: ["svc-saleswatch", "svc-fundfile", "svc-marketintel"],
+    value: 520_000,
+    recurring: true,
+    stage: "solution",
+    crmStage: "Qualify",
+    ownerId: "bp-elena-costa",
+    closeDate: "2026-12-18",
+    closeDateMoves: 1,
+    lastBuyerActivity: "Channel-shift briefing with product preference extracts",
+    lastBuyerActivityDays: 12,
+    mainGap: "economic-buyer",
+    gaps: ["economic-buyer", "mutual-next-step"],
+    health: h(0.7, 0.65, 0.35, 0.7, 0.55, 0.4, 0.6),
+    statement:
+      "SalesWatch and FundFile already run on the platform. The Iberian and Italian channel shift creates a case to widen scope; the economic buyer for a wider data package is not yet confirmed.",
+    bestNextAction:
+      "Confirm whether distribution data and preference intelligence are bought centrally, and who signs the widened SalesWatch / FundFile package.",
+    evidenceIds: [
+      "evd-allfunds-flows",
+      "evd-allfunds-fundfile",
+      "evd-allfunds-routes",
+    ],
+    buyingGroupPersonIds: ["bp-elena-costa"],
+    marker: "progress",
   },
 ];

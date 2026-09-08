@@ -74,6 +74,7 @@ export function topReasons(limit = 3) {
       title: h.title,
       score,
       state: h.state,
+      serviceIds: h.serviceIds,
     }));
 }
 

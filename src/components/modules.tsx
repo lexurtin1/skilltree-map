@@ -6,7 +6,8 @@
  * between the card that opens it and the page it opens.
  *
  * Names are plain and literal on purpose. A Broadridge employee should know
- * what a module does from its label alone.
+ * what a module does from its label alone. Questions are product-led: the MVP
+ * is to test which Broadridge fund-services products fit each commercial moment.
  */
 import {
   AccountsIcon,
@@ -38,79 +39,90 @@ export const MODULES: ModuleDef[] = [
     id: "growth",
     label: "Growth",
     href: "/growth",
-    description: "Accounts and market changes that may create new work.",
+    description:
+      "Account and market changes that may make a Broadridge product relevant.",
     question:
-      "Which accounts have changed in a way that may make a Broadridge capability relevant, and what should we do next?",
+      "Which account changes make a Broadridge product relevant — Cross-border, Registration, Fund Communication Solutions or Translation — and which product should we test next?",
     Icon: GrowthIcon,
   },
   {
     id: "accounts",
     label: "Accounts",
     href: "/accounts",
-    description: "The current picture across strategic client groups.",
+    description:
+      "Strategic client groups and the Broadridge products already in force.",
     question:
-      "What is the full current picture of this client group, what changed, where do we stand and what should happen next?",
+      "For this client group, which Broadridge products are live, what changed, and what should happen next?",
     Icon: AccountsIcon,
   },
   {
     id: "deals",
     label: "Deals",
     href: "/deals",
-    description: "The real condition of active opportunities.",
+    description:
+      "Open opportunities for named Broadridge products, and what still blocks them.",
     question:
-      "What would need to be true for this deal to close, and which important conditions are still missing?",
+      "Which Broadridge product is this deal selling, what must be true to close, and which conditions are still missing?",
     Icon: DealsIcon,
   },
   {
     id: "markets",
     label: "Markets",
     href: "/markets",
-    description: "Fund, regulatory and distribution movement across Europe.",
+    description:
+      "European fund movement that creates a reason for SalesWatch, FundFile, Market intelligence or Registration.",
     question:
-      "Where are fund groups changing, and which changes create a credible reason for Broadridge to help?",
+      "Where are fund groups changing, and which Broadridge product — SalesWatch, FundFile, Market intelligence or Registration — does that change make worth testing?",
     Icon: MarketsIcon,
   },
   {
     id: "people",
     label: "People",
     href: "/people",
-    description: "The people who matter and the routes to reach them.",
-    question: "Who matters to this account or deal, what is their role and what is the best route to them?",
+    description:
+      "Buyers and sponsors who own Fund Communication Solutions, Cross-border and Regulatory decisions.",
+    question:
+      "Who owns the Fund Communication Solutions, Cross-border or Regulatory decision at this account, and what is the best route to them?",
     Icon: PeopleIcon,
   },
   {
     id: "delivery",
     label: "Delivery",
     href: "/delivery",
-    description: "Client health, renewals and responsible expansion.",
+    description:
+      "Live Broadridge product health, renewals and responsible expansion.",
     question:
-      "Are we delivering well, what is changing for this client and where is a responsible expansion conversation justified?",
+      "Are Fund Communication Solutions, Document production and Regulatory workflow delivering well, and where is a responsible expansion conversation justified?",
     Icon: DeliveryIcon,
   },
   {
     id: "knowledge-graph",
     label: "Knowledge Graph",
     href: "/knowledge-graph",
-    description: "The connected view behind every account, fund, market and decision.",
+    description:
+      "How funds, markets and Broadridge products connect behind every decision.",
     question:
-      "How are the account, fund, market, people, product, deal, evidence and action connected?",
+      "How do the account, fund range, host markets and Broadridge products — Registration, Fund Communication Solutions, Fund data — connect?",
     Icon: GraphIcon,
   },
   {
     id: "global",
     label: "Global",
     href: "/global",
-    description: "Broadridge's worldwide interests, relationships and active commercial work.",
+    description:
+      "Worldwide Cross-border and Registration footprint, relationships and open work.",
     question:
-      "Where in the world does Broadridge have strategic commercial interest, active client relationships, open opportunities and emerging market movement?",
+      "Where in the world does Broadridge have Cross-border and Registration presence, active clients, open opportunities and emerging market movement?",
     Icon: GlobeIcon,
   },
   {
     id: "evidence",
     label: "Evidence",
     href: "/evidence",
-    description: "Sources, facts and the reasoning behind every recommendation.",
-    question: "Why should I trust this fact, recommendation or score?",
+    description:
+      "Sources that justify a Broadridge product recommendation — contracts, SalesWatch, FundFile, filings.",
+    question:
+      "Why should I trust this fact, score or Broadridge product recommendation?",
     Icon: EvidenceIcon,
   },
 ];

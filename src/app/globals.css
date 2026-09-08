@@ -1049,11 +1049,25 @@ body {
 }
 
 /* Shared Broadridge surfaces for expanded workspaces. */
-.gi-module-page { background: #edf2f8; }
+.gi-module-page {
+  background:
+    radial-gradient(ellipse 70% 50% at 10% -10%, rgba(129, 183, 240, 0.28), transparent 55%),
+    radial-gradient(ellipse 55% 40% at 90% 0%, rgba(120, 206, 196, 0.2), transparent 50%),
+    #f4f7fb;
+}
 .gi-float[data-active] { animation: none; transform: translateY(var(--fy, 0px)); }
 .gi-record { position: relative; overflow: hidden; padding: 24px; border: 1px solid rgba(255,255,255,.95); border-radius: 24px; background: rgba(255,255,255,.78); backdrop-filter: blur(18px); box-shadow: 0 20px 35px -28px rgba(0,31,90,.42), inset 0 1px 0 #fff; }
 .gi-eyebrow { font-size: 10px; line-height: 1.6; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--text-3); }
-.gi-module-dashboard { --well-0: #001f5a08; --well-1: #001f5a10; --well-line: #001f5a20; }
+.gi-module-dashboard {
+  --well-0: #001f5a08;
+  --well-1: #001f5a10;
+  --well-line: #001f5a20;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.88), rgba(233, 239, 248, 0.72));
+}
+.gi-product-strip {
+  min-height: 28px;
+}
 .gi-navicon { --nav-accent: #001f5a !important; }
 @media (max-width: 767px) {
  .gi-room > header { grid-template-columns: 1fr; padding-top: 12px; }
