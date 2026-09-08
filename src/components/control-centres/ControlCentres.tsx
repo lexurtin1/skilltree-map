@@ -4,7 +4,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useCallback, useState, useSyncExternalStore } from "react";
 import { ControlCentreRing } from "./ControlCentreRing";
-import { MODULE_BY_ID } from "../modules";
+import { LEGACY_GALLERY } from "../modules";
 import { ArrowRightIcon } from "../ui/Icons";
 import { RING_ORDER } from "@/lib/gi/palette";
 import type { ModuleId } from "@/lib/gi/metrics";
@@ -43,7 +43,7 @@ const serverSnapshot = (): ModuleId | null => null;
 function readLastModule(): ModuleId | null {
   try {
     const stored = window.localStorage.getItem("gi.lastModule");
-    return stored && stored in MODULE_BY_ID ? (stored as ModuleId) : null;
+    return stored && stored in LEGACY_GALLERY ? (stored as ModuleId) : null;
   } catch {
     return null;
   }
@@ -59,7 +59,7 @@ export function ControlCentres({ initialCard }: { initialCard: string | null }) 
   const [front, setFront] = useState<ModuleId>(initialFront);
   const onFrontChange = useCallback((id: ModuleId) => setFront(id), []);
 
-  const mod = MODULE_BY_ID[front];
+  const mod = LEGACY_GALLERY[front];
 
   return (
     <div
@@ -122,10 +122,10 @@ export function ControlCentres({ initialCard }: { initialCard: string | null }) 
         <div className="flex justify-end">
           {last && last !== front && (
             <Link
-              href={MODULE_BY_ID[last].href}
+              href={LEGACY_GALLERY[last].href}
               className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,31,90,0.1)] bg-white/70 px-3 py-1.5 text-[11.5px] font-semibold text-[var(--text-2)] backdrop-blur transition-colors hover:border-[rgba(0,31,90,0.28)] hover:text-[var(--text-1)]"
             >
-              Resume {MODULE_BY_ID[last].label}
+              Resume {LEGACY_GALLERY[last].label}
               <ArrowRightIcon size={13} />
             </Link>
           )}
@@ -138,7 +138,7 @@ export function ControlCentres({ initialCard }: { initialCard: string | null }) 
       <div className="relative z-10 flex-1 overflow-y-auto px-4 pb-8 md:hidden">
         <p className="mb-4 mt-2 text-sm text-[var(--text-3)]">Choose a workspace to explore its accounts, signals and fund research.</p>
         <div className="grid gap-3">{RING_ORDER.map(id => {
-          const destination = MODULE_BY_ID[id];
+          const destination = LEGACY_GALLERY[id];
           return <Link key={id} href={destination.href} className="gi-record flex items-center gap-4">
             <span className="rounded-2xl bg-[var(--brand)] p-3 text-white"><destination.Icon size={22} /></span>
             <span><strong className="text-lg">{destination.label}</strong><span className="mt-1 block text-sm text-[var(--text-3)]">{destination.description}</span></span><ArrowRightIcon size={18} />

@@ -31,7 +31,8 @@ const assert = require("node:assert/strict");
         .innerText(),
       /Growth/i,
     );
-    assert.equal(await page.locator(".today-ask-portal").count(), 1);
+    assert.equal(await page.locator(".today-ask-float").count(), 1);
+    assert.match(await page.locator(".today-ask-float-title").innerText(), /Ask AI/);
     assert.match(await page.locator(".today-book").innerText(), /Book health/);
     assert.match(
       await page.locator(".today-priority").innerText(),
@@ -107,7 +108,7 @@ const assert = require("node:assert/strict");
       /Cross-border/,
     );
 
-    await page.getByRole("button", { name: /Open Intelligence/ }).click();
+    await page.getByRole("button", { name: /Ask AI/ }).click();
     await page.getByRole("button", { name: "Why does this matter today?" }).waitFor({
       state: "visible",
       timeout: 5000,

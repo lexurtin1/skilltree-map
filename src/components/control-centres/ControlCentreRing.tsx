@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ControlCentreCard } from "./ControlCentreCard";
-import { MODULE_BY_ID } from "../modules";
+import { LEGACY_GALLERY } from "../modules";
 import { ArrowLeftIcon, ArrowRightIcon } from "../ui/Icons";
 import { MODULE_PALETTE, RING_ORDER } from "@/lib/gi/palette";
 import type { ModuleId } from "@/lib/gi/metrics";
@@ -322,7 +322,6 @@ export function ControlCentreRing({
           }}
         >
           {RING_ORDER.map((id, i) => {
-            const mod = MODULE_BY_ID[id];
             /* How far this panel is from the front, the short way round. */
             const offset = ringDelta(position, i);
             const distance = Math.abs(offset);
@@ -402,7 +401,7 @@ export function ControlCentreRing({
                   )}
 
                   <ControlCentreCard
-                    module={mod}
+                    moduleId={id}
                     active={active}
                     distance={distance}
                     onSeat={() => seat(i)}
@@ -439,7 +438,7 @@ export function ControlCentreRing({
                 type="button"
                 role="tab"
                 aria-selected={i === frontSlot}
-                aria-label={MODULE_BY_ID[id].label}
+                aria-label={LEGACY_GALLERY[id].label}
                 onClick={() => seat(i)}
                 className="group flex h-5 items-center px-[3px]"
               >

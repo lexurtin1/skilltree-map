@@ -283,33 +283,21 @@ export function Today() {
         </section>
 
         <div className="today-hero-row">
-          <div className="today-hero-compose">
-            <AskOrb
-              accountShort={selected.short}
-              open={askOpen}
-              onOpenChange={setAskOpen}
-              draft={askDraft}
-              onDraftChange={setAskDraft}
-              asked={asked}
-              onAsk={runAsk}
-              answer={answer}
-            />
-
-            <article className="today-priority">
-              <div className="today-priority-inner">
-                <div className="today-priority-meta">
-                  <span className="today-priority-pill">
-                    <span className="today-priority-dot" aria-hidden>
-                      <i />
-                      <i />
-                    </span>
-                    Priority action
+          <article className="today-priority">
+            <div className="today-priority-inner">
+              <div className="today-priority-meta">
+                <span className="today-priority-pill">
+                  <span className="today-priority-dot" aria-hidden>
+                    <i />
+                    <i />
                   </span>
-                  <span>
-                    Found 08:12 today · {ACCOUNTS.findIndex((a) => a.id === selected.id) + 1} of{" "}
-                    {ACCOUNTS.length}
-                  </span>
-                </div>
+                  Priority action
+                </span>
+                <span>
+                  Found 08:12 today · {ACCOUNTS.findIndex((a) => a.id === selected.id) + 1} of{" "}
+                  {ACCOUNTS.length}
+                </span>
+              </div>
 
                 <div className="today-priority-client">
                   <p className="today-kicker">Client</p>
@@ -444,7 +432,6 @@ export function Today() {
                 </div>
               </div>
             </article>
-          </div>
 
           <aside className="today-side">
             <div className="today-glass today-queue">
@@ -599,6 +586,17 @@ export function Today() {
           <span>Fund sources checked 7 Sep 2026</span>
         </footer>
       </div>
+
+      <AskOrb
+        accountShort={selected.short}
+        open={askOpen}
+        onOpenChange={setAskOpen}
+        draft={askDraft}
+        onDraftChange={setAskDraft}
+        asked={asked}
+        onAsk={runAsk}
+        answer={answer}
+      />
 
       {prepareOpen && (
         <PreparePanel

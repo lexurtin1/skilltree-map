@@ -363,6 +363,7 @@ export const SERVICE_GROUPS: Record<ServiceGroup, { label: string; color: string
   regulatory: { label: "Regulatory", color: "#4a4f9c" },
   intelligence: { label: "Market intelligence", color: "#1c7a52" },
   technology: { label: "Operations and technology", color: "#5b6b7c" },
+  "post-trade": { label: "Post trade", color: "#8a3d12" },
 };
 
 export const BROADRIDGE_SERVICES: BroadridgeService[] = [
@@ -496,6 +497,51 @@ export const BROADRIDGE_SERVICES: BroadridgeService[] = [
       "service-provider-change",
       "new-manco-aifm-activity",
     ],
+  },
+  {
+    id: "svc-gptm",
+    name: "Global Post Trade Management",
+    short: "Global Post Trade Management",
+    group: "post-trade",
+    description:
+      "Trade capture, confirmation, matching and settlement orchestration across markets.",
+    fitSignals: ["regulatory-deadline", "service-provider-change", "client-consolidation"],
+  },
+  {
+    id: "svc-asset-servicing",
+    name: "Asset Servicing",
+    short: "Asset Servicing",
+    group: "post-trade",
+    description:
+      "Corporate actions, income, tax and custody-adjacent servicing for asset managers.",
+    fitSignals: ["fund-structure-change", "client-consolidation", "new-executive"],
+  },
+  {
+    id: "svc-collateral",
+    name: "Collateral Management",
+    short: "Collateral Management",
+    group: "post-trade",
+    description:
+      "Margin, collateral optimisation and inventory across cleared and bilateral trades.",
+    fitSignals: ["regulatory-deadline", "service-provider-change"],
+  },
+  {
+    id: "svc-recon",
+    name: "Reconciliation & Matching",
+    short: "Reconciliation & Matching",
+    group: "post-trade",
+    description:
+      "Break detection and matching across cash, positions and transactions.",
+    fitSignals: ["service-provider-change", "client-consolidation"],
+  },
+  {
+    id: "svc-settlement",
+    name: "Settlement and T+1 readiness",
+    short: "Settlement / T+1",
+    group: "post-trade",
+    description:
+      "Settlement compression, exception handling and T+1 readiness across entities.",
+    fitSignals: ["regulatory-deadline", "fund-structure-change"],
   },
 ];
 

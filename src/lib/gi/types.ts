@@ -202,7 +202,8 @@ export type ServiceGroup =
   | "data"
   | "regulatory"
   | "intelligence"
-  | "technology";
+  | "technology"
+  | "post-trade";
 
 export interface BroadridgeService {
   id: string;

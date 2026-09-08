@@ -4,7 +4,8 @@ import Link from "next/link";
 import { DASHBOARDS } from "./dashboards";
 import { ArrowRightIcon } from "../ui/Icons";
 import { MODULE_PALETTE } from "@/lib/gi/palette";
-import type { ModuleDef } from "../modules";
+import type { ModuleId } from "@/lib/gi/metrics";
+import { LEGACY_GALLERY } from "../modules";
 
 /**
  * One screen on the ring.
@@ -36,20 +37,21 @@ import type { ModuleDef } from "../modules";
  * the difference is not visible.
  */
 export function ControlCentreCard({
-  module: mod,
+  moduleId,
   active,
   distance,
   onSeat,
 }: {
-  module: ModuleDef;
+  moduleId: ModuleId;
   active: boolean;
   /** Ring positions away from the front, 0 = front. */
   distance: number;
   /** Rotate this screen to the front. */
   onSeat: () => void;
 }) {
-  const palette = MODULE_PALETTE[mod.id];
-  const Dashboard = DASHBOARDS[mod.id];
+  const mod = LEGACY_GALLERY[moduleId];
+  const palette = MODULE_PALETTE[moduleId];
+  const Dashboard = DASHBOARDS[moduleId];
   const { Icon } = mod;
 
   /* Real refraction only where it can be seen. */

@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BrandLogo } from "./BrandLogo";
 import { MODULES, TASKS_MODULE } from "./modules";
-import { MODULE_PALETTE } from "@/lib/gi/palette";
 import { PrepareMeSheet } from "./prepare/PrepareMeSheet";
 import {
   CloseIcon,
@@ -20,21 +19,26 @@ import { search } from "@/lib/gi/select";
 import { OBJECT_KINDS } from "@/lib/gi/taxonomy";
 import type { ObjectRef } from "@/lib/gi/types";
 
-/** Where a search result takes you. */
+/** Where a search result takes you in the Wire / Client / Board IA. */
 function hrefFor(ref: ObjectRef): string {
   switch (ref.kind) {
     case "account":
+      if (ref.id === "acc-amundi") return "/client";
+      if (ref.id === "acc-nordea") return "/board";
       return `/accounts/${ref.id}`;
     case "opportunity":
+      if (ref.id === "opp-nordea-xborder" || ref.label.toLowerCase().includes("nordea")) {
+        return "/board";
+      }
       return `/deals/${ref.id}`;
     case "person":
-      return `/people?person=${ref.id}`;
+      return "/client";
     case "fund":
-      return `/knowledge-graph?focus=${ref.id}`;
+      return "/where-it-runs";
     case "market":
-      return `/markets?market=${ref.id}`;
+      return "/";
     case "service":
-      return `/growth?service=${ref.id}`;
+      return "/case";
     default:
       return "/";
   }
@@ -168,21 +172,16 @@ function TopBar({
   );
 }
 
-/** Persistent labelled destinations with an explicit Today active state. */
+/** Persistent labelled destinations for the Wire / Client / Board IA. */
 function ModuleRail({ pathname }: { pathname: string }) {
   return (
-    <nav
-      className="gi-destination-rail"
-      aria-label="Modules"
-    >
-      <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>Today</Link>
+    <nav className="gi-destination-rail" aria-label="Destinations">
       {MODULES.map((mod) => {
-        const palette = MODULE_PALETTE[mod.id];
-        const active = pathname.startsWith(mod.href);
+        const active = mod.href === "/" ? pathname === "/" : pathname.startsWith(mod.href);
         const { Icon } = mod;
         return (
           <Link
-            key={mod.href}
+            key={mod.id}
             href={mod.href}
             aria-label={mod.label}
             aria-current={active ? "page" : undefined}
@@ -190,7 +189,7 @@ function ModuleRail({ pathname }: { pathname: string }) {
             className="gi-destination-link"
             style={
               {
-                "--nav-accent": palette.base,
+                "--nav-accent": mod.accent,
                 color: active ? "var(--brand)" : "var(--text-3)",
               } as React.CSSProperties
             }
@@ -273,14 +272,14 @@ function NavPanel({
         </div>
 
         <div>
-          <MenuHeading>Modules</MenuHeading>
+          <MenuHeading>Destinations</MenuHeading>
           <ul className="sm-list mt-3 flex flex-col gap-1.5" data-numbered>
             {MODULES.map((m, i) => (
-              <li key={m.href} className="sm-item" style={{ "--i": i } as React.CSSProperties}>
+              <li key={m.id} className="sm-item" style={{ "--i": i } as React.CSSProperties}>
                 <Link
                   href={m.href}
                   className="sm-link"
-                  style={{ "--sm-accent": MODULE_PALETTE[m.id].ink } as React.CSSProperties}
+                  style={{ "--sm-accent": m.accent } as React.CSSProperties}
                   aria-current={isActive(m.href) ? "page" : undefined}
                 >
                   {m.label}
@@ -497,10 +496,10 @@ function FooterRail() {
       <p className="flex min-w-0 items-center gap-2">
         <BrandLogo variant="mark" height={13} className="opacity-45" />
         <span className="truncate">
-          Issuer-sourced fund profiles; commercial relationships, health and opportunities are illustrative.
+          Illustrative Broadridge commercial intelligence — post-trade and fund servicing.
         </span>
       </p>
-      <p className="hidden shrink-0 tabular-nums sm:block">Fund sources checked 7 Sep 2026</p>
+      <p className="hidden shrink-0 tabular-nums sm:block">Wire ranked 8 Sep 2026</p>
     </footer>
   );
 }

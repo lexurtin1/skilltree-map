@@ -1,5 +1,5 @@
-import { Today } from "@/components/today/Today";
+import { WirePage } from "@/components/wire/WirePage";
 
-export default function TodayPage() {
-  return <Today />;
+export default function HomePage() {
+  return <WirePage />;
 }
