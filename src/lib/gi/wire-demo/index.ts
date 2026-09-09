@@ -1,6 +1,12 @@
 /**
- * Screenshot-faithful demo content for the Wire / Client / Board IA.
- * Mixes Broadridge post-trade and fund-servicing products in one narrative.
+ * Demo content for Priorities / Client / Board / Executive.
+ * Calastone CCO briefing: every figure is a change, a gap or a risk,
+ * and every item on the main screens joins two systems.
+ *
+ * Headline arithmetic (literals, already summed):
+ * FY target 48.0 · committed 39.8 · deliverable 37.1 · gap 8.2
+ * Friday committed 40.6 · Friday gap 7.4 · gap_change +0.8 (worse)
+ * Movement: 40.6 − 0.8 (abrdn) − 0.4 (HL) + 0.4 (Jupiter) = 39.8
  */
 
 export type WireTagTone = "risk" | "opportunity" | "expansion" | "neutral";
@@ -94,95 +100,129 @@ export interface AtRiskDeal {
 
 export const WIRE_META = {
   title: "Priorities",
-  stamp: "Tuesday 08:12 — ranked by consequence",
+  stamp: "Tuesday 08:12 — 5 of 17. £8.2m short of FY, £800k worse since Friday",
 };
 
 export const WIRE_FEED: WireCard[] = [
   {
     rank: 1,
-    account: "Amundi Luxembourg",
-    headline: "Amundi Luxembourg files ManCo scope extension with the CSSF",
-    tag: "Renewal at risk",
+    account: "Fidelity International",
+    headline: "Fidelity contracting stalled at twice the median",
+    tag: "Not moving",
     tagTone: "risk",
     bullets: [
-      "GPTM + Fund Communication Solutions renewal in 214 days — €1.14M combined ARR.",
-      "Candriam and DPAM won similar ManCo scope work in the last cycle; Amundi has had no commercial contact for 11 months.",
-      "Sean Doyle (Northern Trust alumni network) sits one hop from Amundi Lux Head of Ops — strongest path below executive.",
-      "Cross-border registration filings still open in IT/ES; attach rate for FCS on peer expansions is 71%.",
+      "Salesforce opp-00F31 is day 94 in contracting. Closed order-routing deals like this had a 38-day median.",
+      "Of 12 order-routing deals past twice that median since 2024, 9 died before signature.",
+      "Paul Elflain's team last touched the record on 22 August. Marcus Hale only takes Ross's calls.",
+      "£3.1m annual sits in weighted pipeline. It has not moved since Friday.",
     ],
     actions: [
-      { label: "Draft intro request to Sean Doyle", href: "/accounts?id=acc-amundi", primary: true },
-      { label: "Open Amundi", href: "/accounts?id=acc-amundi" },
+      { label: "Call Marcus Hale this week", href: "/accounts?id=acc-fidelityintl", primary: true },
+      { label: "Open Fidelity", href: "/accounts?id=acc-fidelityintl" },
     ],
     sources: [
-      "CSSF register",
-      "Contract system",
-      "Salesforce",
-      "Distribution Intelligence",
-      "Personnel graph",
+      "Salesforce, opp-00F31, 08:12",
+      "Closed-deal history, 12 routing deals, 08:12",
     ],
   },
   {
     rank: 2,
-    account: "Robeco",
-    headline: "Robeco posts two settlement-operations roles referencing T+1 readiness",
-    tag: "White space",
-    tagTone: "opportunity",
+    account: "abrdn",
+    headline: "abrdn's sold 15 Sep go-live slips three weeks",
+    tag: "At risk",
+    tagTone: "risk",
     bullets: [
-      "Hiring signal maps to Global Post Trade Management and Settlement / T+1 — neither live at Robeco today.",
-      "6 of 9 peer firms already run GPTM or equivalent; Robeco is the gap in the set.",
-      "ESMA T+1 calendar (11 Oct 2027) puts the renewal window for neighbouring accounts inside the same readiness band.",
-      "FundFile shows rising preference for post-trade outsourcing language in RFPs from NL peer set.",
+      "Salesforce promised 15 September. Jira CAL-2409 now says 6 October — three weeks late, £2.4m at risk.",
+      "Transfers squad is booked to Jupiter until 20 September. Moving them holds abrdn and slips Jupiter.",
+      "Stephen Leggett will not pull the squad without Ross. The date gets worse if this sits until Friday.",
+      "This one item is the £800k of committed that went backwards since Friday.",
     ],
-    actions: [{ label: "Build T+1 readiness brief", href: "/today", primary: true }],
-    sources: ["Careers feed", "ESMA calendar", "Ontology — peer set v4"],
+    actions: [
+      { label: "Tell abrdn the date moves", href: "/executive", primary: true },
+      { label: "Pull Transfers off Jupiter", href: "/executive" },
+      { label: "Read Jira CAL-2409", href: "/executive" },
+    ],
+    sources: [
+      "Salesforce, opp-00A19, 08:12",
+      "Jira, CAL-2409, 08:12",
+    ],
   },
   {
     rank: 3,
-    account: "Nordea Deal",
-    headline: "Nordea deal is now in a stall state — day 71 of stage 4",
-    tag: "Evidence gap",
+    account: "Hargreaves Lansdown",
+    headline: "Hargreaves Lansdown DMI forecast fell £400k since Friday",
+    tag: "Forecast down",
     tagTone: "risk",
     bullets: [
-      "Global Post Trade Management + Asset Servicing · €3.2M · stage 4.",
-      "SME holding 14 questionnaires; 41 of 63 evidence cells still empty.",
-      "11 comparable deals: median close 290d, median death 160d — day 71 sits past the early-kill window.",
-      "Strongest death predictor in the set: no confirmed economic buyer by day 60.",
+      "Weighted DMI forecast was £1.5m on Friday. Salesforce now has it at £1.1m, down £400k this week.",
+      "Stage moved from commit to propose on Monday. Owner is Priya Nair, not Ross.",
+      "The same DMI motion at HL last October recovered in 11 days. This one is day 2.",
     ],
-    actions: [{ label: "Open The Board", href: "/board", primary: true }],
-    sources: ["Exchange", "Closed-deal history"],
+    actions: [
+      { label: "Ask Priya Nair for the Monday note", href: "/executive", primary: true },
+    ],
+    sources: [
+      "Salesforce, opp-00H04 Friday snapshot, 08:12",
+      "Salesforce, opp-00H04 Tuesday, 08:12",
+    ],
   },
   {
     rank: 4,
-    account: "Union Investment",
-    headline: "Union Investment adds a fifth cross-border market — Acolin footprint expands",
-    tag: "Expansion",
-    tagTone: "expansion",
+    account: "Schroders",
+    headline: "Schroders still invoices last year's routing this quarter",
+    tag: "Not recognised",
+    tagTone: "risk",
     bullets: [
-      "Italy and Spain registration filings landed this week; Cross-border + Registration are the natural attach.",
-      "Peer attach rate for Fund Communication Solutions on fifth-market expansions is 71%.",
-      "Reconciliation & Matching not held — peer density 8/9 on that row.",
+      "Closed-won expansion is £1.8m in Salesforce. NetSuite INV-4418 still bills the old £0.9m run-rate this quarter.",
+      "Go-live was 1 August. The first expanded invoice is still in draft, dated 8 September.",
+      "Finance has it waiting-on-ops. Ops has it waiting-on-finance. £900k is not moving.",
     ],
-    actions: [{ label: "Open peer matrix pattern", href: "/accounts?id=acc-unioninvestment", primary: true }],
-    sources: ["Fund registries", "Acolin platform"],
+    actions: [
+      { label: "Get INV-4418 out of draft", href: "/accounts?id=acc-schroders", primary: true },
+      { label: "Open Schroders", href: "/accounts?id=acc-schroders" },
+    ],
+    sources: [
+      "Salesforce, opp-00S11 closed-won, 08:12",
+      "NetSuite, INV-4418, 08:12",
+    ],
+  },
+  {
+    rank: 5,
+    account: "Allfunds",
+    headline: "Allfunds platform head Elena Vázquez left on Sunday",
+    tag: "Buyer gone",
+    tagTone: "risk",
+    bullets: [
+      "Elena Vázquez, head of platform, left on Sunday. Salesforce opp-00A72 is still open at £720k annual.",
+      "Funds Europe posted the departure at 07:40 Monday. NetSuite 12-month revenue on the account is £1.4m.",
+      "The open opportunity names her as economic buyer. No replacement is on the record.",
+    ],
+    actions: [
+      { label: "Name the new Allfunds buyer", href: "/accounts", primary: true },
+    ],
+    sources: [
+      "Funds Europe, 7 Sep 07:40",
+      "Salesforce, opp-00A72, 08:12",
+      "NetSuite, Allfunds 12m, 08:12",
+    ],
   },
 ];
 
 export const LEDGER: LedgerItem[] = [
-  { title: "Confirm SLA terms — Amundi Lux", due: "Due Fri", dueTone: "risk" },
-  { title: "Send DORA evidence pack — SEB", due: "Due Tue", dueTone: "attention" },
-  { title: "Reference approval — Schroders", due: "Waiting on Legal", dueTone: "quiet" },
+  { title: "abrdn slip — £800k off committed since Friday", due: "Due Wed", dueTone: "risk" },
+  { title: "HL DMI — £400k off the Friday forecast", due: "Due Fri", dueTone: "attention" },
+  { title: "Jupiter data services — £400k closed, waiting on invoice", due: "Waiting on NetSuite", dueTone: "quiet" },
 ];
 
 export const LEDGER_NOTE =
-  "Commitments made in a sales cycle stay in the graph after close, and follow the account into delivery.";
+  "£8.2m short of the FY number. The gap grew £800k since Friday because abrdn onboarding slipped against a date Salesforce already sold.";
 
 export const SILENCE: SilenceRow[] = [
-  { name: "Amundi Lux", months: 11, label: "11m" },
-  { name: "Eurizon", months: 8, label: "8m" },
-  { name: "NN Group", months: 6, label: "6m" },
-  { name: "Handelsbanken", months: 3, label: "3m" },
-  { name: "Schroders", months: 0.5, label: "<1m" },
+  { name: "Allfunds", months: 11, label: "11m" },
+  { name: "M&G", months: 8, label: "8m" },
+  { name: "Amundi Lux", months: 6, label: "6m" },
+  { name: "Baillie Gifford", months: 3, label: "3m" },
+  { name: "Eurizon", months: 3, label: "3m" },
 ];
 
 /* ── Client · Amundi ──────────────────────────────────────────────────────── */
@@ -190,25 +230,26 @@ export const SILENCE: SilenceRow[] = [
 export const AMUNDI = {
   name: "Amundi",
   initials: "AM",
-  summary: "4 legal entities resolved · 11 source-system identities merged · ontology:client/amundi-grp",
+  summary:
+    "4 legal entities. Order routing live in Paris and Dublin. Lux volume is still last year's. NetSuite 12-month £2.1m.",
   kpis: [
-    { label: "Next renewal", value: "214 days", tone: "risk" as const },
-    { label: "Recurring revenue", value: "€4.31M", tone: "brand" as const },
-    { label: "Open commitments", value: "3", tone: "attention" as const },
-    { label: "Products held", value: "6 of 19", tone: "neutral" as const },
-    { label: "Peer product density", value: "11 of 19", tone: "neutral" as const },
+    { label: "Days to Dublin renewal", value: "214", tone: "risk" as const },
+    { label: "Recognised vs sold, this quarter", value: "£0.4m short", tone: "brand" as const },
+    { label: "Delivery dates that have slipped", value: "1", tone: "attention" as const },
+    { label: "Entities live on routing", value: "2 of 4", tone: "neutral" as const },
+    { label: "Peers on DMI, Amundi not", value: "6 of 9", tone: "neutral" as const },
   ],
   matrixTitle: "What they hold, and what their peers hold that they don't",
   entities: ["Paris", "Lux", "Dublin", "CPR AM"] as const,
   peerSet:
-    "Eurizon, DWS, Union Investment, Robeco, Candriam, NN, Generali, Allianz GI, BNP Paribas AM",
+    "Eurizon, DWS, Schroders, Fidelity International, Allfunds, NN, Generali, Allianz GI, BNP Paribas AM",
   historyNote:
-    "Every red cell carries its own history. Collateral Management, Paris — proposed Q2 2023, lost on price, 22% concession requested, sponsor has since left the firm.",
+    "Every red cell carries its own history. Data services, Paris — proposed March 2026, lost on price, 18% concession asked, sponsor left 2 August.",
 };
 
 export const AMUNDI_HOLDINGS: ProductHoldRow[] = [
   {
-    product: "Global Post Trade Management",
+    product: "Order routing",
     paris: "held",
     lux: "partial",
     dublin: "held",
@@ -217,7 +258,7 @@ export const AMUNDI_HOLDINGS: ProductHoldRow[] = [
     peerPct: 89,
   },
   {
-    product: "Asset Servicing",
+    product: "Transfers",
     paris: "held",
     lux: "held",
     dublin: "peer-gap",
@@ -226,7 +267,7 @@ export const AMUNDI_HOLDINGS: ProductHoldRow[] = [
     peerPct: 78,
   },
   {
-    product: "Reconciliation & Matching",
+    product: "Automated onboarding",
     paris: "peer-gap",
     lux: "peer-gap",
     dublin: "held",
@@ -235,7 +276,7 @@ export const AMUNDI_HOLDINGS: ProductHoldRow[] = [
     peerPct: 89,
   },
   {
-    product: "Collateral Management",
+    product: "Data services",
     paris: "peer-gap",
     lux: "na",
     dublin: "peer-gap",
@@ -244,77 +285,50 @@ export const AMUNDI_HOLDINGS: ProductHoldRow[] = [
     peerPct: 56,
   },
   {
-    product: "Cross-border distribution",
-    paris: "held",
-    lux: "held",
-    dublin: "partial",
-    cpr: "held",
-    peer: "9/9",
-    peerPct: 100,
-  },
-  {
-    product: "Fund registration",
-    paris: "held",
-    lux: "held",
-    dublin: "held",
-    cpr: "partial",
-    peer: "8/9",
-    peerPct: 89,
-  },
-  {
-    product: "Fund Communication Solutions",
-    paris: "partial",
-    lux: "held",
-    dublin: "peer-gap",
-    cpr: "peer-gap",
-    peer: "6/9",
-    peerPct: 67,
-  },
-  {
-    product: "SalesWatch",
+    product: "Distributed market infrastructure",
     paris: "peer-gap",
     lux: "peer-gap",
-    dublin: "na",
-    cpr: "na",
-    peer: "4/9",
-    peerPct: 44,
+    dublin: "partial",
+    cpr: "held",
+    peer: "6/9",
+    peerPct: 67,
   },
 ];
 
 export const AMUNDI_CLOCK: ClockItem[] = [
   {
-    days: 397,
-    label: "UK/EU T+1 — 11 Oct 2027",
-    detail: "Touches settlement across three entities.",
+    days: 7,
+    label: "Dublin routing renewal conversation — 15 Sep",
+    detail: "Salesforce last activity on this entity: 6 months.",
     tone: "risk",
   },
   {
-    days: 214,
-    label: "GPTM renewal — Dublin",
-    detail: "Falls inside the T+1 readiness window.",
+    days: 22,
+    label: "Paris automated onboarding — now 6 Oct in Jira",
+    detail: "Sold for 15 September. Already two weeks late in the sprint plan.",
     tone: "attention",
   },
   {
     days: 168,
-    label: "EMIR Refit reporting change — Paris and Lux",
-    detail: "Regulatory reporting + workflow attach.",
+    label: "DMI decision — Paris and Lux",
+    detail: "Open Salesforce opportunity £520k. No Jira squad assigned.",
     tone: "quiet",
   },
   {
     days: 92,
     label: "DORA third-party register submission",
-    detail: "Evidence pack already in flight for SEB pattern.",
+    detail: "NetSuite has the live routing contract. The pack is still in draft.",
     tone: "quiet",
   },
 ];
 
 export const AMUNDI_CLOCK_NOTE =
-  "The renewal and the regulatory deadline sit in the same window. That edge is what the graph is for.";
+  "Dublin comes up in 214 days and nobody has spoken to Lux in 6 months. That is this week's problem, not a later one.";
 
 export const AMUNDI_RELS: RelEdge[] = [
-  { from: "S. Doyle (SD)", to: "Head of Ops", strength: "strong", note: "strong · North" },
-  { from: "You (PR)", to: "Lux COO", strength: "weak", note: "weak · 11m silent" },
-  { from: "You (PR)", to: "Group CTO", strength: "none", note: "no path" },
+  { from: "P. Elflain (PE)", to: "Head of Ops", strength: "strong", note: "strong · last spoke 11 Mar" },
+  { from: "You (RF)", to: "Lux COO", strength: "weak", note: "weak · 6m silent" },
+  { from: "You (RF)", to: "Group CTO", strength: "none", note: "no path" },
 ];
 
 /* ── The Board · Nordea ───────────────────────────────────────────────────── */
@@ -322,11 +336,12 @@ export const AMUNDI_RELS: RelEdge[] = [
 export const NORDEA_BOARD = {
   name: "Nordea Asset Management",
   pills: [
-    { label: "Global Post Trade Management + Asset Servicing", tone: "neutral" as const },
-    { label: "€3.2M · stage 4 · day 71", tone: "neutral" as const },
-    { label: "Stalled", tone: "risk" as const },
+    { label: "Order routing", tone: "neutral" as const },
+    { label: "£1.4m · sold 15 Sep go-live · day 71", tone: "neutral" as const },
+    { label: "Jira already late", tone: "risk" as const },
   ],
-  summary: "Nine decision criteria. Seven people. Sixty-three cells. Forty-one are empty. The grid is the deal.",
+  summary:
+    "Nine go-live criteria. Seven people. Sixty-three cells. Forty-one are empty. Jira CAL-1841 has said 6 October since July.",
   coverage: 35,
   confirmedPct: 22,
   inferredPct: 13,
@@ -345,15 +360,15 @@ export const BOARD_STAKEHOLDERS: BoardStakeholder[] = [
 ];
 
 export const BOARD_CRITERIA: BoardCriterion[] = [
-  { id: "c1", label: "Native ISO 20022 by Q1 2027" },
-  { id: "c2", label: "T+1 settlement readiness, 11 Oct 2027" },
-  { id: "c3", label: "Migration without parallel run" },
-  { id: "c4", label: "Total cost below current in-house run" },
-  { id: "c5", label: "DORA third-party register evidence" },
+  { id: "c1", label: "Order routing live by 15 Sep 2026" },
+  { id: "c2", label: "Message specs signed this week" },
+  { id: "c3", label: "No parallel run past 6 Oct" },
+  { id: "c4", label: "Price at or below current Swift/fax run" },
+  { id: "c5", label: "DORA third-party register pack" },
   { id: "c6", label: "Nordic data residency" },
   { id: "c7", label: "Penetration test within 12 months" },
   { id: "c8", label: "Named exit and reversibility plan" },
-  { id: "c9", label: "Five-year price certainty" },
+  { id: "c9", label: "Three-year price certainty" },
 ];
 
 /** rows = criteria, cols = stakeholders */
@@ -377,83 +392,75 @@ export const BOARD_COMPARABLES = {
   medianDeath: 160,
   thisDealDay: 71,
   insight:
-    "Matched on evidence topology, not on account size. The single strongest predictor of death in this set: no confirmed economic buyer by day 60.",
+    "Of 11 order-routing deals with this empty-buyer pattern, 7 died. None had a confirmed economic buyer by day 60. This one is day 71.",
 };
 
 /* ── Executive ────────────────────────────────────────────────────────────── */
 
 export const EXECUTIVE = {
-  stamp: "Monday, 06:50",
-  person: "M. Sleightholme — President, Broadridge International",
+  stamp: "Tuesday, 08:12",
+  person: "R. Fox — Chief Commercial Officer, Calastone",
 };
 
 export const QUEUE_STAGES = [
-  { stage: "Qualify", p90: 11, hot: false },
-  { stage: "Business case", p90: 34, hot: false },
-  { stage: "Security review", p90: 61, hot: true },
-  { stage: "Deal desk", p90: 26, hot: false },
-  { stage: "Legal", p90: 29, hot: false },
+  { stage: "Order routing", p90: 11, hot: false },
+  { stage: "Transfers", p90: 34, hot: false },
+  { stage: "Automated onboarding", p90: 61, hot: true },
+  { stage: "Data services", p90: 26, hot: false },
+  { stage: "DMI", p90: 29, hot: false },
 ];
 
 export const QUEUE_NOTE =
-  "Medians are fine. The forecast dies in the p90 tail of the security review.";
+  "Committed is £39.8m. Engineering can deliver £37.1m. The £2.7m hole is automated onboarding sitting 61 days in the p90 tail.";
 
 export const EXEC_UNBLOCKS: ExecUnblock[] = [
   {
-    title: "Sponsor introduction",
-    detail: "Nordea Group CTO",
-    note: "No path exists below your level.",
-    action: "Draft",
-    href: "/board",
-  },
-  {
-    title: "Pricing exception",
-    detail: "SEB, 17% on a five-year term",
-    note: "Above AE authority.",
-    action: "Precedent",
+    title: "Move the abrdn date or the Jupiter squad",
+    detail: "£2.4m at risk vs Jupiter transfers",
+    note: "Stephen Leggett will not pull Transfers without you.",
+    action: "Decide",
     href: "/executive",
   },
   {
-    title: "Reference approval",
-    detail: "Schroders, for the Robeco T+1 case",
-    note: "Unlocks the white-space brief.",
-    action: "Draft",
-    href: "/",
+    title: "Pricing exception",
+    detail: "Fidelity, 12% on a three-year routing term",
+    note: "Above Paul Elflain's authority. £3.1m annual if they sign this week.",
+    action: "Approve",
+    href: "/accounts?id=acc-fidelityintl",
+  },
+  {
+    title: "Call Marcus Hale",
+    detail: "Fidelity International, economic buyer",
+    note: "No path exists below you. Day 94 in contracting.",
+    action: "Call",
+    href: "/accounts?id=acc-fidelityintl",
   },
 ];
 
 export const AT_RISK: AtRiskDeal[] = [
   {
-    name: "Nordea AM",
-    value: "€3.2M",
-    status: "Day 71 — no confirmed economic buyer — 2 stakeholders unengaged",
-    confirmed: 15,
-    inferred: 10,
-    nothing: 75,
+    name: "Fidelity International",
+    value: "£3.1m",
+    status: "Day 94 in contracting, median is 38",
+    confirmed: 0,
+    inferred: 12,
+    nothing: 88,
   },
   {
-    name: "Eurizon Capital",
-    value: "€2.1M",
-    status: "Day 44 — business case never built in their numbers",
+    name: "abrdn",
+    value: "£2.4m",
+    status: "Jira go-live now 6 Oct, sold 15 Sep",
+    confirmed: 10,
+    inferred: 0,
+    nothing: 90,
+  },
+  {
+    name: "Schroders",
+    value: "£0.9m",
+    status: "NetSuite still on the old run-rate",
     confirmed: 50,
-    inferred: 25,
-    nothing: 25,
-  },
-  {
-    name: "Handelsbanken",
-    value: "€1.7M",
-    status: "Day 118 — DORA evidence outstanding 31 days",
-    confirmed: 75,
-    inferred: 15,
-    nothing: 10,
-  },
-  {
-    name: "Generali Investments",
-    value: "€1.4M",
-    status: "Day 29 — healthy — no action required",
-    confirmed: 80,
-    inferred: 10,
-    nothing: 10,
+    inferred: 0,
+    nothing: 50,
   },
 ];
 
@@ -467,13 +474,13 @@ export const NORDEA_TIMELINE = {
   ],
   beats: [
     {
-      title: "Day 12 — signal present, unactioned",
-      body: "Their board approved the ops budget line. Visible in a public filing. Nobody read it.",
+      title: "Day 12 — Jira already showed the miss",
+      body: "CAL-1841 moved Nordea order-routing cutover from 15 September to 6 October. The ticket sat unread.",
       tone: "risk" as const,
     },
     {
-      title: "Day 58 — their internal deadline passed",
-      body: "The deal did not stall. It was never scheduled.",
+      title: "Day 58 — their 15 September date is next week",
+      body: "Jira has said 6 October since July. Lindqvist has not been told. That call is this week's.",
       tone: "neutral" as const,
     },
   ],
@@ -483,28 +490,28 @@ export const NORDEA_TIMELINE = {
 
 export const CASE_THESIS = {
   title: "The case",
-  headline: "Consequence, not coverage.",
-  lede: "Growth Intelligence ranks what moved overnight by commercial consequence across Broadridge post-trade and fund servicing — then shows the path to act.",
+  headline: "What changed, what it costs, what to decide.",
+  lede: "Priorities shows Ross Fox what moved since Friday, what that does to the FY number, and which items only he can settle this week.",
   steps: [
     {
       label: "Priorities",
       href: "/",
-      text: "Four signals ranked: ManCo filing at Amundi, T+1 hiring at Robeco, Nordea evidence stall, Union Investment expansion.",
+      text: "Five of 17 cleared the bar. Fidelity stall, abrdn slip, HL forecast, Schroders invoices, Allfunds departure — ranked by money.",
     },
     {
       label: "Accounts",
       href: "/accounts",
-      text: "Hold vs peer matrix mixes GPTM and Asset Servicing with Cross-border, Registration and FCS — same account, both product families.",
+      text: "A fact from one system stays on the dossier. The main screen only shows a join.",
     },
     {
       label: "Board",
       href: "/board",
-      text: "Sixty-three cells. The deal is the empty ones — ISO 20022, T+1, DORA, price certainty.",
+      text: "Nordea order routing we already sold. Jira showed the miss on day 12. Forty-one cells still empty.",
     },
     {
       label: "Executive",
       href: "/executive",
-      text: "Three items only a president can unblock. The p90 security-review tail is where forecasts die.",
+      text: "Three items only Ross can settle. Onboarding's 61-day p90 is why deliverable is £37.1m against £39.8m committed.",
     },
   ],
 };
@@ -513,23 +520,19 @@ export const CASE_THESIS = {
 
 export const WHERE_IT_RUNS = {
   title: "Where it runs",
-  lede: "Every Wire footer tag is a system you can open. Nothing is invented without a source.",
+  lede: "Every footer tag is a system you can open. If a number has no source, it is not on the page.",
   flow: [
-    { id: "registers", label: "Registers & filings", examples: "CSSF, ESMA, fund registries" },
-    { id: "commercial", label: "Commercial systems", examples: "Salesforce, Contract system, Exchange" },
-    { id: "signals", label: "External signals", examples: "Careers feed, Acolin, public filings" },
-    { id: "ontology", label: "Ontology", examples: "client/amundi-grp · peer set v4 · personnel graph" },
-    { id: "wire", label: "Priorities", examples: "Ranked consequence feed" },
+    { id: "registers", label: "External signals", examples: "Funds Europe, filings, Companies House" },
+    { id: "commercial", label: "Salesforce", examples: "Commitments, stage age, last activity, weekly forecast" },
+    { id: "signals", label: "Jira", examples: "Sprint dates, squad load, missed go-lives" },
+    { id: "ontology", label: "NetSuite", examples: "Recognised revenue, invoices, 12-month run-rate" },
+    { id: "wire", label: "Priorities", examples: "Ranked by money, then by what gets worse" },
   ],
   systems: [
-    { name: "CSSF register", feeds: "ManCo scope, entity resolution", usedBy: "Wire #1, Client" },
-    { name: "Contract system", feeds: "Renewals, ARR, SLA terms", usedBy: "Wire, Ledger" },
-    { name: "Salesforce", feeds: "Opportunities, commitments, silence", usedBy: "Wire, Executive" },
-    { name: "Distribution Intelligence", feeds: "Peer attach, market expansion", usedBy: "Wire #4, Client" },
-    { name: "Personnel graph", feeds: "Introduction paths", usedBy: "Client who-knows-whom" },
-    { name: "Careers feed", feeds: "Hiring / T+1 language", usedBy: "Wire #2" },
-    { name: "ESMA calendar", feeds: "Regulatory deadlines", usedBy: "Clock, Board criteria" },
-    { name: "Closed-deal history", feeds: "Evidence topology comparables", usedBy: "Board sidebar" },
-    { name: "FundFile / SalesWatch", feeds: "Product preference, peer density", usedBy: "Client matrix" },
+    { name: "Salesforce", feeds: "Commitments, stage age, forecast movement, silence", usedBy: "Priorities, Executive" },
+    { name: "Jira", feeds: "Go-live dates, squad allocation, delivery slips", usedBy: "Priorities #2, Executive queue" },
+    { name: "NetSuite", feeds: "Recognised revenue, invoices, 12-month account value", usedBy: "Priorities #4–5, at-risk bars" },
+    { name: "Closed-deal history", feeds: "Median stage age by product", usedBy: "Priorities #1, Board" },
+    { name: "Funds Europe", feeds: "Personnel changes matched to open opportunities", usedBy: "Priorities #5" },
   ],
 };
