@@ -7,6 +7,8 @@ import { AskOrb } from "./AskOrb";
 import { answerQuery } from "./askQuery";
 import {
   ACCOUNTS,
+  BOOK_COPY,
+  CHART_NOTES,
   COVERAGE_CELL_STYLE,
   COVERAGE_ROLES,
   COVERAGE_ROWS,
@@ -82,7 +84,7 @@ function PreparePanel({
         </section>
 
         <section>
-          <h3>Broadridge products in play</h3>
+          <h3>Calastone products in play</h3>
           <div className="today-prepare-products">
             {account.services.map((s) => (
               <span key={s}>{s}</span>
@@ -174,7 +176,7 @@ export function Today() {
   const selected = ACCOUNTS.find((a) => a.id === selectedId) ?? ACCOUNTS[0];
   const prepared = preparedIds.includes(selected.id);
   const book = bookHealthSummary(ACCOUNTS);
-  const attentionQueue = ACCOUNTS.filter((a) => a.id !== selected.id && a.kind !== "Steady");
+  const attentionQueue = ACCOUNTS.filter((a) => a.id !== selected.id && a.kind !== "Watch");
   const answer = answerQuery(asked ?? "", selected.id, { accounts: ACCOUNTS });
   const headWords = selected.head.split(" ");
   const confBars = [0, 1, 2].map((i) => (i < selected.conf ? selected.state : "rgba(10,37,64,0.12)"));
@@ -226,41 +228,39 @@ export function Today() {
           <div className="today-book-head">
             <div>
               <p className="today-kicker">Book health</p>
-              <h2>Alex Curtin · illustrative UK &amp; Europe funds book</h2>
+              <h2>{BOOK_COPY.title}</h2>
             </div>
-            <p className="today-book-stamp">Checked overnight · illustrative data</p>
+            <p className="today-book-stamp">{BOOK_COPY.stamp}</p>
           </div>
 
           <div className="today-book-metrics">
             <div>
-              <span>Book with us</span>
+              <span>{BOOK_COPY.gapLabel}</span>
               <strong>£{book.bookRev}m</strong>
-              <em>{book.accountCount} accounts</em>
+              <em>{BOOK_COPY.gapEm}</em>
             </div>
             <div>
-              <span>Needs attention</span>
+              <span>{BOOK_COPY.attentionLabel}</span>
               <strong>{book.attentionCount}</strong>
-              <em>
-                {book.opportunities} opportunities · {book.atRisk} at risk · {book.gaps} gaps
-              </em>
+              <em>{BOOK_COPY.attentionEm}</em>
             </div>
             <div>
-              <span>Revenue at risk</span>
+              <span>{BOOK_COPY.riskLabel}</span>
               <strong>£{book.atRiskRev}m</strong>
-              <em>Nearest renewal in the attention set</em>
+              <em>{BOOK_COPY.riskEm}</em>
             </div>
             <div>
-              <span>Overnight changes</span>
+              <span>{BOOK_COPY.overnightLabel}</span>
               <strong>{book.overnight.length}</strong>
-              <em>New signals since yesterday close</em>
+              <em>{BOOK_COPY.overnightEm}</em>
             </div>
           </div>
 
           <div className="today-book-mix" aria-hidden>
-            <span style={{ flex: book.opportunities, background: "#2F9B8E" }} title="New opportunity" />
-            <span style={{ flex: Math.max(book.atRisk, 0.35), background: "#C4675F" }} title="Revenue at risk" />
-            <span style={{ flex: book.gaps, background: "#D99A3E" }} title="Relationship gap" />
-            <span style={{ flex: Math.max(book.steady, 0.35), background: "#5A7391" }} title="Steady" />
+            <span style={{ flex: book.opportunities, background: "#2F9B8E" }} title="Forecast down" />
+            <span style={{ flex: Math.max(book.atRisk, 0.35), background: "#C4675F" }} title="At risk" />
+            <span style={{ flex: book.gaps, background: "#D99A3E" }} title="Not moving" />
+            <span style={{ flex: Math.max(book.steady, 0.35), background: "#5A7391" }} title="Watch" />
           </div>
 
           <div className="today-book-overnight">
@@ -315,7 +315,7 @@ export function Today() {
                     </span>
                   </div>
                   <p className="today-priority-client-meta">
-                    £{selected.rev}m with us · HQ {selected.hq}
+                    £{selected.rev}m {selected.kind.toLowerCase()} · HQ {selected.hq}
                     {selected.recordId ? (
                       <>
                         {" · "}
@@ -370,7 +370,7 @@ export function Today() {
                 </div>
 
                 <div className="today-products">
-                  <p className="today-kicker">Broadridge products</p>
+                  <p className="today-kicker">{BOOK_COPY.productsKicker}</p>
                   <div className="today-product-chips">
                     {selected.services.map((s) => (
                       <span key={s}>{s}</span>
@@ -502,10 +502,7 @@ export function Today() {
                 </span>
               ))}
             </div>
-            <p className="today-chart-note">
-              M&G renews in 22 days with three Fund Communication Solutions support tickets
-              still open. It is the largest amount of revenue you could lose.
-            </p>
+            <p className="today-chart-note">{CHART_NOTES.risk}</p>
           </div>
 
           <div className="today-glass">
@@ -574,16 +571,13 @@ export function Today() {
                 </button>
               ))}
             </div>
-            <p className="today-chart-note">
-              Three accounts are contacting you more, two have stopped. Less contact plus a
-              Fund Communication Solutions renewal date soon is the case to act on.
-            </p>
+            <p className="today-chart-note">{CHART_NOTES.changed}</p>
           </div>
         </section>
 
         <footer className="today-footer">
           <span>{DAILY_BRIEFING.stamp}</span>
-          <span>Fund sources checked 7 Sep 2026</span>
+          <span>{BOOK_COPY.footerStamp}</span>
         </footer>
       </div>
 

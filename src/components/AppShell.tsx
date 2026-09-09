@@ -124,7 +124,7 @@ function TopBar({
         />
         <span className="hidden h-7 w-px bg-[var(--line)] lg:block" aria-hidden />
         <span
-          className={`hidden font-bold uppercase leading-[1.35] tracking-[0.16em] text-[var(--brand)] lg:block ${
+          className={`hidden font-bold uppercase leading-[1.35] tracking-[0.16em] text-[var(--brand-bright)] lg:block ${
             isHome ? "text-[11px]" : "text-[9.5px] text-[var(--text-3)]"
           }`}
         >
@@ -157,7 +157,7 @@ function TopBar({
           className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-[8px] text-[12px] font-semibold transition-colors ${
             menuOpen
               ? "border-[var(--brand-soft)] bg-[var(--chip-bg)] text-[var(--chip-fg)]"
-              : "border-[var(--line)] text-[var(--text-2)] hover:border-[var(--brand-bright)] hover:text-[var(--brand)]"
+              : "border-[var(--line)] text-[var(--text-2)] hover:border-[var(--brand-bright)] hover:text-[var(--brand-bright)]"
           }`}
         >
           {menuOpen ? <CloseIcon size={14} /> : <MenuIcon size={14} />}
@@ -295,7 +295,7 @@ function NavPanel({
             <Link
               href={TASKS_MODULE.href}
               className={`flex items-center gap-2 rounded-lg px-2 py-[7px] text-[13px] transition-colors hover:bg-[var(--surface-2)] ${
-                isActive("/tasks") ? "font-semibold text-[var(--brand)]" : "text-[var(--text-2)]"
+                isActive("/tasks") ? "font-semibold text-[var(--brand-bright)]" : "text-[var(--text-2)]"
               }`}
             >
               <TasksIcon size={14} />
@@ -322,12 +322,12 @@ function NavPanel({
           className="sm-item mt-auto flex items-center gap-2.5 border-t border-[var(--line-soft)] pt-4"
           style={{ "--i": MODULES.length + 1 } as React.CSSProperties}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-bold text-white">
-            AC
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-bold text-white">
+            RF
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-[12.5px] font-semibold text-[var(--text-1)]">Alex Curtin</span>
-            <span className="block truncate text-[11px] text-[var(--text-4)]">Strategic Account Director</span>
+            <span className="block truncate text-[12.5px] font-semibold text-[var(--text-1)]">Ross Fox</span>
+            <span className="block truncate text-[11px] text-[var(--text-4)]">Chief Commercial Officer</span>
           </span>
         </div>
       </nav>
